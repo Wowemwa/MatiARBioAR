@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import Fuse from 'fuse.js'
 import { getUnifiedSpecies, getSites } from '../data/adapters'
-import { Link } from 'react-router-dom'
 import AnimatedText from '../components/AnimatedText'
-import { WaveIcon, MountainIcon, SpeciesIcon } from '../components/Icons'
+import { MountainIcon, SpeciesIcon } from '../components/Icons'
 
 const STATUS_ORDER = ['CR','EN','VU','NT','LC','DD']
 
@@ -53,7 +52,7 @@ export default function BiodiversityExplorer() {
               </h1>
               
               <p className="text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-                Discover and explore the rich flora and fauna of Mati City's protected areas and biodiversity hotspots
+                Discover and explore the rich flora and fauna of Mati City&apos;s protected areas and biodiversity hotspots
               </p>
               
               <div className="flex justify-center items-center gap-6 mt-8">

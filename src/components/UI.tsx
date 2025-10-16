@@ -1,5 +1,4 @@
 import { ReactNode, CSSProperties, HTMLAttributes, memo } from 'react'
-import clsx from 'clsx'
 
 type BaseProps = { className?: string; children: ReactNode; style?: CSSProperties } & HTMLAttributes<HTMLDivElement>
 type ButtonProps = { variant?: 'primary' | 'secondary' | 'ghost'; size?: 'sm' | 'md' | 'lg'; className?: string; children: ReactNode; type?: 'button' | 'submit' | 'reset'; disabled?: boolean } & HTMLAttributes<HTMLButtonElement>

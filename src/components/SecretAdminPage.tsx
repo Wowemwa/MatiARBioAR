@@ -1,12 +1,10 @@
 import { useState } from 'react'
 import { useAdmin } from '../context/AdminContext'
-import useTheme from '../useTheme'
 import AdminLogin from './AdminLogin'
 import AdminPanel from './AdminPanel'
 
 export default function SecretAdminPage() {
   const { isAdmin, logout } = useAdmin()
-  const { theme } = useTheme()
   const [showAdminPanel, setShowAdminPanel] = useState(false)
 
   if (!isAdmin) {

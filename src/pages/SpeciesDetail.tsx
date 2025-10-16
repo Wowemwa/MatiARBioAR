@@ -25,7 +25,7 @@ export default function SpeciesDetail() {
             <SpeciesIcon className="w-8 h-8 text-gray-400" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Species not found</h2>
-          <p className="text-gray-600 dark:text-gray-400">The species you're looking for doesn't exist in our database.</p>
+          <p className="text-gray-600 dark:text-gray-400">The species you&apos;re looking for doesn&apos;t exist in our database.</p>
           <Link 
             to="/biodiversity" 
             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
@@ -406,7 +406,7 @@ export default function SpeciesDetail() {
                       Protected Areas
                     </h3>
                     <p className="text-gray-700 dark:text-gray-300 mb-3">
-                      This species is found in {sites.length} protected conservation site{sites.length !== 1 ? 's' : ''} within Mati City's biodiversity network.
+                      This species is found in {sites.length} protected conservation site{sites.length !== 1 ? 's' : ''} within Mati City&apos;s biodiversity network.
                     </p>
                     <div className="space-y-2">
                       {sites.map((site: any) => (
@@ -507,7 +507,7 @@ export default function SpeciesDetail() {
           </div>
           
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            Part of Mati City's biodiversity conservation network
+            Part of Mati City&apos;s biodiversity conservation network
           </div>
         </div>
       </div>

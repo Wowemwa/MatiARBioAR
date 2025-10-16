@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import useTheme from '../useTheme'
 import useScrollPosition from '../hooks/useScrollPosition'
-import { WaveIcon, SpeciesIcon, ARIcon, InfoIcon } from './Icons'
+import { ARIcon } from './Icons'
 
 function ThemeToggle() {
   const { theme, toggleTheme } = useTheme()

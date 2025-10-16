@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useData } from '../context/DataContext'
@@ -140,7 +140,6 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
 
       // Enhanced popup with detailed information including species
       const siteSpecies = species.filter(sp => sp.siteIds.includes(site.id))
-      const speciesCount = siteSpecies.length
       const floraCount = siteSpecies.filter(sp => sp.category === 'flora').length
       const faunaCount = siteSpecies.filter(sp => sp.category === 'fauna').length
       
@@ -438,7 +437,7 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
                       </div>
                       
                       <div className="grid sm:grid-cols-2 gap-4">
-                        {siteSpecies.map((sp, index) => (
+                        {siteSpecies.map((sp) => (
                           <div key={sp.id} className="bg-white dark:bg-slate-700 rounded-lg p-4 border border-gray-200 dark:border-slate-600 hover:shadow-md transition-shadow">
                             <div className="flex items-start justify-between mb-2">
                               <div>

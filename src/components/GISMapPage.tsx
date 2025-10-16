@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useData } from '../context/DataContext'
 import { getUnifiedSpecies } from '../data/adapters'
@@ -85,7 +85,7 @@ export default function GISMapPage({ className = '' }: GISMapPageProps) {
               </h1>
               
               <p className="text-xl text-gray-700 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
-                Explore Mati City's biodiversity hotspots and conservation areas through our comprehensive Geographic Information System
+                Explore Mati City&apos;s biodiversity hotspots and conservation areas through our comprehensive Geographic Information System
               </p>
             </div>
 

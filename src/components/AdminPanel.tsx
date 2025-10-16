@@ -1,7 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
-import { PlusIcon, EditIcon, DeleteIcon, ImageIcon, SaveIcon, CancelIcon, EyeIcon } from './Icons'
+import { useState, useMemo } from 'react'
+import { PlusIcon, EditIcon, DeleteIcon, SaveIcon, CancelIcon, EyeIcon } from './Icons'
 import { MATI_SPECIES, SpeciesDetail } from '../data/mati-hotspots'
-import { getUnifiedSpecies } from '../data/adapters'
 
 interface AdminPanelProps {
   isVisible: boolean
@@ -171,7 +170,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-3xl font-bold mb-2">🌿 Species Administration</h2>
-              <p className="text-white/90 text-lg">Manage biodiversity data for Mati City's natural heritage</p>
+              <p className="text-white/90 text-lg">Manage biodiversity data for Mati City&apos;s natural heritage</p>
             </div>
             <button
               onClick={onClose}

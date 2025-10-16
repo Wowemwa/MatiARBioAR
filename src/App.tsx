@@ -1,5 +1,5 @@
+import React, { useEffect, useMemo, useState, lazy, Suspense, memo, useCallback } from 'react'
 import { BrowserRouter, Routes, Route, Link, useParams, useNavigate, NavLink, useLocation } from 'react-router-dom'
-import { useEffect, useMemo, useState, lazy, Suspense, memo, useCallback } from 'react'
 import useTheme from './useTheme'
 import { Card, SoftCard, Badge, Button, SectionTitle, MediaThumb } from './components/UI'
 import AnimatedText from './components/AnimatedText'
@@ -11,14 +11,96 @@ import { DataProvider, useData } from './context/DataContext'
 import { AdminProvider, useAdmin } from './context/AdminContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import PerformanceMonitor from './components/PerformanceMonitor'
-import { PageLoadingFallback, ComponentLoadingFallback, MapLoadingFallback } from './components/LoadingSpinner'
+import { PageLoadingFallback, MapLoadingFallback } from './components/LoadingSpinner'
 import { initProgressiveEnhancement } from './utils/progressive-enhancement'
 import { DeviceProvider, useDeviceDetection } from './context/DeviceContext'
+import type { Hotspot, SpeciesDetail } from './data/hotspots'
+
+type AdminTab = 'login' | 'dashboard' | 'data' | 'system'
+type DataViewMode = 'hotspots' | 'species'
+
+type HotspotFormValues = Omit<Hotspot, 'lat' | 'lng' | 'areaHectares' | 'image'> & {
+  lat: number | ''
+  lng: number | ''
+  areaHectares?: number | ''
+  image?: string
+}
+
+type SpeciesFormValues = Omit<SpeciesDetail, 'images'> & {
+  images: string[]
+}
+
+const isHotspotRecord = (item: Hotspot | SpeciesDetail | null): item is Hotspot => Boolean(item && 'type' in item)
+const isSpeciesRecord = (item: Hotspot | SpeciesDetail | null): item is SpeciesDetail => Boolean(item && 'category' in item)
+
+const createHotspotFormValues = (initialData?: Hotspot): HotspotFormValues => {
+  if (!initialData) {
+    return {
+      id: '',
+      name: '',
+      type: 'terrestrial',
+      barangay: '',
+      city: 'Mati City',
+      province: 'Davao Oriental',
+      designation: '',
+      areaHectares: '',
+      lat: '',
+      lng: '',
+      summary: '',
+      description: '',
+      features: [],
+      stewardship: '',
+      image: '',
+      tags: [],
+      highlightSpeciesIds: [],
+      floraIds: [],
+      faunaIds: [],
+      visitorNotes: '',
+    }
+  }
+
+  return {
+    ...initialData,
+    areaHectares: initialData.areaHectares ?? '',
+    image: initialData.image ?? '',
+    lat: initialData.lat,
+    lng: initialData.lng,
+    features: [...initialData.features],
+    tags: [...initialData.tags],
+    highlightSpeciesIds: [...initialData.highlightSpeciesIds],
+    floraIds: [...initialData.floraIds],
+    faunaIds: [...initialData.faunaIds],
+    visitorNotes: initialData.visitorNotes ?? '',
+  }
+}
+
+const createSpeciesFormValues = (initialData?: SpeciesDetail): SpeciesFormValues => {
+  if (!initialData) {
+    return {
+      id: '',
+      category: 'flora',
+      commonName: '',
+      scientificName: '',
+      status: 'LC',
+      habitat: '',
+      blurb: '',
+      siteIds: [],
+      highlights: [],
+      images: [],
+    }
+  }
+
+  return {
+    ...initialData,
+    highlights: [...initialData.highlights],
+    siteIds: [...initialData.siteIds],
+    images: initialData.images ? [...initialData.images] : [],
+  }
+}
 
 // Lazy load all heavy components for better code splitting and performance
 const BiodiversityExplorer = lazy(() => import('./pages/BiodiversityExplorer'))
 const SpeciesDetail = lazy(() => import('./pages/SpeciesDetail'))
-const DetailedGISMap = lazy(() => import('./components/DetailedGISMap'))
 const GISMapPage = lazy(() => import('./components/GISMapPage'))
 
 const ThemeToggle = memo(function ThemeToggle() {
@@ -513,6 +595,31 @@ const Home = memo(function Home() {
   } as const
 
   const featuredSites = useMemo(() => hotspots.slice(0, 4), [hotspots])
+  const featuredImages = useMemo(
+    () => featuredSites.filter((site) => Boolean(site.image)),
+    [featuredSites]
+  )
+  const [slideshowIndex, setSlideshowIndex] = useState(0)
+
+  useEffect(() => {
+    if (featuredImages.length === 0) return
+
+    const interval = window.setInterval(() => {
+      setSlideshowIndex((prev) => (prev + 1) % featuredImages.length)
+    }, 6500)
+
+    return () => {
+      window.clearInterval(interval)
+    }
+  }, [featuredImages.length])
+
+  useEffect(() => {
+    if (slideshowIndex >= featuredImages.length) {
+      setSlideshowIndex(0)
+    }
+  }, [featuredImages.length, slideshowIndex])
+
+  const currentSlide = featuredImages[slideshowIndex] ?? null
 
   return (
     <div className="space-y-8 min-h-screen">
@@ -651,6 +758,95 @@ const Home = memo(function Home() {
                 <p className="mt-3 text-xs text-slate-500 dark:text-slate-300">
                   Catalogued {loading ? '•••' : speciesCount} of {discoveryGoal}+ priority species for Year&nbsp;1 AR experiences.
                 </p>
+                {currentSlide && featuredImages.length > 0 && (
+                  <div className="relative mt-5 overflow-hidden rounded-3xl border border-emerald-300/50 bg-gradient-to-br from-emerald-100/70 via-white/70 to-sky-100/60 shadow-2xl dark:border-emerald-400/30 dark:from-emerald-900/40 dark:via-slate-900/40 dark:to-slate-800/35">
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-emerald-200/30 dark:from-white/10" />
+                    <div className="relative z-10 space-y-4 p-5">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-white/70 text-emerald-500 shadow-sm backdrop-blur dark:bg-white/10 dark:text-emerald-200">
+                            <MapIcon className="h-5 w-5" />
+                          </span>
+                          <div>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-emerald-600/90 dark:text-emerald-300/90">
+                              Field spotlight
+                            </p>
+                            <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                              {currentSlide.name}
+                            </p>
+                          </div>
+                        </div>
+                        <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.25em] ${
+                          currentSlide.type === 'marine'
+                            ? 'bg-sky-500/15 text-sky-700 dark:bg-sky-500/20 dark:text-sky-200'
+                            : 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200'
+                        }`}>
+                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                          {currentSlide.type === 'marine' ? 'Marine site' : 'Terrestrial site'}
+                        </span>
+                      </div>
+
+                      <div className="relative overflow-hidden rounded-2xl border border-white/40 bg-slate-900/40 shadow-lg">
+                        <div className="relative h-44 sm:h-48">
+                          {featuredImages.map((site, index) => (
+                            <img
+                              key={site.id}
+                              src={site.image as string}
+                              alt={`${site.name} preview`}
+                              loading="lazy"
+                              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[1200ms] ease-out ${
+                                index === slideshowIndex ? 'opacity-100' : 'opacity-0'
+                              }`}
+                            />
+                          ))}
+                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/10 to-transparent" />
+                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-transparent to-sky-500/20" />
+                          <div className="absolute bottom-3 left-3 flex items-center gap-3 text-xs font-semibold text-white/90">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-black/40 px-2.5 py-1 backdrop-blur">
+                              {currentSlide.lat.toFixed(2)}° / {currentSlide.lng.toFixed(2)}°
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-slate-600 dark:text-slate-300">
+                        {currentSlide.summary}
+                      </p>
+
+                      <div className="flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.25em] text-emerald-600/80 dark:text-emerald-300/70">
+                        {(currentSlide.tags || []).slice(0, 3).map((tag) => (
+                          <span key={`${currentSlide.id}-${tag}`} className="rounded-full bg-white/70 px-3 py-1 shadow-sm dark:bg-white/10">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex flex-1 items-center gap-1">
+                          {featuredImages.map((site, index) => (
+                            <span
+                              key={`${site.id}-indicator`}
+                              className={`h-1.5 flex-1 rounded-full transition-all duration-500 ease-out ${
+                                index === slideshowIndex
+                                  ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500'
+                                  : 'bg-slate-200/70 dark:bg-slate-700/60'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <Link
+                          to={`/site/${currentSlide.id}`}
+                          className="inline-flex items-center gap-2 rounded-full border border-emerald-400/60 bg-white/80 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-emerald-700 shadow-sm transition hover:bg-white/90 dark:border-emerald-400/40 dark:bg-slate-900/70 dark:text-emerald-200"
+                        >
+                          Explore
+                          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 5l7 7-7 7" />
+                          </svg>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </aside>
@@ -1436,7 +1632,7 @@ function ARDemo() {
             <AnimatedText text="AR Experience" />
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Experience Mati's biodiversity through cutting-edge augmented reality technology
+            Experience Mati&rsquo;s biodiversity through cutting-edge augmented reality technology
           </p>
         </div>
         
@@ -1449,7 +1645,7 @@ function ARDemo() {
             <h3 className="text-2xl font-bold text-gray-800">Immersive AR Demo</h3>
             
             <p className="text-lg text-gray-700 max-w-2xl mx-auto leading-relaxed">
-              Experience Mati's biodiversity like never before! Our augmented reality demo uses cutting-edge 
+              Experience Mati&rsquo;s biodiversity like never before! Our augmented reality demo uses cutting-edge
               MindAR + A-Frame technology to bring species to life in your environment.
             </p>
             
@@ -1467,7 +1663,7 @@ function ARDemo() {
               <div className="bg-white/60 rounded-2xl p-6 backdrop-blur-sm border border-white/30 overflow-hidden">
                 <div className="text-3xl mb-3"><StarIcon className="w-8 h-8" /></div>
                 <h4 className="font-bold mb-4">Interactive 3D</h4>
-                <p className="text-sm text-gray-600">Interact with 3D models of Mati's amazing species</p>
+                <p className="text-sm text-gray-600">Interact with 3D models of Mati&rsquo;s amazing species</p>
               </div>
             </div>
             
@@ -1548,9 +1744,9 @@ function AdminPreview() {
   const [submitting, setSubmitting] = useState(false)
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
-  const [activeTab, setActiveTab] = useState<'login' | 'dashboard' | 'data' | 'system'>('login')
-  const [dataView, setDataView] = useState<'hotspots' | 'species'>('hotspots')
-  const [editingItem, setEditingItem] = useState<any>(null)
+  const [activeTab, setActiveTab] = useState<AdminTab>('login')
+  const [dataView, setDataView] = useState<DataViewMode>('hotspots')
+  const [editingItem, setEditingItem] = useState<Hotspot | SpeciesDetail | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
@@ -1600,11 +1796,6 @@ function AdminPreview() {
     setShowForm(true)
   }
 
-  const handleEdit = (item: any) => {
-    setEditingItem(item)
-    setShowForm(true)
-  }
-
   const handleDelete = (id: string) => {
     setDeleteConfirm(id)
   }
@@ -1617,16 +1808,43 @@ function AdminPreview() {
     }
   }
 
-  const handleSave = (formData: any) => {
-    // In a real app, this would save to database/API
-    if (editingItem) {
-      alert(`Item ${editingItem.id} would be updated with: ${JSON.stringify(formData)}`)
-    } else {
-      alert(`New item would be created with: ${JSON.stringify(formData)}`)
+  const handleSaveHotspot = (formData: HotspotFormValues) => {
+    const normalized = {
+      ...formData,
+      lat: typeof formData.lat === 'number' ? formData.lat : parseFloat(String(formData.lat)),
+      lng: typeof formData.lng === 'number' ? formData.lng : parseFloat(String(formData.lng)),
+      areaHectares:
+        formData.areaHectares === '' || typeof formData.areaHectares === 'undefined'
+          ? undefined
+          : Number(formData.areaHectares),
     }
+
+    if (isHotspotRecord(editingItem)) {
+      alert(`Item ${editingItem.id} would be updated with: ${JSON.stringify(normalized)}`)
+    } else {
+      alert(`New hotspot would be created with: ${JSON.stringify(normalized)}`)
+    }
+
     setShowForm(false)
     setEditingItem(null)
   }
+
+  const handleSaveSpecies = (formData: SpeciesFormValues) => {
+    if (isSpeciesRecord(editingItem)) {
+      alert(`Item ${editingItem.id} would be updated with: ${JSON.stringify(formData)}`)
+    } else {
+      alert(`New species would be created with: ${JSON.stringify(formData)}`)
+    }
+
+    setShowForm(false)
+    setEditingItem(null)
+  }
+
+  const adminNavTabs: Array<{ id: Exclude<AdminTab, 'login'>; label: string; icon: string }> = [
+    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+    { id: 'data', label: 'Data Management', icon: '🗄️' },
+    { id: 'system', label: 'System Status', icon: '⚙️' },
+  ]
 
   const exportData = (type: 'hotspots' | 'species', format: 'csv' | 'json') => {
     const data = type === 'hotspots' ? hotspots : species
@@ -1788,14 +2006,10 @@ function AdminPreview() {
 
       {/* Navigation Tabs */}
       <div className="flex flex-wrap gap-2 bg-white/50 dark:bg-slate-800/50 p-2 rounded-2xl backdrop-blur-xl border border-white/30 dark:border-white/15">
-        {[
-          { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-          { id: 'data', label: 'Data Management', icon: '🗄️' },
-          { id: 'system', label: 'System Status', icon: '⚙️' },
-        ].map((tab) => (
+        {adminNavTabs.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${
               activeTab === tab.id
                 ? 'bg-gradient-to-r from-emerald-500 to-blue-500 text-white shadow-lg'
@@ -2168,8 +2382,8 @@ function AdminPreview() {
 
               {dataView === 'hotspots' ? (
                 <HotspotForm
-                  initialData={editingItem}
-                  onSave={handleSave}
+                  initialData={isHotspotRecord(editingItem) ? editingItem : undefined}
+                  onSave={handleSaveHotspot}
                   onCancel={() => {
                     setShowForm(false)
                     setEditingItem(null)
@@ -2177,8 +2391,8 @@ function AdminPreview() {
                 />
               ) : (
                 <SpeciesForm
-                  initialData={editingItem}
-                  onSave={handleSave}
+                  initialData={isSpeciesRecord(editingItem) ? editingItem : undefined}
+                  onSave={handleSaveSpecies}
                   onCancel={() => {
                     setShowForm(false)
                     setEditingItem(null)
@@ -2194,29 +2408,14 @@ function AdminPreview() {
 }
 
 // Form Components
-function HotspotForm({ initialData, onSave, onCancel }: { initialData?: any, onSave: (data: any) => void, onCancel: () => void }) {
-  const [formData, setFormData] = useState(initialData || {
-    id: '',
-    name: '',
-    type: 'terrestrial',
-    city: 'Mati City',
-    province: 'Davao Oriental',
-    designation: '',
-    areaHectares: '',
-    lat: '',
-    lng: '',
-    summary: '',
-    description: '',
-    features: [],
-    stewardship: '',
-    image: '',
-    tags: [],
-    highlightSpeciesIds: [],
-    floraIds: [],
-    faunaIds: [],
-  })
+function HotspotForm({ initialData, onSave, onCancel }: { initialData?: Hotspot, onSave: (data: HotspotFormValues) => void, onCancel: () => void }) {
+  const [formData, setFormData] = useState<HotspotFormValues>(() => createHotspotFormValues(initialData))
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    setFormData(createHotspotFormValues(initialData))
+  }, [initialData])
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     onSave(formData)
   }
@@ -2232,7 +2431,7 @@ function HotspotForm({ initialData, onSave, onCancel }: { initialData?: any, onS
             type="text"
             required
             value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
             className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
           />
         </div>
@@ -2244,7 +2443,9 @@ function HotspotForm({ initialData, onSave, onCancel }: { initialData?: any, onS
           <select
             required
             value={formData.type}
-            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, type: e.target.value as Hotspot['type'] }))
+            }
             className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
           >
             <option value="terrestrial">Terrestrial</option>
@@ -2260,8 +2461,11 @@ function HotspotForm({ initialData, onSave, onCancel }: { initialData?: any, onS
             type="number"
             step="any"
             required
-            value={formData.lat}
-            onChange={(e) => setFormData({ ...formData, lat: parseFloat(e.target.value) })}
+            value={formData.lat === '' ? '' : formData.lat}
+            onChange={(e) => {
+              const { value } = e.target
+              setFormData((prev) => ({ ...prev, lat: value === '' ? '' : Number(value) }))
+            }}
             className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
           />
         </div>
@@ -2274,8 +2478,11 @@ function HotspotForm({ initialData, onSave, onCancel }: { initialData?: any, onS
             type="number"
             step="any"
             required
-            value={formData.lng}
-            onChange={(e) => setFormData({ ...formData, lng: parseFloat(e.target.value) })}
+            value={formData.lng === '' ? '' : formData.lng}
+            onChange={(e) => {
+              const { value } = e.target
+              setFormData((prev) => ({ ...prev, lng: value === '' ? '' : Number(value) }))
+            }}
             className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
           />
         </div>
@@ -2286,8 +2493,14 @@ function HotspotForm({ initialData, onSave, onCancel }: { initialData?: any, onS
           </label>
           <input
             type="number"
-            value={formData.areaHectares}
-            onChange={(e) => setFormData({ ...formData, areaHectares: parseInt(e.target.value) })}
+            value={formData.areaHectares === '' || typeof formData.areaHectares === 'undefined' ? '' : formData.areaHectares}
+            onChange={(e) => {
+              const { value } = e.target
+              setFormData((prev) => ({
+                ...prev,
+                areaHectares: value === '' ? '' : Number(value),
+              }))
+            }}
             className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
           />
         </div>
@@ -2298,8 +2511,8 @@ function HotspotForm({ initialData, onSave, onCancel }: { initialData?: any, onS
           </label>
           <input
             type="url"
-            value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+            value={formData.image ?? ''}
+            onChange={(e) => setFormData((prev) => ({ ...prev, image: e.target.value }))}
             className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
           />
         </div>
@@ -2313,7 +2526,7 @@ function HotspotForm({ initialData, onSave, onCancel }: { initialData?: any, onS
           type="text"
           required
           value={formData.summary}
-          onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
+          onChange={(e) => setFormData((prev) => ({ ...prev, summary: e.target.value }))}
           className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
         />
       </div>
@@ -2326,7 +2539,7 @@ function HotspotForm({ initialData, onSave, onCancel }: { initialData?: any, onS
           required
           rows={4}
           value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
           className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
         />
       </div>
@@ -2350,21 +2563,14 @@ function HotspotForm({ initialData, onSave, onCancel }: { initialData?: any, onS
   )
 }
 
-function SpeciesForm({ initialData, onSave, onCancel }: { initialData?: any, onSave: (data: any) => void, onCancel: () => void }) {
-  const [formData, setFormData] = useState(initialData || {
-    id: '',
-    category: 'flora',
-    commonName: '',
-    scientificName: '',
-    status: 'LC',
-    habitat: '',
-    blurb: '',
-    siteIds: [],
-    highlights: [],
-    images: [],
-  })
+function SpeciesForm({ initialData, onSave, onCancel }: { initialData?: SpeciesDetail, onSave: (data: SpeciesFormValues) => void, onCancel: () => void }) {
+  const [formData, setFormData] = useState<SpeciesFormValues>(() => createSpeciesFormValues(initialData))
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    setFormData(createSpeciesFormValues(initialData))
+  }, [initialData])
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     onSave(formData)
   }
@@ -2380,7 +2586,7 @@ function SpeciesForm({ initialData, onSave, onCancel }: { initialData?: any, onS
             type="text"
             required
             value={formData.commonName}
-            onChange={(e) => setFormData({ ...formData, commonName: e.target.value })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, commonName: e.target.value }))}
             className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
           />
         </div>
@@ -2393,7 +2599,7 @@ function SpeciesForm({ initialData, onSave, onCancel }: { initialData?: any, onS
             type="text"
             required
             value={formData.scientificName}
-            onChange={(e) => setFormData({ ...formData, scientificName: e.target.value })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, scientificName: e.target.value }))}
             className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 italic"
           />
         </div>
@@ -2405,7 +2611,9 @@ function SpeciesForm({ initialData, onSave, onCancel }: { initialData?: any, onS
           <select
             required
             value={formData.category}
-            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, category: e.target.value as SpeciesDetail['category'] }))
+            }
             className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
           >
             <option value="flora">Flora</option>
@@ -2420,7 +2628,9 @@ function SpeciesForm({ initialData, onSave, onCancel }: { initialData?: any, onS
           <select
             required
             value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, status: e.target.value as SpeciesDetail['status'] }))
+            }
             className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
           >
             <option value="LC">Least Concern (LC)</option>
@@ -2441,7 +2651,7 @@ function SpeciesForm({ initialData, onSave, onCancel }: { initialData?: any, onS
           type="text"
           required
           value={formData.habitat}
-          onChange={(e) => setFormData({ ...formData, habitat: e.target.value })}
+          onChange={(e) => setFormData((prev) => ({ ...prev, habitat: e.target.value }))}
           className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
         />
       </div>
@@ -2454,7 +2664,7 @@ function SpeciesForm({ initialData, onSave, onCancel }: { initialData?: any, onS
           required
           rows={4}
           value={formData.blurb}
-          onChange={(e) => setFormData({ ...formData, blurb: e.target.value })}
+          onChange={(e) => setFormData((prev) => ({ ...prev, blurb: e.target.value }))}
           className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
         />
       </div>
@@ -2465,8 +2675,10 @@ function SpeciesForm({ initialData, onSave, onCancel }: { initialData?: any, onS
         </label>
         <input
           type="url"
-          value={formData.images?.[0] || ''}
-          onChange={(e) => setFormData({ ...formData, images: e.target.value ? [e.target.value] : [] })}
+          value={formData.images[0] ?? ''}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, images: e.target.value ? [e.target.value] : [] }))
+          }
           className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
         />
       </div>
@@ -2575,7 +2787,7 @@ function About() {
               Join Our Conservation Mission
             </h3>
             <p className="text-xl text-gray-700 mb-8 max-w-3xl mx-auto">
-              Together, we can protect and preserve Mati's unique biodiversity for future generations. 
+              Together, we can protect and preserve Mati&rsquo;s unique biodiversity for future generations.
               Start exploring today and become part of the conservation community!
             </p>
             <Link 
@@ -2675,7 +2887,7 @@ export default function App() {
                           <div className="text-center py-16">
                             <div className="text-6xl mb-4">🔍</div>
                             <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">Page not found</h2>
-                            <p className="text-gray-600 dark:text-gray-400 mb-6">The page you're looking for doesn't exist.</p>
+                            <p className="text-gray-600 dark:text-gray-400 mb-6">The page you&rsquo;re looking for doesn&rsquo;t exist.</p>
                             <Link to="/" className="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
                               🏠 Go Home
                             </Link>

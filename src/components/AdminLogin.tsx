@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useAdmin } from '../context/AdminContext'
-import useTheme from '../useTheme'
 
 interface AdminLoginProps {
   isVisible: boolean
@@ -12,7 +11,6 @@ export default function AdminLogin({ isVisible, onClose }: AdminLoginProps) {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const { login } = useAdmin()
-  const { theme } = useTheme()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
