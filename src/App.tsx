@@ -15,6 +15,9 @@ import { PageLoadingFallback, MapLoadingFallback } from './components/LoadingSpi
 import { initProgressiveEnhancement } from './utils/progressive-enhancement'
 import { DeviceProvider, useDeviceDetection } from './context/DeviceContext'
 import type { Hotspot, SpeciesDetail } from './data/hotspots'
+import AdminControls from './components/AdminControls'
+import SecretAdminPage from './components/SecretAdminPage'
+import SecretAdminTrigger from './components/SecretAdminTrigger'
 
 type AdminTab = 'login' | 'dashboard' | 'data' | 'system'
 type DataViewMode = 'hotspots' | 'species'
@@ -2775,6 +2778,8 @@ export default function App() {
               </div>
               
               <div className="app relative z-10">
+                <SecretAdminTrigger />
+                
                 <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-green-600 text-white px-4 py-2 rounded-lg shadow-glow-green">
                   Skip to content
                 </a>
@@ -2813,8 +2818,8 @@ export default function App() {
                         
                         <Route path="/ar" element={<ARDemo />} />
                         <Route path="/admin/preview" element={<AdminPreview />} />
-                        <Route path="/admin" element={<AdminPreview />} />
-                        {/* Admin route removed - component not found */}
+                        <Route path="/admin" element={<SecretAdminPage />} />
+                        <Route path="/secret-admin-portal-2024" element={<SecretAdminPage />} />
                         <Route path="/about" element={<About />} />
                         
                         <Route path="*" element={

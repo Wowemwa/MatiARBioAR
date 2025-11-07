@@ -2,4 +2,10 @@ node_modules
 .DS_Store
 dist
 .env
+.env.local
+.env.production
 tsconfig.tsbuildinfo
+
+# Admin access documentation (keep private)
+ADMIN_ACCESS.md
+ADMIN_QUICK_REF.md

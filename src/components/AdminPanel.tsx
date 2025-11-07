@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { PlusIcon, EditIcon, DeleteIcon, SaveIcon, CancelIcon, EyeIcon } from './Icons'
-import { MATI_SPECIES, SpeciesDetail } from '../data/mati-hotspots'
+import { SpeciesDetail } from '../data/mati-hotspots'
+import { useData } from '../context/DataContext'
 
 interface AdminPanelProps {
   isVisible: boolean
@@ -34,21 +35,24 @@ const emptySpecies: SpeciesFormData = {
 }
 
 export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
-  const [species, setSpecies] = useState<SpeciesDetail[]>(MATI_SPECIES)
+  // 🔥 Use DataContext to get real-time data and save functions
+  const { species: globalSpecies, saveSpecies: saveSpeciesToDB, deleteSpecies: deleteSpeciesFromDB } = useData()
+  
   const [editingSpecies, setEditingSpecies] = useState<SpeciesFormData | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'flora' | 'fauna'>('all')
   const [previewImage, setPreviewImage] = useState<string>('')
+  const [saving, setSaving] = useState(false)
 
   const filteredSpecies = useMemo(() => {
-    return species.filter(s => {
+    return globalSpecies.filter(s => {
       const matchesSearch = s.commonName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            s.scientificName.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesCategory = selectedCategory === 'all' || s.category === selectedCategory
       return matchesSearch && matchesCategory
     })
-  }, [species, searchQuery, selectedCategory])
+  }, [globalSpecies, searchQuery, selectedCategory])
 
   const statusOptions = [
     { value: 'DD', label: 'Data Deficient', color: 'gray' },
@@ -89,32 +93,45 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
     })
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editingSpecies) return
 
-    if (isCreating) {
-      // Add new species
-      const newSpecies: SpeciesDetail = {
+    setSaving(true)
+    try {
+      // Prepare species data
+      const speciesData: SpeciesDetail = {
         ...editingSpecies,
         highlights: editingSpecies.highlights.filter(h => h.trim())
       }
-      setSpecies(prev => [...prev, newSpecies])
-    } else {
-      // Update existing species
-      setSpecies(prev => prev.map(s => 
-        s.id === editingSpecies.id 
-          ? { ...editingSpecies, highlights: editingSpecies.highlights.filter(h => h.trim()) }
-          : s
-      ))
-    }
 
-    setEditingSpecies(null)
-    setIsCreating(false)
+      // 🔥 Save to database (MongoDB)
+      await saveSpeciesToDB(speciesData)
+      
+      console.log(isCreating ? '✅ Species created!' : '✅ Species updated!', speciesData.commonName)
+      
+      setEditingSpecies(null)
+      setIsCreating(false)
+    } catch (error) {
+      console.error('❌ Failed to save species:', error)
+      alert('Failed to save species. Please try again.')
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this species? This action cannot be undone.')) {
-      setSpecies(prev => prev.filter(s => s.id !== id))
+      setSaving(true)
+      try {
+        // 🔥 Delete from database (MongoDB)
+        await deleteSpeciesFromDB(id)
+        console.log('✅ Species deleted!', id)
+      } catch (error) {
+        console.error('❌ Failed to delete species:', error)
+        alert('Failed to delete species. Please try again.')
+      } finally {
+        setSaving(false)
+      }
     }
   }
 

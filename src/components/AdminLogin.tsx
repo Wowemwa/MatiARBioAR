@@ -101,16 +101,18 @@ export default function AdminLogin({ isVisible, onClose }: AdminLoginProps) {
             </div>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-gray-200/60 dark:border-gray-600/60">
-            <div className="text-center">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                🔐 Secure Admin Access
-              </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">
-                Password: <code className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-slate-700 dark:to-slate-600 px-3 py-1 rounded-lg font-mono font-bold text-emerald-600 dark:text-emerald-400">Rey21</code>
-              </p>
+          {import.meta.env.DEV && (
+            <div className="mt-8 pt-6 border-t border-gray-200/60 dark:border-gray-600/60">
+              <div className="text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                  �� Development Mode Only
+                </p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">
+                  Default password: <code className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-slate-700 dark:to-slate-600 px-3 py-1 rounded-lg font-mono font-bold text-emerald-600 dark:text-emerald-400">Rey21</code>
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

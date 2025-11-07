@@ -1,4 +1,5 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react'
+import { storageService } from '../services/storage'
 
 type AdminContextValue = {
   isAdmin: boolean
@@ -53,6 +54,15 @@ export function AdminProvider({ children }: AdminProviderProps) {
       setIsAdmin(true)
       setLastLoginAt(timestamp)
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ isAdmin: true, lastLoginAt: timestamp }))
+      
+      // 🔥 Log admin login to localStorage
+      try {
+        await storageService.logAdminLogin('admin')
+        console.log('✅ Admin login logged')
+      } catch (error) {
+        console.warn('⚠️ Failed to log admin login:', error)
+        // Continue even if logging fails
+      }
     }
     return isValid
   }
