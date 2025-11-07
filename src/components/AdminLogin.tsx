@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAdmin } from '../context/AdminContext'
 
 interface AdminLoginProps {
@@ -10,7 +10,17 @@ export default function AdminLogin({ isVisible, onClose }: AdminLoginProps) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const { login } = useAdmin()
+  const { login, openAdminPanel } = useAdmin()
+  const passwordRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    if (isVisible && passwordRef.current) {
+      // focus the password input when modal opens
+      passwordRef.current.focus()
+      // select any existing value for convenience
+      passwordRef.current.select()
+    }
+  }, [isVisible])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -20,6 +30,13 @@ export default function AdminLogin({ isVisible, onClose }: AdminLoginProps) {
     try {
       const success = await login({ password })
       if (success) {
+        // open the admin panel automatically after successful login
+        try {
+          openAdminPanel()
+        } catch (err) {
+          // ignore if unavailable
+        }
+
         setPassword('')
         onClose()
       } else {
