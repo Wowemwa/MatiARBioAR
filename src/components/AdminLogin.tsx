@@ -12,6 +12,7 @@ export default function AdminLogin({ isVisible, onClose }: AdminLoginProps) {
   const [isLoading, setIsLoading] = useState(false)
   const { login, openAdminPanel } = useAdmin()
   const passwordRef = useRef<HTMLInputElement | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
     if (isVisible && passwordRef.current) {
@@ -21,6 +22,17 @@ export default function AdminLogin({ isVisible, onClose }: AdminLoginProps) {
       passwordRef.current.select()
     }
   }, [isVisible])
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isVisible && !isLoading) {
+        onClose()
+      }
+    }
+    document.addEventListener('keydown', handleEsc)
+    return () => document.removeEventListener('keydown', handleEsc)
+  }, [isVisible, isLoading, onClose])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -70,20 +82,36 @@ export default function AdminLogin({ isVisible, onClose }: AdminLoginProps) {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6" role="form" aria-labelledby="admin-login-title">
             <div>
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
                 🔑 Admin Password
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-5 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-2xl bg-white/80 dark:bg-slate-700/80 backdrop-blur-xl text-gray-900 dark:text-gray-100 focus:ring-4 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300 text-lg font-medium"
-                placeholder="Enter your admin password"
-                required
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <input
+                  ref={passwordRef}
+                  id="admin-password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-5 py-4 pr-14 border-2 border-gray-200 dark:border-gray-600 rounded-2xl bg-white/80 dark:bg-slate-700/80 backdrop-blur-xl text-gray-900 dark:text-gray-100 focus:ring-4 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300 text-lg font-medium"
+                  placeholder="Enter your admin password"
+                  required
+                  disabled={isLoading}
+                  aria-label="Admin password"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute inset-y-0 right-3 flex items-center px-3 text-sm text-gray-600 dark:text-gray-300"
+                  aria-pressed={showPassword}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
             </div>
 
             {error && (
