@@ -1,16 +1,37 @@
+/* Performance Optimizations */
+* {
+  /* Use GPU acceleration for transforms and animations */
+  transform: translateZ(0);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optimize animations to use only transform and opacity */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Modern UI Utilities */
 .modern-glass {
   background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px) saturate(1.3);
-  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
   border: 1px solid rgba(255, 255, 255, 0.6);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  will-change: transform;
 }
 
 body.dark .modern-glass {
   background: rgba(30, 41, 59, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  will-change: transform;
 }
 
 .modern-button {
@@ -20,10 +41,11 @@ body.dark .modern-glass {
   font-weight: 700;
   border-radius: 1.5rem;
   padding: 1rem 2rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
   position: relative;
   overflow: hidden;
+  will-change: transform;
 }
 
 .modern-button:hover {

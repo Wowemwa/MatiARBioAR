@@ -147,7 +147,6 @@ const Navbar = memo(function Navbar() {
     { to: '/gis', label: 'GIS Map', badge: '🗺️' },
     { to: '/biodiversity', label: 'Biodiversity', badge: '🌿' },
     { to: '/ar', label: 'AR Demo', badge: '✨', comingSoon: !isAdmin },
-    { to: '/virtual-tour', label: 'Virtual Tour', badge: '🎥', comingSoon: true },
     ...(isAdmin ? [{ to: '/admin', label: 'Admin', badge: '👑', adminOnly: true }] : []),
     { to: '/about', label: 'About', badge: '💡' },
   ], [isAdmin])
@@ -1097,11 +1096,11 @@ const Home = memo(function Home() {
   )
 })
 
-function GISMap() {
+const GISMap = memo(function GISMap() {
   return <GISMapPage />
-}
+})
 
-function SitePage() {
+const SitePage = memo(function SitePage() {
   const { id } = useParams()
   const { hotspots, species, loading } = useData()
 
@@ -1388,9 +1387,9 @@ function SitePage() {
       </section>
     </div>
   )
-}
+})
 
-function SpeciesList() {
+const SpeciesList = memo(function SpeciesList() {
   const { species, hotspots, loading } = useData()
   const [isVisible, setIsVisible] = useState(false)
   
@@ -1515,9 +1514,9 @@ function SpeciesList() {
       </div>
     </div>
   )
-}
+})
 
-function SpeciesPage() {
+const SpeciesPage = memo(function SpeciesPage() {
   const { id } = useParams()
   const { species, hotspots, loading } = useData()
   const sp = useMemo(() => species.find((x) => x.id === id), [species, id])
@@ -1574,9 +1573,9 @@ function SpeciesPage() {
       </div>
     </div>
   )
-}
+})
 
-function ARDemo() {
+const ARDemo = memo(function ARDemo() {
   const { isAdmin } = useAdmin()
   const [isVisible, setIsVisible] = useState(false)
   
@@ -1684,60 +1683,10 @@ function ARDemo() {
       </div>
     </div>
   )
-}
+})
 
-function VirtualTour() {
-  const { isAdmin } = useAdmin()
 
-  return (
-    <ComingSoon
-      icon={<CameraIcon className="h-9 w-9" />}
-      title="Virtual tour"
-      description="We’re storyboarding the 360° journey so viewers can virtually hike the Hamiguitan range, snorkel Pujada Bay, and visit community-led mangrove wards—all without leaving the classroom."
-      highlight="Interactive scenes launch after media capture and narration" 
-      items={[
-        {
-          label: '360° field capture',
-          status: 'in-progress',
-          detail: 'Coordinating drone and underwater teams to capture core habitats at golden hour.',
-        },
-        {
-          label: 'Narration + overlays',
-          status: 'queued',
-          detail: 'Drafting bilingual scripts with the tourism office and layering H5P hotspots for trivia.',
-        },
-        {
-          label: 'Deployment QA',
-          status: 'queued',
-          detail: 'Testing mobile gyro support and bandwidth fallbacks before publishing the public tour.',
-        },
-      ]}
-      footer={
-        <p>
-          Want to contribute panoramas or narration? Sync with the content lead so assets follow the same color grading and accessibility standards.
-        </p>
-      }
-    >
-      {isAdmin && (
-        <SoftCard className="border border-blue-400/40 bg-blue-500/10 text-blue-900 dark:border-blue-400/30 dark:bg-blue-500/15 dark:text-blue-100">
-          <div className="space-y-3 text-sm">
-            <div className="flex items-center gap-2">
-              <TargetIcon className="h-5 w-5" />
-              <span className="font-semibold uppercase tracking-[0.2em]">Admin notes</span>
-            </div>
-            <ul className="list-disc space-y-1 pl-5">
-              <li>Upload stitched equirectangular assets to the private S3 bucket using the naming convention <code className="rounded bg-black/5 px-2 py-0.5 text-xs">scene-XX-location.webp</code>.</li>
-              <li>Publish draft tour nodes in the Notion checklist before toggling visibility in the production build.</li>
-              <li>Log device compatibility findings (gyro, touch, VR headset) so we can prioritize fallbacks.</li>
-            </ul>
-          </div>
-        </SoftCard>
-      )}
-    </ComingSoon>
-  )
-}
-
-function AdminPreview() {
+const AdminPreview = memo(function AdminPreview() {
   const { isAdmin, login, logout, lastLoginAt } = useAdmin()
   const { hotspots, species, loading } = useData()
   const [password, setPassword] = useState('')
@@ -2076,7 +2025,6 @@ function AdminPreview() {
                 { label: 'AR Experience', path: '/ar', icon: '🥽', desc: 'Test AR features' },
                 { label: 'GIS Mapping', path: '/gis', icon: '🗺️', desc: 'Review hotspots' },
                 { label: 'Species Explorer', path: '/biodiversity', icon: '🔬', desc: 'Browse data' },
-                { label: 'Virtual Tour', path: '/virtual-tour', icon: '🎥', desc: 'Preview tours' },
                 { label: 'System Logs', path: '#', icon: '📋', desc: 'Check activity' },
                 { label: 'Data Export', path: '#', icon: '💾', desc: 'Download data' },
               ].map((action) => (
@@ -2308,10 +2256,6 @@ function AdminPreview() {
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span>AR Module: Ready</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    <span>Virtual Tour: In Development</span>
-                  </div>
                 </div>
               </div>
               
@@ -2405,10 +2349,10 @@ function AdminPreview() {
       )}
     </div>
   )
-}
+})
 
 // Form Components
-function HotspotForm({ initialData, onSave, onCancel }: { initialData?: Hotspot, onSave: (data: HotspotFormValues) => void, onCancel: () => void }) {
+const HotspotForm = memo(function HotspotForm({ initialData, onSave, onCancel }: { initialData?: Hotspot, onSave: (data: HotspotFormValues) => void, onCancel: () => void }) {
   const [formData, setFormData] = useState<HotspotFormValues>(() => createHotspotFormValues(initialData))
 
   useEffect(() => {
@@ -2561,9 +2505,9 @@ function HotspotForm({ initialData, onSave, onCancel }: { initialData?: Hotspot,
       </div>
     </form>
   )
-}
+})
 
-function SpeciesForm({ initialData, onSave, onCancel }: { initialData?: SpeciesDetail, onSave: (data: SpeciesFormValues) => void, onCancel: () => void }) {
+const SpeciesForm = memo(function SpeciesForm({ initialData, onSave, onCancel }: { initialData?: SpeciesDetail, onSave: (data: SpeciesFormValues) => void, onCancel: () => void }) {
   const [formData, setFormData] = useState<SpeciesFormValues>(() => createSpeciesFormValues(initialData))
 
   useEffect(() => {
@@ -2700,9 +2644,9 @@ function SpeciesForm({ initialData, onSave, onCancel }: { initialData?: SpeciesD
       </div>
     </form>
   )
-}
+})
 
-function About() {
+const About = memo(function About() {
   const [isVisible, setIsVisible] = useState(false)
   
   useEffect(() => {
@@ -2805,7 +2749,7 @@ function About() {
       </div>
     </div>
   )
-}
+})
 
 export default function App() {
   // Ensure hook initialized so initial theme applied early
@@ -2822,21 +2766,12 @@ export default function App() {
         <AdminProvider>
           <DataProvider>
             <BrowserRouter>
-            <div className="min-h-screen w-full bg-gradient-to-br from-sky-50/40 via-indigo-50/30 via-purple-50/20 via-emerald-50/30 to-cyan-50/40 dark:from-slate-950 dark:via-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-x-hidden">
-              {/* Enhanced animated background with modern effects */}
+            <div className="min-h-screen w-full bg-gradient-to-br from-sky-50/40 via-indigo-50/30 to-emerald-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900 overflow-x-hidden">
+              {/* Optimized background - reduced animations for better performance */}
               <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                {/* Primary floating orbs with enhanced gradients */}
-                <div className="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-emerald-400/25 via-blue-400/20 to-purple-400/15 rounded-full blur-3xl animate-pulse opacity-60"></div>
-                <div className="absolute -bottom-20 -left-20 w-[30rem] h-[30rem] bg-gradient-to-br from-cyan-400/20 via-purple-400/15 to-pink-400/10 rounded-full blur-3xl animate-pulse opacity-50" style={{animationDelay: '1s'}}></div>
-                <div className="absolute top-1/3 left-1/4 w-80 h-80 bg-gradient-to-br from-indigo-400/15 via-teal-400/12 to-emerald-400/10 rounded-full blur-2xl animate-bounce opacity-40" style={{animationDuration: '6s'}}></div>
-                
-                {/* Secondary floating elements */}
-                <div className="absolute top-1/4 right-1/3 w-64 h-64 bg-gradient-to-br from-rose-400/10 via-orange-400/8 to-yellow-400/6 rounded-full blur-2xl animate-pulse opacity-30" style={{animationDelay: '2s'}}></div>
-                <div className="absolute bottom-1/3 right-1/4 w-72 h-72 bg-gradient-to-br from-violet-400/12 via-fuchsia-400/10 to-cyan-400/8 rounded-full blur-2xl animate-bounce opacity-35" style={{animationDuration: '8s', animationDelay: '0.5s'}}></div>
-                
-                {/* Animated gradient mesh overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-blue-500/3 via-purple-500/4 to-cyan-500/5 animate-pulse opacity-50" style={{animationDuration: '4s'}}></div>
-                <div className="absolute inset-0 bg-[conic-gradient(from_0deg_at_30%_70%,rgba(16,185,129,0.08),rgba(59,130,246,0.06),rgba(147,51,234,0.08),rgba(6,182,212,0.06),rgba(16,185,129,0.08))] animate-spin opacity-20" style={{animationDuration: '20s'}}></div>
+                {/* Simplified static gradients - no heavy blur animations */}
+                <div className="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-emerald-400/20 via-blue-400/15 to-purple-400/10 rounded-full blur-3xl opacity-50"></div>
+                <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-gradient-to-br from-cyan-400/15 via-purple-400/10 to-pink-400/8 rounded-full blur-3xl opacity-40"></div>
               </div>
               
               <div className="app relative z-10">
@@ -2877,7 +2812,6 @@ export default function App() {
                         } />
                         
                         <Route path="/ar" element={<ARDemo />} />
-                        <Route path="/virtual-tour" element={<VirtualTour />} />
                         <Route path="/admin/preview" element={<AdminPreview />} />
                         <Route path="/admin" element={<AdminPreview />} />
                         {/* Admin route removed - component not found */}
