@@ -1,5 +1,6 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react'
 import { storageService } from '../services/storage'
+import { getAdminPassword } from '../utils/runtimeConfig'
 
 type AdminContextValue = {
   isAdmin: boolean
@@ -41,10 +42,10 @@ export function AdminProvider({ children }: AdminProviderProps) {
   }, [])
 
   const login: AdminContextValue['login'] = async ({ password }) => {
-    const expected = import.meta.env.VITE_ADMIN_PASS?.trim()
+    const expected = await getAdminPassword()
 
     if (!expected) {
-      console.warn('[AdminProvider] VITE_ADMIN_PASS is not configured. Set it in your .env file.')
+      console.warn('[AdminProvider] Admin password is not configured. Provide VITE_ADMIN_PASS at build time or create /runtime-config.json')
       return false
     }
 
