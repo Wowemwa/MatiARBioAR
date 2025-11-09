@@ -83,14 +83,14 @@ export default function AdminLogin({ isVisible, onClose }: AdminLoginProps) {
               <button
                 type="button"
                 onClick={onClose}
-                className="group relative flex-1 px-6 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-2xl font-semibold bg-white/70 dark:bg-slate-700/50 backdrop-blur-xl hover:bg-white/90 dark:hover:bg-slate-600/70 hover:border-gray-400 hover:shadow-xl transition-all duration-500 hover:scale-105 hover:rotate-1 text-gray-700 dark:text-gray-300"
+                className="relative flex-1 px-6 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-2xl font-semibold bg-white/70 dark:bg-slate-700/50 backdrop-blur-xl hover:bg-white/90 dark:hover:bg-slate-600/70 hover:border-gray-400 hover:shadow-xl transition-all duration-500 hover:scale-105 text-gray-700 dark:text-gray-300 z-10"
                 disabled={isLoading}
               >
-                <span className="relative z-10">❌ Cancel</span>
+                ❌ Cancel
               </button>
               <button
                 type="submit"
-                className="group relative overflow-hidden flex-1 bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 hover:from-emerald-600 hover:via-blue-600 hover:to-purple-600 text-white font-bold px-6 py-4 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-110 hover:-rotate-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="relative overflow-hidden flex-1 bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 hover:from-emerald-600 hover:via-blue-600 hover:to-purple-600 text-white font-bold px-6 py-4 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed z-10"
                 disabled={isLoading}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -103,11 +103,8 @@ export default function AdminLogin({ isVisible, onClose }: AdminLoginProps) {
 
           <div className="mt-8 pt-6 border-t border-gray-200/60 dark:border-gray-600/60">
             <div className="text-center">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                🔐 Secure Admin Access
-              </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">
-                Password: <code className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-slate-700 dark:to-slate-600 px-3 py-1 rounded-lg font-mono font-bold text-emerald-600 dark:text-emerald-400">Rey21</code>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                🔐 Secure Admin Authentication System
               </p>
             </div>
           </div>

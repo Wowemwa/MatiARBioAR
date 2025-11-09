@@ -66,8 +66,8 @@ export default function SecretAdminPage() {
         <AdminLogin 
           isVisible={true} 
           onClose={() => {
-            // After login, stay on admin dashboard (don't navigate away)
-            console.log('[SecretAdminPage] Login successful, showing dashboard')
+            // Navigate to home page when cancel is clicked
+            window.location.href = '/'
           }} 
         />
       </div>
