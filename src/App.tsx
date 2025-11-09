@@ -1553,36 +1553,164 @@ const ARDemo = memo(function ARDemo() {
     setIsVisible(true)
   }, [])
 
+  // Species available in AR Viewer
+  const arSpecies = [
+    {
+      id: 'eagle',
+      name: 'Philippine Eagle',
+      scientific: 'Pithecophaga jefferyi',
+      status: 'Critically Endangered',
+      description: 'The largest eagle in the Philippines, known for its impressive wingspan and hunting prowess.',
+      modelUrl: '/models/philippine-eagle.glb', // Placeholder - update when available
+      image: '/images/eagle-thumb.jpg' // Placeholder
+    },
+    {
+      id: 'tarsier',
+      name: 'Philippine Tarsier',
+      scientific: 'Carlito syrichta',
+      status: 'Near Threatened',
+      description: 'A tiny primate with enormous eyes, perfectly adapted for nocturnal life in the rainforest.',
+      modelUrl: '/models/philippine-tarsier.glb',
+      image: '/images/tarsier-thumb.jpg'
+    },
+    {
+      id: 'butterfly',
+      name: 'Mati Blue Butterfly',
+      scientific: 'Graphium sarpedon',
+      status: 'Common',
+      description: 'A beautiful butterfly species found in Mati City, known for its striking blue wings.',
+      modelUrl: '/models/mati-blue-butterfly.glb',
+      image: '/images/butterfly-thumb.jpg'
+    },
+    {
+      id: 'mangrove',
+      name: 'Red Mangrove',
+      scientific: 'Rhizophora mangle',
+      status: 'Ecologically Important',
+      description: 'Vital coastal tree that protects shorelines and provides habitat for marine life.',
+      modelUrl: '/models/red-mangrove.glb',
+      image: '/images/mangrove-thumb.jpg'
+    },
+    {
+      id: 'coral',
+      name: 'Staghorn Coral',
+      scientific: 'Acropora cervicornis',
+      status: 'Threatened',
+      description: 'Branching coral that forms complex reef structures essential for marine biodiversity.',
+      modelUrl: '/models/staghorn-coral.glb',
+      image: '/images/coral-thumb.jpg'
+    },
+    {
+      id: 'palm',
+      name: 'Coconut Palm',
+      scientific: 'Cocos nucifera',
+      status: 'Abundant',
+      description: 'Iconic tropical tree that provides food, shelter, and economic value to local communities.',
+      modelUrl: '/models/coconut-palm.glb',
+      image: '/images/palm-thumb.jpg'
+    }
+  ]
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Critically Endangered': return 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30'
+      case 'Endangered': return 'text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30'
+      case 'Vulnerable': return 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30'
+      case 'Near Threatened': return 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30'
+      default: return 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30'
+    }
+  }
+
   if (!isAdmin) {
     return (
-      <ComingSoon
-        icon={<ARIcon className="h-9 w-9" />}
-        title="Augmented reality module"
-        description="We’re polishing the AR field guide so MindAR models load quickly on mid-range devices. The experience will roll out once assets, targets, and accessibility checks are finalized."
-        highlight="Preview restricted to project admins"
-        items={[
-          {
-            label: 'Target image refresh',
-            status: 'in-progress',
-            detail: 'Compressing the MindAR target set and swapping in higher-contrast markers for classroom lighting.',
-          },
-          {
-            label: 'GLB asset optimization',
-            status: 'queued',
-            detail: 'Re-exporting species models with Draco compression for faster WebGL loads.',
-          },
-          {
-            label: 'Teacher pilot run',
-            status: 'queued',
-            detail: 'Schedule usability testing with STEM teachers before public launch.',
-          },
-        ]}
-        footer={
-          <p>
-            Authorized maintainers can unlock the preview via the secure admin link. Keep this route private to avoid sharing the password publicly.
-          </p>
-        }
-      />
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <div className="container mx-auto px-4 py-12 max-w-7xl">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full mb-6">
+              <ARIcon className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-5xl font-black tracking-tight bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+              <AnimatedText text="AR Biodiversity Experience" />
+            </h1>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+              Discover Mati City's incredible wildlife through immersive augmented reality. 
+              Experience 3D models of our local species right in your space!
+            </p>
+          </div>
+
+          {/* Species Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            {arSpecies.map((species) => (
+              <div key={species.id} className="group bg-white dark:bg-slate-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-slate-700">
+                <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center">
+                  <div className="text-6xl opacity-50">
+                    {species.id === 'eagle' && '🦅'}
+                    {species.id === 'tarsier' && '👁️'}
+                    {species.id === 'butterfly' && '🦋'}
+                    {species.id === 'mangrove' && '🌳'}
+                    {species.id === 'coral' && '🪸'}
+                    {species.id === 'palm' && '🥥'}
+                  </div>
+                </div>
+                
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{species.name}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 italic">{species.scientific}</p>
+                    </div>
+                    <Badge className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(species.status)}`}>
+                      {species.status}
+                    </Badge>
+                  </div>
+                  
+                  <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-4">
+                    {species.description}
+                  </p>
+                  
+                  <button 
+                    className="w-full group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-blue-600 text-white px-4 py-3 rounded-xl font-semibold text-sm shadow-lg hover:shadow-emerald-500/25 transform hover:scale-105 transition-all duration-300"
+                    onClick={() => window.open('/ar-viewer.html', '_blank')}
+                  >
+                    <ARIcon className="w-4 h-4 group-hover:animate-pulse" />
+                    View in AR
+                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Call to Action */}
+          <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl p-8 text-center text-white">
+            <h2 className="text-3xl font-bold mb-4">Ready to Explore?</h2>
+            <p className="text-lg mb-6 opacity-90">
+              Experience marker-based AR tracking with our interactive MindAR demo, or browse our full species database.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a 
+                className="inline-flex items-center justify-center gap-2 bg-white text-purple-600 px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors duration-300"
+                href="/ar-demo/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <TargetIcon className="w-5 h-5" />
+                Try MindAR Demo
+              </a>
+              <a 
+                className="inline-flex items-center justify-center gap-2 bg-white/20 text-white px-6 py-3 rounded-xl font-bold hover:bg-white/30 transition-colors duration-300"
+                href="/biodiversity"
+              >
+                <SpeciesIcon className="w-5 h-5" />
+                Explore All Species
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     )
   }
 
