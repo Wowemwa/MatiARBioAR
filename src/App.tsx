@@ -150,7 +150,7 @@ const Navbar = memo(function Navbar() {
     { to: '/gis', label: 'GIS Map', badge: '🗺️' },
     { to: '/biodiversity', label: 'Biodiversity', badge: '🌿' },
     { to: '/ar', label: 'AR Demo', badge: '✨' },
-    ...(isAdmin ? [{ to: '/admin', label: 'Admin', badge: '👑', adminOnly: true }] : []),
+    ...(isAdmin ? [{ to: '/mati-secret-admin-2024', label: 'Admin', badge: '👑', adminOnly: true }] : []),
     { to: '/about', label: 'About', badge: '💡' },
   ], [isAdmin])
   
@@ -3104,9 +3104,7 @@ export default function App() {
                         } />
                         
                         <Route path="/ar" element={<ARDemo />} />
-                        <Route path="/admin/preview" element={<AdminPreview />} />
-                        <Route path="/admin" element={<AdminPreview />} />
-                        {/* Hidden admin route - only for authorized users */}
+                        {/* Main admin route */}
                         <Route path="/mati-secret-admin-2024" element={<SecretAdminPage />} />
                         <Route path="/about" element={<About />} />
                         
