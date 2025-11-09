@@ -63,7 +63,13 @@ export default function SecretAdminPage() {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-100 via-white to-emerald-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center p-4">
-        <AdminLogin isVisible={true} onClose={() => window.history.back()} />
+        <AdminLogin 
+          isVisible={true} 
+          onClose={() => {
+            // After login, stay on admin dashboard (don't navigate away)
+            console.log('[SecretAdminPage] Login successful, showing dashboard')
+          }} 
+        />
       </div>
     )
   }
