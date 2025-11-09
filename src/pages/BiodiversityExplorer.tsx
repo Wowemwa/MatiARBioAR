@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react'
 import Fuse from 'fuse.js'
-import { getUnifiedSpecies, getSites } from '../data/adapters'
+import { getSites } from '../data/adapters'
+import { useData } from '../context/DataContext'
 import AnimatedText from '../components/AnimatedText'
 import { MountainIcon, SpeciesIcon } from '../components/Icons'
 
 const STATUS_ORDER = ['CR','EN','VU','NT','LC','DD']
 
 export default function BiodiversityExplorer() {
-  const allSpecies = useMemo(()=>getUnifiedSpecies(),[])
+  const { unifiedSpecies: allSpecies } = useData()
   const sites = useMemo(()=>getSites(),[])
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')

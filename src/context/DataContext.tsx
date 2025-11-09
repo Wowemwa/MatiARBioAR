@@ -25,6 +25,7 @@ export interface UnifiedSpecies {
   habitats: string[]
   siteIds: string[]
   endemic?: boolean
+  media?: { type: 'image', url: string, caption?: string, credit?: string }[]
 }
 
 function buildUnifiedSpecies({ species }: { species: SpeciesDetail[] }): UnifiedSpecies[] {
@@ -38,6 +39,12 @@ function buildUnifiedSpecies({ species }: { species: SpeciesDetail[] }): Unified
     habitats: record.habitat ? [record.habitat] : [],
     siteIds: record.siteIds ?? [],
     endemic: undefined,
+    media: record.images ? record.images.map(url => ({
+      type: 'image' as const,
+      url,
+      caption: `${record.commonName} (${record.scientificName})`,
+      credit: 'Wikimedia Commons'
+    })) : undefined,
   }))
 }
 
@@ -124,12 +131,7 @@ export function DataProvider({ children }: DataProviderProps) {
   }, [])
 
   const deleteSpecies = useCallback((id: string) => {
-    console.log('[DataContext] Deleting species:', id)
-    setSpecies(prev => {
-      const updated = prev.filter(s => s.id !== id)
-      console.log('[DataContext] New species count:', updated.length)
-      return updated
-    })
+    setSpecies(prev => prev.filter(s => s.id !== id))
   }, [])
 
   const resetToDefault = useCallback(() => {

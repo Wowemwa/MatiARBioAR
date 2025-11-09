@@ -43,6 +43,9 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'flora' | 'fauna'>('all')
   const [previewImage, setPreviewImage] = useState<string>('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [speciesToDelete, setSpeciesToDelete] = useState<SpeciesDetail | null>(null)
+  const [uploadingImages, setUploadingImages] = useState<Set<number>>(new Set())
 
   const filteredSpecies = useMemo(() => {
     return species.filter(s => {
@@ -121,12 +124,23 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
     alert('✅ Species saved successfully!')
   }
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this species? This action cannot be undone.')) {
-      console.log('[AdminPanel] Deleting species:', id)
-      deleteSpecies(id)
+  const handleDelete = (species: SpeciesDetail) => {
+    setSpeciesToDelete(species)
+    setShowDeleteConfirm(true)
+  }
+
+  const confirmDelete = () => {
+    if (speciesToDelete) {
+      deleteSpecies(speciesToDelete.id)
       alert('✅ Species deleted successfully!')
+      setShowDeleteConfirm(false)
+      setSpeciesToDelete(null)
     }
+  }
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false)
+    setSpeciesToDelete(null)
   }
 
   const handleCancel = () => {
@@ -170,6 +184,39 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
     }
   }
 
+  const handleImageUpload = (index: number, file: File) => {
+    if (!editingSpecies) return
+    
+    if (file && file.type.startsWith('image/')) {
+      setUploadingImages(prev => new Set(prev).add(index))
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const result = e.target?.result as string
+        if (result) {
+          const newImages = [...editingSpecies.images]
+          newImages[index] = result
+          setEditingSpecies({...editingSpecies, images: newImages})
+        }
+        setUploadingImages(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(index)
+          return newSet
+        })
+      }
+      reader.onerror = () => {
+        alert('Failed to read image file.')
+        setUploadingImages(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(index)
+          return newSet
+        })
+      }
+      reader.readAsDataURL(file)
+    } else {
+      alert('Please select a valid image file.')
+    }
+  }
+
   if (!isVisible) return null
 
   return (
@@ -186,6 +233,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
             <div className="flex items-center gap-2">
               {/* Feedback toggle - only visible to admins since AdminPanel is admin-only */}
               <button
+                type="button"
                 onClick={() => setShowFeedbacks(s => !s)}
                 className="px-3 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-semibold"
               >
@@ -196,6 +244,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
               </button>
 
               <button
+                type="button"
                 onClick={onClose}
                 className="group relative overflow-hidden bg-white/20 hover:bg-white/30 p-3 rounded-2xl transition-all duration-300 hover:scale-110 hover:-rotate-12"
               >
@@ -211,6 +260,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
             {/* Controls */}
             <div className="space-y-6 mb-8">
               <button
+                type="button"
                 onClick={handleCreate}
                 className="group relative overflow-hidden w-full bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 hover:from-emerald-600 hover:via-blue-600 hover:to-purple-600 text-white font-bold px-6 py-4 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 hover:-rotate-1 active:scale-95"
               >
@@ -274,16 +324,23 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                         </span>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 relative z-10">
                       <button
+                        type="button"
                         onClick={() => handleEdit(speciesItem)}
                         className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                       >
                         <EditIcon className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(speciesItem.id)}
-                        className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        type="button"
+                        disabled={false}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          handleDelete(speciesItem)
+                        }}
+                        className="p-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
                       >
                         <DeleteIcon className="w-4 h-4" />
                       </button>
@@ -304,6 +361,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                   </h3>
                   <div className="flex gap-2">
                     <button
+                      type="button"
                       onClick={handleSave}
                       className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors"
                     >
@@ -311,6 +369,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                       Save
                     </button>
                     <button
+                      type="button"
                       onClick={handleCancel}
                       className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-xl font-semibold hover:bg-gray-600 transition-colors"
                     >
@@ -456,6 +515,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                       Key Highlights
                     </label>
                     <button
+                      type="button"
                       onClick={addHighlight}
                       className="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors"
                     >
@@ -476,6 +536,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                           className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
                         />
                         <button
+                          type="button"
                           onClick={() => removeHighlight(index)}
                           className="px-3 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors"
                         >
@@ -493,40 +554,62 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                       Images
                     </label>
                     <button
+                      type="button"
                       onClick={addImage}
                       className="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors"
                     >
                       Add Image
                     </button>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {editingSpecies.images.map((image, index) => (
-                      <div key={index} className="flex gap-2">
-                        <input
-                          type="url"
-                          value={image}
-                          onChange={(e) => {
-                            const newImages = [...editingSpecies.images]
-                            newImages[index] = e.target.value
-                            setEditingSpecies({...editingSpecies, images: newImages})
-                          }}
-                          className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
-                          placeholder="https://example.com/image.jpg"
-                        />
-                        {image && (
+                      <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-xl p-3 bg-gray-50 dark:bg-slate-700/50">
+                        <div className="flex gap-2 mb-2">
+                          <input
+                            type="url"
+                            value={image.startsWith('data:') ? '' : image}
+                            onChange={(e) => {
+                              const newImages = [...editingSpecies.images]
+                              newImages[index] = e.target.value
+                              setEditingSpecies({...editingSpecies, images: newImages})
+                            }}
+                            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 text-sm"
+                            placeholder="https://example.com/image.jpg or upload file below"
+                          />
+                          {image && (
+                            <button
+                              type="button"
+                              onClick={() => setPreviewImage(image)}
+                              className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                            >
+                              <EyeIcon className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
-                            onClick={() => setPreviewImage(image)}
-                            className="px-3 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors"
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                           >
-                            <EyeIcon className="w-4 h-4" />
+                            <DeleteIcon className="w-4 h-4" />
                           </button>
-                        )}
-                        <button
-                          onClick={() => removeImage(index)}
-                          className="px-3 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors"
-                        >
-                          <DeleteIcon className="w-4 h-4" />
-                        </button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            disabled={uploadingImages.has(index)}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0]
+                              if (file) {
+                                handleImageUpload(index, file)
+                              }
+                            }}
+                            className="flex-1 text-sm text-gray-600 dark:text-gray-400 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900/30 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {uploadingImages.has(index) ? '⏳ Uploading...' : image.startsWith('data:') ? '📎 Uploaded' : '🔗 URL or Upload'}
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -557,6 +640,45 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
               alt="Preview" 
               className="max-w-full max-h-full object-contain rounded-lg"
             />
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && speciesToDelete && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-gray-200 dark:border-gray-700">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <DeleteIcon className="w-8 h-8 text-red-600 dark:text-red-400" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                Delete Species
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Are you sure you want to delete <strong>"{speciesToDelete.commonName}"</strong>?
+                <br />
+                <span className="text-sm text-red-600 dark:text-red-400">
+                  This action cannot be undone.
+                </span>
+              </p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={cancelDelete}
+                  className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-xl font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDelete}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
