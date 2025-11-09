@@ -148,7 +148,7 @@ const Navbar = memo(function Navbar() {
   const navItems = useMemo(() => [
     { to: '/gis', label: 'GIS Map', badge: '🗺️' },
     { to: '/biodiversity', label: 'Biodiversity', badge: '🌿' },
-    { to: '/ar', label: 'AR Demo', badge: '✨', comingSoon: !isAdmin },
+    { to: '/ar', label: 'AR Demo', badge: '✨' },
     ...(isAdmin ? [{ to: '/admin', label: 'Admin', badge: '👑', adminOnly: true }] : []),
     { to: '/about', label: 'About', badge: '💡' },
   ], [isAdmin])
@@ -298,7 +298,6 @@ const Navbar = memo(function Navbar() {
               
               {navItems.map((item) => {
                 const isActive = location.pathname.startsWith(item.to)
-                const showSoon = item.comingSoon && !isAdmin
                 const isAdminItem = 'adminOnly' in item && item.adminOnly
                 return (
                   <NavLink
@@ -309,9 +308,7 @@ const Navbar = memo(function Navbar() {
                         ? isAdminItem
                           ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white shadow-xl scale-110'
                           : 'bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500 text-white shadow-xl scale-110'
-                        : showSoon 
-                          ? 'text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                          : isAdminItem
+                        : isAdminItem
                             ? 'text-purple-700 dark:text-purple-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-100/90 dark:hover:bg-purple-900/70 hover:scale-105 hover:shadow-lg'
                             : 'text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white/90 dark:hover:bg-slate-700/70 hover:scale-105 hover:shadow-lg'
                     }`}
@@ -324,9 +321,7 @@ const Navbar = memo(function Navbar() {
                     <span className={`flex h-8 w-8 items-center justify-center rounded-full text-base transition-all duration-500 ${
                       isActive
                         ? 'bg-white/25 text-white shadow-lg'
-                        : showSoon
-                          ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500'
-                          : isAdminItem
+                        : isAdminItem
                             ? 'bg-purple-100/90 dark:bg-purple-900/50 border border-purple-200/90 dark:border-purple-700/70 group-hover:bg-purple-50 dark:group-hover:bg-purple-900/70 group-hover:scale-110'
                             : 'bg-white/70 dark:bg-slate-600/70 border border-white/90 dark:border-slate-500/70 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-900/40 group-hover:scale-110'
                     }`}>
@@ -335,11 +330,6 @@ const Navbar = memo(function Navbar() {
                     
                     <div className="flex flex-col items-start">
                       <span className="leading-tight">{item.label}</span>
-                      {showSoon && (
-                        <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-700/60 shadow-sm">
-                          SOON
-                        </span>
-                      )}
                     </div>
                   </NavLink>
                 )
@@ -354,7 +344,6 @@ const Navbar = memo(function Navbar() {
           <div className={`md:hidden overflow-hidden transition-[max-height,opacity] duration-500 ease-out ${open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
             <div className={`space-y-3 rounded-2xl border border-slate-200/70 bg-white/95 p-4 shadow-2xl backdrop-blur-2xl dark:border-slate-700/50 dark:bg-slate-900/95 ${isMobileView ? 'rounded-xl p-3 space-y-2' : ''}`}>
               {navItems.map((item) => {
-                const showSoon = item.comingSoon && !isAdmin
                 return (
                   <NavLink
                     key={item.to}
@@ -363,9 +352,7 @@ const Navbar = memo(function Navbar() {
                       return `flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-500 ${
                         isActive
                           ? 'bg-gradient-to-r from-emerald-500 to-blue-500 text-white shadow-xl scale-[1.03]'
-                          : showSoon
-                            ? 'text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-slate-800/50 cursor-not-allowed'
-                            : 'text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:shadow-lg hover:scale-[1.02]'
+                          : 'text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:shadow-lg hover:scale-[1.02]'
                       }`
                     }}
                     onClick={() => setOpen(false)}
@@ -376,26 +363,17 @@ const Navbar = memo(function Navbar() {
                           <span className={`flex h-8 w-8 items-center justify-center rounded-full text-lg ${
                             isActive 
                               ? 'bg-white/20 text-white' 
-                              : showSoon
-                                ? 'bg-gray-100 dark:bg-gray-700 text-gray-400'
-                                : 'bg-white dark:bg-slate-700 border border-gray-200 dark:border-gray-600'
+                              : 'bg-white dark:bg-slate-700 border border-gray-200 dark:border-gray-600'
                           }`}>
                             {item.badge}
                           </span>
                           <div className="flex flex-col leading-tight">
                             <span>{item.label}</span>
-                            {showSoon && (
-                              <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                                SOON
-                              </span>
-                            )}
                           </div>
                         </div>
-                        {!showSoon && (
-                          <svg className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                          </svg>
-                        )}
+                        <svg className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
                       </>
                     )}
                   </NavLink>
@@ -1608,6 +1586,15 @@ const ARDemo = memo(function ARDemo() {
       description: 'Iconic tropical tree that provides food, shelter, and economic value to local communities.',
       modelUrl: '/models/coconut-palm.glb',
       image: '/images/palm-thumb.jpg'
+    },
+    {
+      id: 'koi',
+      name: 'Tri-Coloured Koi',
+      scientific: 'Cyprinus carpio',
+      status: 'Cultivated',
+      description: 'A beautiful ornamental fish with striking tri-color patterns, symbolizing good fortune in Asian cultures.',
+      modelUrl: '/models/tri-coloured-koi.glb',
+      image: '/images/koi-thumb.jpg'
     }
   ]
 
@@ -1621,92 +1608,236 @@ const ARDemo = memo(function ARDemo() {
     }
   }
 
+  // Import species data
+  const { species: allMatiSpecies } = useData()
+  const [selectedSpecies, setSelectedSpecies] = useState<string | null>(null)
+
+  const generateQRCode = (speciesId: string, commonName: string) => {
+    const arUrl = `${window.location.origin}/ar/${speciesId}`
+    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(arUrl)}&bgcolor=255-255-255&color=0-0-0&qzone=2&format=svg`
+  }
+
+  const selectedSpeciesData = selectedSpecies 
+    ? allMatiSpecies.find(s => s.id === selectedSpecies)
+    : null
+
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <div className="container mx-auto px-4 py-12 max-w-7xl">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full mb-6">
-              <ARIcon className="w-10 h-10 text-white" />
-            </div>
-            <h1 className="text-5xl font-black tracking-tight bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-              <AnimatedText text="AR Biodiversity Experience" />
-            </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-              Discover Mati City's incredible wildlife through immersive augmented reality. 
-              Experience 3D models of our local species right in your space!
-            </p>
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+        {/* Hero Section */}
+        <div className="relative bg-gradient-to-br from-emerald-600 via-blue-600 to-purple-700 text-white overflow-hidden">
+          {/* Animated mesh background */}
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute inset-0" style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            }}></div>
           </div>
 
-          {/* Species Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {arSpecies.map((species) => (
-              <div key={species.id} className="group bg-white dark:bg-slate-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-slate-700">
-                <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center">
-                  <div className="text-6xl opacity-50">
-                    {species.id === 'eagle' && '🦅'}
-                    {species.id === 'tarsier' && '👁️'}
-                    {species.id === 'butterfly' && '🦋'}
-                    {species.id === 'mangrove' && '🌳'}
-                    {species.id === 'coral' && '🪸'}
-                    {species.id === 'palm' && '🥥'}
-                  </div>
-                </div>
-                
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{species.name}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 italic">{species.scientific}</p>
+          <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full mb-6 border border-white/30">
+                <ARIcon className="w-5 h-5" />
+                <span className="text-sm font-semibold">Augmented Reality Experience</span>
+              </div>
+              
+              <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight">
+                <AnimatedText text="Mati City" />
+                <br />
+                <span className="text-emerald-200">Biodiversity AR Gallery</span>
+              </h1>
+              
+              <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed">
+                Explore our interactive species gallery. Click any species to reveal its unique QR code and experience it in stunning 3D augmented reality.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="container mx-auto px-4 py-12 max-w-7xl">
+          {/* Gallery Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+            {allMatiSpecies.map((species) => {
+              const speciesImage = species.images && species.images.length > 0 ? species.images[0] : 
+                (species.category === 'fauna' 
+                  ? 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?w=800&h=600&fit=crop&crop=center'
+                  : 'https://images.unsplash.com/photo-1466781783364-36c955e42a7f?w=800&h=600&fit=crop&crop=center')
+              
+              const isSelected = selectedSpecies === species.id
+              
+              return (
+                <button
+                  key={species.id}
+                  onClick={() => setSelectedSpecies(isSelected ? null : species.id)}
+                  className={`group relative overflow-hidden rounded-2xl transition-all duration-500 ${
+                    isSelected 
+                      ? 'ring-4 ring-purple-600 ring-offset-4 ring-offset-gray-50 dark:ring-offset-slate-900 scale-105 shadow-2xl' 
+                      : 'hover:scale-105 hover:shadow-xl'
+                  }`}
+                  style={{ height: '300px' }}
+                >
+                  {/* Image */}
+                  <img 
+                    src={speciesImage} 
+                    alt={species.commonName}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300"></div>
+                  
+                  {/* Content */}
+                  <div className="absolute inset-0 p-4 flex flex-col justify-end">
+                    {/* Status Badge */}
+                    <div className="absolute top-3 right-3">
+                      <Badge className={`text-xs px-2 py-1 rounded-full font-bold ${getStatusColor(
+                        species.status === 'CR' ? 'Critically Endangered' :
+                        species.status === 'EN' ? 'Endangered' :
+                        species.status === 'VU' ? 'Vulnerable' :
+                        species.status === 'NT' ? 'Near Threatened' :
+                        'Least Concern'
+                      )}`}>
+                        {species.status}
+                      </Badge>
                     </div>
-                    <Badge className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(species.status)}`}>
-                      {species.status}
-                    </Badge>
+
+                    {/* Title */}
+                    <h3 className="text-white font-black text-lg mb-1 leading-tight group-hover:text-emerald-300 transition-colors duration-300">
+                      {species.commonName}
+                    </h3>
+                    <p className="text-white/70 text-xs italic mb-2">{species.scientificName}</p>
+                    
+                    {/* Category */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-white/20 backdrop-blur-md px-2 py-1 rounded-full text-white font-medium">
+                        {species.category === 'fauna' ? '🦊 Fauna' : '🌱 Flora'}
+                      </span>
+                      {isSelected && (
+                        <span className="text-xs bg-purple-600 px-2 py-1 rounded-full text-white font-bold animate-pulse">
+                          Selected
+                        </span>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Click Indicator */}
+                  {!isSelected && (
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                      <div className="bg-white/95 backdrop-blur-md px-6 py-3 rounded-full shadow-2xl">
+                        <span className="text-sm font-bold text-purple-600">Click to view AR</span>
+                      </div>
+                    </div>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* QR Code Modal/Section */}
+          {selectedSpeciesData && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300"
+                 onClick={() => setSelectedSpecies(null)}>
+              <div className="bg-white dark:bg-slate-800 rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500"
+                   onClick={(e) => e.stopPropagation()}>
+                {/* Header */}
+                <div className="relative h-48 overflow-hidden">
+                  <img 
+                    src={selectedSpeciesData.images && selectedSpeciesData.images.length > 0 
+                      ? selectedSpeciesData.images[0] 
+                      : (selectedSpeciesData.category === 'fauna' 
+                        ? 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?w=800&h=600&fit=crop&crop=center'
+                        : 'https://images.unsplash.com/photo-1466781783364-36c955e42a7f?w=800&h=600&fit=crop&crop=center')} 
+                    alt={selectedSpeciesData.commonName}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
                   
-                  <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-4">
-                    {species.description}
-                  </p>
-                  
-                  <button 
-                    className="w-full group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-blue-600 text-white px-4 py-3 rounded-xl font-semibold text-sm shadow-lg hover:shadow-emerald-500/25 transform hover:scale-105 transition-all duration-300"
-                    onClick={() => window.open('/ar-viewer.html', '_blank')}
+                  {/* Close Button */}
+                  <button
+                    onClick={() => setSelectedSpecies(null)}
+                    className="absolute top-4 right-4 bg-white/20 backdrop-blur-md hover:bg-white/30 text-white p-2 rounded-full transition-all duration-300"
                   >
-                    <ARIcon className="w-4 h-4 group-hover:animate-pulse" />
-                    View in AR
-                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
+
+                  {/* Title Overlay */}
+                  <div className="absolute bottom-4 left-6">
+                    <h2 className="text-3xl font-black text-white mb-1">{selectedSpeciesData.commonName}</h2>
+                    <p className="text-white/80 italic">{selectedSpeciesData.scientificName}</p>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-8">
+                  <div className="grid md:grid-cols-2 gap-8">
+                    {/* Left: Info */}
+                    <div>
+                      <div className="flex gap-2 mb-4">
+                        <Badge className={`text-xs px-3 py-1.5 rounded-full font-bold ${getStatusColor(
+                          selectedSpeciesData.status === 'CR' ? 'Critically Endangered' :
+                          selectedSpeciesData.status === 'EN' ? 'Endangered' :
+                          selectedSpeciesData.status === 'VU' ? 'Vulnerable' :
+                          selectedSpeciesData.status === 'NT' ? 'Near Threatened' :
+                          'Least Concern'
+                        )}`}>
+                          {selectedSpeciesData.status}
+                        </Badge>
+                        <Badge className="text-xs px-3 py-1.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 font-bold">
+                          {selectedSpeciesData.category === 'fauna' ? '🦊 Fauna' : '🌱 Flora'}
+                        </Badge>
+                      </div>
+
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">About</h3>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">
+                        {selectedSpeciesData.blurb}
+                      </p>
+
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Habitat</h3>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                        {selectedSpeciesData.habitat}
+                      </p>
+                    </div>
+
+                    {/* Right: QR Code */}
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="bg-gradient-to-br from-purple-600 to-blue-600 p-6 rounded-3xl mb-4 shadow-xl">
+                        <div className="bg-white p-4 rounded-2xl">
+                          <img 
+                            src={generateQRCode(selectedSpeciesData.id, selectedSpeciesData.commonName)} 
+                            alt={`QR Code for ${selectedSpeciesData.commonName}`}
+                            className="w-48 h-48"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="text-center">
+                        <p className="font-bold text-gray-900 dark:text-white mb-1 flex items-center justify-center gap-2">
+                          <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                          </svg>
+                          Scan QR Code
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Open your camera to experience in AR
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          )}
 
-          {/* Call to Action */}
-          <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl p-8 text-center text-white">
-            <h2 className="text-3xl font-bold mb-4">Ready to Explore?</h2>
-            <p className="text-lg mb-6 opacity-90">
-              Experience marker-based AR tracking with our interactive MindAR demo, or browse our full species database.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a 
-                className="inline-flex items-center justify-center gap-2 bg-white text-purple-600 px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors duration-300"
-                href="/ar-demo/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                <TargetIcon className="w-5 h-5" />
-                Try MindAR Demo
-              </a>
-              <a 
-                className="inline-flex items-center justify-center gap-2 bg-white/20 text-white px-6 py-3 rounded-xl font-bold hover:bg-white/30 transition-colors duration-300"
-                href="/biodiversity"
-              >
-                <SpeciesIcon className="w-5 h-5" />
-                Explore All Species
-              </a>
+          {/* Footer CTA */}
+          <div className="text-center mt-16">
+            <div className="inline-flex items-center gap-4 bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-xl border border-gray-200 dark:border-slate-700">
+              <div className="text-4xl">🎯</div>
+              <div className="text-left">
+                <h3 className="font-bold text-gray-900 dark:text-white">How to Use</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Click any species → Scan QR code → Experience in AR</p>
+              </div>
             </div>
           </div>
         </div>

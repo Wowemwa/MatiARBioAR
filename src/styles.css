@@ -239,6 +239,37 @@ body.dark .gradient-text-subtle {
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  
+  .transform-style-3d {
+    transform-style: preserve-3d;
+  }
+  
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+}
+
+@layer components {
+  /* Floating animation */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+}
+
 /* Enhanced animations with modern easing and advanced visual effects */
 @keyframes float {
   0%, 100% { transform: translateY(0px) rotate(0deg); }

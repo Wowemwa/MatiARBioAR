@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AR Demo • Mati ARBio</title>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/aframe@1.5.0/dist/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar/dist/mindar-image-aframe.prod.js"></script>
     <style>
@@ -16,8 +17,17 @@
     <div class="hint">
       Point your camera at the target image to see the 3D model.
       <span>Sample target:</span> <a href="https://raw.githubusercontent.com/MindAR-js/aframe-examples/master/image-tracking/assets/card-example/card.png" target="_blank" rel="noreferrer">Open</a>
-      <span>• If you added your own marker, place it as <code>images/pitcher.jpg</code> and compile <code>targets.mind</code> here.</span>
+      <span>• The demo automatically loads your custom Koi model if available at <code>/models/tri-coloured-koi.glb</code>.</span>
     </div>
+
+    <!-- Upload Section -->
+    <div class="upload-section" style="position: fixed; top: 80px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 15px; border-radius: 8px; max-width: 300px; font-family: Arial, sans-serif; font-size: 14px;">
+      <h3 style="margin: 0 0 10px 0; font-size: 16px;">Upload Custom Model</h3>
+      <input type="file" id="model-upload" accept=".glb,.gltf" style="margin-bottom: 10px; width: 100%;">
+      <button id="upload-btn" style="background: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">Upload & Test</button>
+      <div id="upload-status" style="margin-top: 10px; font-size: 12px;"></div>
+    </div>
+
     <div id="app"></div>
 
     <script>
@@ -36,6 +46,17 @@
           } catch (e) {}
         }
 
+        // Check for local Koi model
+        let modelSrc = '/models/tri-coloured-koi.glb';
+        try {
+          const res = await fetch(modelSrc, { method: 'HEAD' });
+          if (!res.ok) {
+            modelSrc = 'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/Duck/glTF-Binary/Duck.glb';
+          }
+        } catch (e) {
+          modelSrc = 'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/Duck/glTF-Binary/Duck.glb';
+        }
+
         const html = `
           <a-scene
             mindar-image="imageTargetSrc: ${src}; uiLoading: yes;"
@@ -46,7 +67,7 @@
             device-orientation-permission-ui="enabled: true">
 
             <a-assets>
-              <a-asset-item id="model" src="https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/Duck/glTF-Binary/Duck.glb"></a-asset-item>
+              <a-asset-item id="model" src="${modelSrc}"></a-asset-item>
             </a-assets>
 
             <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -58,6 +79,80 @@
         `;
         document.getElementById('app').innerHTML = html;
       })();
+
+      // File upload functionality
+      document.getElementById('upload-btn').addEventListener('click', async () => {
+        const fileInput = document.getElementById('model-upload');
+        const statusDiv = document.getElementById('upload-status');
+        
+        if (!fileInput.files[0]) {
+          statusDiv.innerHTML = '<span style="color: #ff6b6b;">Please select a file first.</span>';
+          return;
+        }
+        
+        const file = fileInput.files[0];
+        
+        // Validate file extension
+        if (!file.name.toLowerCase().endsWith('.glb') && !file.name.toLowerCase().endsWith('.gltf')) {
+          statusDiv.innerHTML = '<span style="color: #ff6b6b;">Only .glb and .gltf files are supported.</span>';
+          return;
+        }
+        
+        // Validate file size (max 50MB)
+        if (file.size > 50 * 1024 * 1024) {
+          statusDiv.innerHTML = '<span style="color: #ff6b6b;">File size must be less than 50MB.</span>';
+          return;
+        }
+        
+        statusDiv.innerHTML = '<span style="color: #ffd93d;">Validating and loading model...</span>';
+        
+        try {
+          // Create object URL for the file
+          const modelUrl = URL.createObjectURL(file);
+          
+          // Test loading the model by creating a temporary model-viewer
+          const testViewer = document.createElement('model-viewer');
+          testViewer.src = modelUrl;
+          testViewer.style.display = 'none';
+          document.body.appendChild(testViewer);
+          
+          // Wait for model to load or error
+          await new Promise((resolve, reject) => {
+            testViewer.addEventListener('load', () => {
+              document.body.removeChild(testViewer);
+              URL.revokeObjectURL(modelUrl);
+              resolve();
+            });
+            
+            testViewer.addEventListener('error', (e) => {
+              document.body.removeChild(testViewer);
+              URL.revokeObjectURL(modelUrl);
+              reject(new Error('Model failed to load'));
+            });
+            
+            // Timeout after 10 seconds
+            setTimeout(() => {
+              document.body.removeChild(testViewer);
+              URL.revokeObjectURL(modelUrl);
+              reject(new Error('Model loading timeout'));
+            }, 10000);
+          });
+          
+          // If we get here, model is valid
+          // Update the A-Frame model
+          const modelAsset = document.querySelector('#model');
+          if (modelAsset) {
+            modelAsset.setAttribute('src', modelUrl);
+            statusDiv.innerHTML = '<span style="color: #6bcf7f;">Model uploaded and loaded successfully! Point your camera at the marker.</span>';
+          } else {
+            statusDiv.innerHTML = '<span style="color: #ff6b6b;">AR scene not ready. Please refresh and try again.</span>';
+          }
+          
+        } catch (error) {
+          console.error('Model validation error:', error);
+          statusDiv.innerHTML = '<span style="color: #ff6b6b;">Model validation failed: ' + error.message + '. Please check the file and try again.</span>';
+        }
+      });
     </script>
   </body>
 </html>
