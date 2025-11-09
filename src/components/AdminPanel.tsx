@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import AdminFeedbacks from './AdminFeedbacks'
+import AdminAnalytics from './AdminAnalytics'
 import { PlusIcon, EditIcon, DeleteIcon, SaveIcon, CancelIcon, EyeIcon } from './Icons'
 import { SpeciesDetail } from '../data/mati-hotspots'
 import { useData } from '../context/DataContext'
@@ -38,6 +39,7 @@ const emptySpecies: SpeciesFormData = {
 export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
   const { species, createSpecies, updateSpecies, deleteSpecies } = useData()
   const [showFeedbacks, setShowFeedbacks] = useState(false)
+  const [showAnalytics, setShowAnalytics] = useState(false)
   const [editingSpecies, setEditingSpecies] = useState<SpeciesFormData | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -231,6 +233,15 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
               <p className="text-white/90 text-lg">Manage biodiversity data for Mati City&apos;s natural heritage</p>
             </div>
             <div className="flex items-center gap-2">
+              {/* Analytics toggle */}
+              <button
+                type="button"
+                onClick={() => setShowAnalytics(s => !s)}
+                className="px-3 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-semibold"
+              >
+                📊 Analytics
+              </button>
+
               {/* Feedback toggle - only visible to admins since AdminPanel is admin-only */}
               <button
                 type="button"
@@ -683,7 +694,9 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                 </div>
               </div>
             ) : (
-              showFeedbacks ? (
+              showAnalytics ? (
+                <AdminAnalytics />
+              ) : showFeedbacks ? (
                 <AdminFeedbacks />
               ) : (
                 <div className="flex items-center justify-center h-full">
