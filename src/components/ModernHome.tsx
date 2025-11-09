@@ -69,7 +69,7 @@ const ModernHome = memo(function ModernHome() {
               </ul>
             </div>
             
-            {/* Contact */}
+            {/* Connect */}
             <div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">
                 Connect
@@ -83,7 +83,7 @@ const ModernHome = memo(function ModernHome() {
           {/* Copyright */}
           <div className="pt-8 border-t border-slate-200/50 dark:border-slate-700/50 text-center">
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              © {new Date().getFullYear()} Mati Biodiversity Platform. Conserving nature through technology.
+              © 2025 Mati Biodiversity Platform. Conserving nature through technology.
             </p>
           </div>
         </div>

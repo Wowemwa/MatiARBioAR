@@ -430,70 +430,6 @@ const Navbar = memo(function Navbar() {
   )
 })
 
-const Footer = memo(function Footer() {
-  return (
-    <footer className="relative mt-20 overflow-hidden">
-      <div className="relative rounded-t-[3rem] backdrop-blur-xl bg-gradient-to-br from-slate-900/90 to-slate-800/90 dark:from-slate-900/95 dark:to-slate-800/95 border-t border-white/20 py-16">
-        <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-blue-500/10 to-purple-500/10" />
-        
-        <div className="relative z-10 text-center space-y-8">
-          <div className="flex items-center justify-center gap-6 mb-8">
-            <div className="animate-pulse text-3xl">🌊</div>
-            <div className="text-4xl font-black bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
-              Mati ARBio
-            </div>
-            <div className="animate-pulse text-3xl">🦋</div>
-          </div>
-          
-          <div className="max-w-2xl mx-auto">
-            <p className="text-xl text-gray-200 font-medium mb-6">
-              Connecting nature, technology, and conservation for a sustainable future
-            </p>
-            <p className="text-gray-400">
-              © {new Date().getFullYear()} Mati ARBio • Web-based educational & eco-tourism platform
-            </p>
-          </div>
-          
-          <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <div className="group p-6 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105">
-              <div className="text-3xl mb-3 group-hover:animate-bounce">🌱</div>
-              <h4 className="font-bold text-green-400 mb-2">Biodiversity Protection</h4>
-              <p className="text-sm text-gray-400">Preserving ecosystems for future generations</p>
-            </div>
-            
-            <div className="group p-6 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105">
-              <div className="text-3xl mb-3 group-hover:animate-bounce">🔬</div>
-              <h4 className="font-bold text-blue-400 mb-2">Education & Research</h4>
-              <p className="text-sm text-gray-400">Learning through interactive experiences</p>
-            </div>
-            
-            <div className="group p-6 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105">
-              <div className="text-3xl mb-3 group-hover:animate-bounce">🚀</div>
-              <h4 className="font-bold text-purple-400 mb-2">AR Innovation</h4>
-              <p className="text-sm text-gray-400">Cutting-edge augmented reality technology</p>
-            </div>
-          </div>
-          
-          <div className="pt-8 border-t border-white/10">
-            <p className="text-sm text-gray-500 flex items-center justify-center gap-2">
-              <span>Made with</span>
-              <span className="text-red-400 animate-pulse">❤️</span>
-              <span>for environmental conservation and education</span>
-            </p>
-          </div>
-        </div>
-        
-        {/* Floating decorative elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-gradient-to-br from-green-400/20 to-blue-400/20 rounded-full blur-2xl animate-pulse"></div>
-          <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-2xl animate-pulse delay-1000"></div>
-          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-24 h-24 bg-gradient-to-br from-purple-400/20 to-green-400/20 rounded-full blur-xl animate-pulse delay-500"></div>
-        </div>
-      </div>
-    </footer>
-  )
-})
-
 const Home = memo(function Home() {
   const { hotspots, species, loading } = useData()
   const navigate = useNavigate()
@@ -2865,10 +2801,6 @@ export default function App() {
                     </ErrorBoundary>
                   </div>
                 </main>
-                
-                <ErrorBoundary fallback={<div className="p-4 text-center text-gray-600">Footer unavailable</div>}>
-                  <Footer />
-                </ErrorBoundary>
 
                 {/* Floating feedback widget */}
                 <FeedbackFloating />
