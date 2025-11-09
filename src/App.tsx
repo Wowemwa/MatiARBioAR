@@ -1611,11 +1611,12 @@ const ARDemo = memo(function ARDemo() {
           <div className="relative z-10 space-y-6">
             <div className="text-6xl animate-pulse mb-6"><CameraIcon className="w-16 h-16" /></div>
             
-            <h3 className="text-2xl font-bold text-gray-800">Immersive AR Demo</h3>
+            <h3 className="text-2xl font-bold text-gray-800">Immersive AR Experiences</h3>
             
             <p className="text-lg text-gray-700 max-w-2xl mx-auto leading-relaxed">
-              Experience Mati&rsquo;s biodiversity like never before! Our augmented reality demo uses cutting-edge
-              MindAR + A-Frame technology to bring species to life in your environment.
+              Experience Mati&rsquo;s biodiversity like never before! We offer two AR experiences:
+              <strong> AR Viewer</strong> with interactive 3D models you can view in your space, and 
+              <strong> MindAR Demo</strong> with marker-based tracking using A-Frame technology.
             </p>
             
             <div className="grid md:grid-cols-3 gap-6 my-8">
@@ -1636,18 +1637,33 @@ const ARDemo = memo(function ARDemo() {
               </div>
             </div>
             
-            <a 
-              className="group inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-purple-500/25 transform hover:scale-105 transition-all duration-300 hover:rotate-1" 
-              href="/ar-demo/" 
-              target="_blank" 
-              rel="noreferrer"
-            >
-              <span className="text-2xl group-hover:animate-bounce"><ARIcon className="w-6 h-6" /></span>
-              Launch AR Demo
-              <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </a>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a 
+                className="group inline-flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-purple-500/25 transform hover:scale-105 transition-all duration-300 hover:rotate-1" 
+                href="/ar-viewer.html" 
+                target="_blank" 
+                rel="noreferrer"
+              >
+                <span className="text-2xl group-hover:animate-bounce"><ARIcon className="w-6 h-6" /></span>
+                Launch AR Viewer
+                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+              
+              <a 
+                className="group inline-flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-emerald-500/25 transform hover:scale-105 transition-all duration-300" 
+                href="/ar-demo/" 
+                target="_blank" 
+                rel="noreferrer"
+              >
+                <span className="text-2xl group-hover:animate-bounce"><TargetIcon className="w-6 h-6" /></span>
+                MindAR Demo
+                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            </div>
           </div>
         </div>
       </div>
