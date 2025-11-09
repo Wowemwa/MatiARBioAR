@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import AdminFeedbacks from './AdminFeedbacks'
 import { PlusIcon, EditIcon, DeleteIcon, SaveIcon, CancelIcon, EyeIcon } from './Icons'
 import { MATI_SPECIES, SpeciesDetail } from '../data/mati-hotspots'
 
@@ -34,6 +35,7 @@ const emptySpecies: SpeciesFormData = {
 }
 
 export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
+  const [showFeedbacks, setShowFeedbacks] = useState(false)
   const [species, setSpecies] = useState<SpeciesDetail[]>(MATI_SPECIES)
   const [editingSpecies, setEditingSpecies] = useState<SpeciesFormData | null>(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -172,12 +174,25 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
               <h2 className="text-3xl font-bold mb-2">🌿 Species Administration</h2>
               <p className="text-white/90 text-lg">Manage biodiversity data for Mati City&apos;s natural heritage</p>
             </div>
-            <button
-              onClick={onClose}
-              className="group relative overflow-hidden bg-white/20 hover:bg-white/30 p-3 rounded-2xl transition-all duration-300 hover:scale-110 hover:-rotate-12"
-            >
-              <CancelIcon className="w-6 h-6 transition-transform duration-300 group-hover:rotate-90" />
-            </button>
+            <div className="flex items-center gap-2">
+              {/* Feedback toggle - only visible to admins since AdminPanel is admin-only */}
+              <button
+                onClick={() => setShowFeedbacks(s => !s)}
+                className="px-3 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-semibold"
+              >
+                Feedback
+                <span className="ml-2 inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500 text-white text-xs">{(() => {
+                  try { const raw = localStorage.getItem('mati-feedback:v1'); return raw ? JSON.parse(raw).length : 0 } catch { return 0 }
+                })()}</span>
+              </button>
+
+              <button
+                onClick={onClose}
+                className="group relative overflow-hidden bg-white/20 hover:bg-white/30 p-3 rounded-2xl transition-all duration-300 hover:scale-110 hover:-rotate-12"
+              >
+                <CancelIcon className="w-6 h-6 transition-transform duration-300 group-hover:rotate-90" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -509,12 +524,16 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                <div className="text-center">
-                  <EditIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg">Select a species to edit or create a new one</p>
+              showFeedbacks ? (
+                <AdminFeedbacks />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                  <div className="text-center">
+                    <EditIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg">Select a species to edit or create a new one</p>
+                  </div>
                 </div>
-              </div>
+              )
             )}
           </div>
         </div>

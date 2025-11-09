@@ -12,6 +12,7 @@ import { DataProvider, useData } from './context/DataContext'
 import { AdminProvider, useAdmin } from './context/AdminContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import PerformanceMonitor from './components/PerformanceMonitor'
+import FeedbackFloating from './components/FeedbackFloating'
 import { PageLoadingFallback, MapLoadingFallback } from './components/LoadingSpinner'
 import { initProgressiveEnhancement } from './utils/progressive-enhancement'
 import { DeviceProvider, useDeviceDetection } from './context/DeviceContext'
@@ -2868,6 +2869,9 @@ export default function App() {
                 <ErrorBoundary fallback={<div className="p-4 text-center text-gray-600">Footer unavailable</div>}>
                   <Footer />
                 </ErrorBoundary>
+
+                {/* Floating feedback widget */}
+                <FeedbackFloating />
               </div>
               
               {/* Performance Monitor - only in development */}
