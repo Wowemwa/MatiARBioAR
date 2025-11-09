@@ -37,7 +37,7 @@ export default function NavbarClassic() {
   const navItems = [
     { to: '/explore', label: 'Explore', icon: <WaveIcon className="w-5 h-5" />, badge: '🗺️' },
     { to: '/biodiversity', label: 'Biodiversity', icon: <SpeciesIcon className="w-5 h-5" />, badge: '🌿' },
-    { to: '/ar', label: 'AR Demo', icon: <ARIcon className="w-5 h-5" />, badge: '✨' },
+    { to: '/ar', label: 'AR Demo', icon: <ARIcon className="w-5 h-5" />, badge: '🎯' },
     { to: '/about', label: 'About', icon: <InfoIcon className="w-5 h-5" />, badge: '💡' },
   ]
   const pillRefs = useRef<HTMLDivElement[]>([])

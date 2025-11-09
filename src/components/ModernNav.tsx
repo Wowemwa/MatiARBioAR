@@ -28,7 +28,7 @@ const ModernNav = memo(function ModernNav() {
     { to: '/', label: 'Home', icon: Sparkles },
     { to: '/gis', label: 'Explore Map', icon: MapPin },
     { to: '/biodiversity', label: 'Species', icon: Leaf },
-    { to: '/ar-demo', label: 'AR Demo', icon: BookOpen }
+    { to: '/ar', label: 'AR Demo', icon: Sparkles },
   ]
 
   const isActive = (path: string) => location.pathname === path
