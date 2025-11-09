@@ -14,9 +14,10 @@ import ErrorBoundary from './components/ErrorBoundary'
 import PerformanceMonitor from './components/PerformanceMonitor'
 import FeedbackFloating from './components/FeedbackFloating'
 import { PageLoadingFallback, MapLoadingFallback } from './components/LoadingSpinner'
-import SecretAdminPage from './components/SecretAdminPage'
+import About from './components/AboutMinimal'
 import { initProgressiveEnhancement } from './utils/progressive-enhancement'
 import { DeviceProvider, useDeviceDetection } from './context/DeviceContext'
+import SecretAdminPage from './components/SecretAdminPage'
 import type { Hotspot, SpeciesDetail } from './data/hotspots'
 
 type AdminTab = 'login' | 'dashboard' | 'data' | 'system'
@@ -3056,111 +3057,7 @@ const SpeciesForm = memo(function SpeciesForm({ initialData, onSave, onCancel }:
   )
 })
 
-const About = memo(function About() {
-  const [isVisible, setIsVisible] = useState(false)
-  
-  useEffect(() => {
-    setIsVisible(true)
-  }, [])
-  
-  return (
-    <div className="space-y-8 min-h-screen">
-      <div className={`space-y-8 transform transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-        <div className="text-center">
-          <h2 className="text-5xl font-black tracking-tight bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-            <AnimatedText text="About Mati ARBio" />
-          </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Discover our mission to preserve biodiversity through innovative technology and education
-          </p>
-        </div>
-        
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div className={`space-y-6 transform transition-all duration-1000 delay-300 ${isVisible ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0'}`}>
-            <div className="relative rounded-3xl p-8 bg-gradient-to-br from-green-100/50 to-blue-100/50 border-2 border-white/30 backdrop-blur-sm overflow-hidden">
-              <h3 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2"><MissionIcon className="w-6 h-6" /> Our Mission</h3>
-              <p className="text-gray-700 leading-relaxed">
-                Mati ARBio is an innovative web-based educational and eco-tourism platform designed to showcase 
-                the incredible biodiversity of Mati City. We combine cutting-edge augmented reality technology 
-                with comprehensive species databases to create immersive learning experiences.
-              </p>
-            </div>
-            
-            <div className="relative rounded-3xl p-8 bg-gradient-to-br from-blue-100/50 to-purple-100/50 border-2 border-white/30 backdrop-blur-sm overflow-hidden">
-              <h3 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2"><ConservationIcon className="w-6 h-6" /> Conservation Impact</h3>
-              <p className="text-gray-700 leading-relaxed">
-                Through interactive maps, detailed species profiles, and immersive AR experiences, we aim to 
-                raise awareness about environmental conservation while promoting sustainable eco-tourism in the region.
-              </p>
-            </div>
-          </div>
-          
-          <div className={`space-y-6 transform transition-all duration-1000 delay-500 ${isVisible ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0'}`}>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/60 rounded-2xl p-6 text-center backdrop-blur-sm border border-white/30 hover:scale-105 transition-transform duration-300 overflow-hidden">
-                <div className="text-3xl mb-2"><MapIcon className="w-8 h-8" /></div>
-                <h4 className="font-bold text-lg mb-1">Interactive Maps</h4>
-                <p className="text-sm text-gray-600">Explore biodiversity hotspots</p>
-              </div>
-              
-              <div className="bg-white/60 rounded-2xl p-6 text-center backdrop-blur-sm border border-white/30 hover:scale-105 transition-transform duration-300 overflow-hidden">
-                <div className="text-3xl mb-2"><SpeciesIcon className="w-8 h-8" /></div>
-                <h4 className="font-bold text-lg mb-1">Species Database</h4>
-                <p className="text-sm text-gray-600">Comprehensive species profiles</p>
-              </div>
-              
-              <div className="bg-white/60 rounded-2xl p-6 text-center backdrop-blur-sm border border-white/30 hover:scale-105 transition-transform duration-300 overflow-hidden">
-                <div className="text-3xl mb-2"><TechIcon className="w-8 h-8" /></div>
-                <h4 className="font-bold text-lg mb-1">AR Technology</h4>
-                <p className="text-sm text-gray-600">Immersive 3D experiences</p>
-              </div>
-              
-              <div className="bg-white/60 rounded-2xl p-6 text-center backdrop-blur-sm border border-white/30 hover:scale-105 transition-transform duration-300 overflow-hidden">
-                <div className="text-3xl mb-2"><EducationIcon className="w-8 h-8" /></div>
-                <h4 className="font-bold text-lg mb-1">Education</h4>
-                <p className="text-sm text-gray-600">Learn about conservation</p>
-              </div>
-            </div>
-            
-            <div className="relative rounded-3xl p-8 bg-gradient-to-br from-purple-100/50 to-pink-100/50 border-2 border-white/30 backdrop-blur-sm overflow-hidden">
-              <h3 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2"><TechIcon className="w-6 h-6" /> Technology Stack</h3>
-              <div className="flex flex-wrap gap-2">
-                {['React', 'TypeScript', 'Tailwind CSS', 'Leaflet Maps', 'MindAR', 'A-Frame'].map((tech, i) => (
-                  <span key={i} className="px-3 py-1 bg-white/60 rounded-full text-sm font-medium text-gray-700 border border-white/30">
-                    {tech}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className={`text-center transform transition-all duration-1000 delay-700 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-          <div className="relative rounded-3xl p-12 bg-gradient-to-br from-green-400/20 via-blue-400/20 to-purple-400/20 border-2 border-white/30 backdrop-blur-sm overflow-hidden">
-            <h3 className="text-3xl font-bold mb-6 bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-              Join Our Conservation Mission
-            </h3>
-            <p className="text-xl text-gray-700 mb-8 max-w-3xl mx-auto">
-              Together, we can protect and preserve Mati&rsquo;s unique biodiversity for future generations.
-              Start exploring today and become part of the conservation community!
-            </p>
-            <Link 
-              to="/gis" 
-              className="group inline-flex items-center gap-3 bg-gradient-to-r from-green-600 to-blue-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-green-500/25 transform hover:scale-105 transition-all duration-300"
-            >
-              <span className="text-2xl group-hover:animate-bounce">🌟</span>
-              Start Exploring
-              <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-})
-
+// About component moved to separate file
 export default function App() {
   // Ensure hook initialized so initial theme applied early
   useTheme()

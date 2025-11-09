@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react'
 import AdminFeedbacks from './AdminFeedbacks'
-import AdminAnalytics from './AdminAnalytics'
 import { PlusIcon, EditIcon, DeleteIcon, SaveIcon, CancelIcon, EyeIcon } from './Icons'
 import { SpeciesDetail } from '../data/mati-hotspots'
 import { useData } from '../context/DataContext'
@@ -39,7 +38,6 @@ const emptySpecies: SpeciesFormData = {
 export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
   const { species, createSpecies, updateSpecies, deleteSpecies } = useData()
   const [showFeedbacks, setShowFeedbacks] = useState(false)
-  const [showAnalytics, setShowAnalytics] = useState(false)
   const [editingSpecies, setEditingSpecies] = useState<SpeciesFormData | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -233,15 +231,6 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
               <p className="text-white/90 text-lg">Manage biodiversity data for Mati City&apos;s natural heritage</p>
             </div>
             <div className="flex items-center gap-2">
-              {/* Analytics toggle */}
-              <button
-                type="button"
-                onClick={() => setShowAnalytics(s => !s)}
-                className="px-3 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-semibold"
-              >
-                📊 Analytics
-              </button>
-
               {/* Feedback toggle - only visible to admins since AdminPanel is admin-only */}
               <button
                 type="button"
@@ -265,6 +254,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
           </div>
         </div>
 
+        {/* Content Area */}
         <div className="relative z-10 flex h-full">
           {/* Species List */}
           <div className="w-1/2 border-r border-white/20 dark:border-white/10 p-8 overflow-y-auto">
@@ -694,9 +684,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                 </div>
               </div>
             ) : (
-              showAnalytics ? (
-                <AdminAnalytics />
-              ) : showFeedbacks ? (
+              showFeedbacks ? (
                 <AdminFeedbacks />
               ) : (
                 <div className="flex items-center justify-center h-full">
@@ -724,7 +712,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
               )
             )}
           </div>
-        </div>
+          </div>
       </div>
 
       {/* Image Preview Modal */}

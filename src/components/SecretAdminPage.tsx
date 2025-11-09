@@ -3,11 +3,15 @@ import { useAdmin } from '../context/AdminContext'
 import { useData } from '../context/DataContext'
 import AdminLogin from './AdminLogin'
 import AdminPanel from './AdminPanel'
+import UserManagement from './UserManagement'
+import AnalyticsDashboard from './AnalyticsDashboard'
 
 export default function SecretAdminPage() {
   const { isAdmin, logout } = useAdmin()
   const { species, resetToDefault } = useData()
   const [showAdminPanel, setShowAdminPanel] = useState(false)
+  const [showUserManagement, setShowUserManagement] = useState(false)
+  const [showAnalytics, setShowAnalytics] = useState(false)
 
   const handleResetData = () => {
     if (confirm('⚠️ Are you sure you want to reset all species data to default?\n\nThis will permanently delete all your edits and cannot be undone!')) {
@@ -149,6 +153,42 @@ export default function SecretAdminPage() {
             </div>
           </div>
 
+          <div 
+            onClick={() => setShowUserManagement(true)}
+            className="group cursor-pointer relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 hover:rotate-1 overflow-hidden p-8"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-cyan-500/20 to-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="relative z-10">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform duration-300">👥</div>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">User Management</h2>
+              <p className="text-gray-600 dark:text-gray-300">Manage team members displayed on the About page</p>
+              <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400 font-semibold">
+                <span>Manage Team</span>
+                <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div 
+            onClick={() => setShowAnalytics(true)}
+            className="group cursor-pointer relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 hover:rotate-1 overflow-hidden p-8"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="relative z-10">
+              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform duration-300">📊</div>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">Analytics</h2>
+              <p className="text-gray-600 dark:text-gray-300">Monitor website performance and user engagement</p>
+              <div className="mt-4 flex items-center text-purple-600 dark:text-purple-400 font-semibold">
+                <span>View Analytics</span>
+                <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
           <div
             onClick={handleExportData}
             className="group cursor-pointer relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 hover:rotate-1 overflow-hidden p-8"
@@ -204,36 +244,6 @@ export default function SecretAdminPage() {
           </div>
 
           <div className="group relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl opacity-60 cursor-not-allowed overflow-hidden p-8">
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-teal-500/10 to-blue-500/10" />
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-full flex items-center justify-center text-3xl mb-6">📊</div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">Analytics</h2>
-              <p className="text-gray-600 dark:text-gray-300">Coming soon - Usage statistics and reports</p>
-              <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 font-medium">🚧 Under Development</div>
-            </div>
-          </div>
-
-          <div className="group relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl opacity-60 cursor-not-allowed overflow-hidden p-8">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-red-500/10 to-yellow-500/10" />
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center text-3xl mb-6">⚙️</div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">System Settings</h2>
-              <p className="text-gray-600 dark:text-gray-300">Configure system preferences and options</p>
-              <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 font-medium">🚧 Under Development</div>
-            </div>
-          </div>
-
-          <div className="group relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl opacity-60 cursor-not-allowed overflow-hidden p-8">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-cyan-500/10 to-teal-500/10" />
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-3xl mb-6">👥</div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">User Management</h2>
-              <p className="text-gray-600 dark:text-gray-300">Manage admin accounts and permissions</p>
-              <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 font-medium">🚧 Under Development</div>
-            </div>
-          </div>
-
-          <div className="group relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl opacity-60 cursor-not-allowed overflow-hidden p-8">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-violet-500/10 to-purple-500/10" />
             <div className="relative z-10">
               <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full flex items-center justify-center text-3xl mb-6">🗂️</div>
@@ -257,6 +267,8 @@ export default function SecretAdminPage() {
       </div>
 
       <AdminPanel isVisible={showAdminPanel} onClose={() => setShowAdminPanel(false)} />
+      <UserManagement isVisible={showUserManagement} onClose={() => setShowUserManagement(false)} />
+      <AnalyticsDashboard isVisible={showAnalytics} onClose={() => setShowAnalytics(false)} />
     </div>
   )
 }
