@@ -3005,6 +3005,52 @@ export default function App() {
   useEffect(() => {
     initProgressiveEnhancement()
   }, [])
+
+  // Keyboard shortcut for admin access (120108)
+  useEffect(() => {
+    const targetSequence = '120108'
+    let currentSequence = ''
+    let timeoutId: NodeJS.Timeout
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Only track number keys
+      if (event.key >= '0' && event.key <= '9') {
+        currentSequence += event.key
+        
+        // Clear previous timeout
+        clearTimeout(timeoutId)
+        
+        // Set new timeout to reset sequence after 2 seconds of inactivity
+        timeoutId = setTimeout(() => {
+          currentSequence = ''
+        }, 2000)
+        
+        // Check if sequence matches
+        if (currentSequence === targetSequence) {
+          currentSequence = ''
+          clearTimeout(timeoutId)
+          // Navigate to admin page
+          window.location.href = '/mati-secret-admin-2024'
+        }
+        
+        // Reset if sequence gets too long
+        if (currentSequence.length > targetSequence.length) {
+          currentSequence = ''
+        }
+      } else {
+        // Reset on non-number key
+        currentSequence = ''
+        clearTimeout(timeoutId)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      clearTimeout(timeoutId)
+    }
+  }, [])
   
   return (
     <ErrorBoundary>
