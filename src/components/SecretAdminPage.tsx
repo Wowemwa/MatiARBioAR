@@ -1,11 +1,20 @@
 import { useState } from 'react'
 import { useAdmin } from '../context/AdminContext'
+import { useData } from '../context/DataContext'
 import AdminLogin from './AdminLogin'
 import AdminPanel from './AdminPanel'
 
 export default function SecretAdminPage() {
   const { isAdmin, logout } = useAdmin()
+  const { species, resetToDefault } = useData()
   const [showAdminPanel, setShowAdminPanel] = useState(false)
+
+  const handleResetData = () => {
+    if (confirm('⚠️ Are you sure you want to reset all species data to default?\n\nThis will permanently delete all your edits and cannot be undone!')) {
+      resetToDefault()
+      alert('✅ Species data has been reset to default!')
+    }
+  }
 
   if (!isAdmin) {
     return (
@@ -43,7 +52,35 @@ export default function SecretAdminPage() {
         </div>
 
         {/* Dashboard Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 mb-8">
+          {/* Stats Row */}
+          <div className="grid gap-6 md:grid-cols-4">
+            <div className="relative rounded-2xl backdrop-blur-xl bg-gradient-to-br from-emerald-500/20 to-green-500/20 border border-emerald-500/30 shadow-xl p-6">
+              <div className="text-emerald-600 dark:text-emerald-300 text-sm font-semibold mb-2">Total Species</div>
+              <div className="text-4xl font-black text-gray-900 dark:text-white">{species.length}</div>
+            </div>
+            <div className="relative rounded-2xl backdrop-blur-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 shadow-xl p-6">
+              <div className="text-blue-600 dark:text-blue-300 text-sm font-semibold mb-2">Fauna</div>
+              <div className="text-4xl font-black text-gray-900 dark:text-white">
+                {species.filter(s => s.category === 'fauna').length}
+              </div>
+            </div>
+            <div className="relative rounded-2xl backdrop-blur-xl bg-gradient-to-br from-green-500/20 to-teal-500/20 border border-green-500/30 shadow-xl p-6">
+              <div className="text-green-600 dark:text-green-300 text-sm font-semibold mb-2">Flora</div>
+              <div className="text-4xl font-black text-gray-900 dark:text-white">
+                {species.filter(s => s.category === 'flora').length}
+              </div>
+            </div>
+            <div className="relative rounded-2xl backdrop-blur-xl bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-red-500/30 shadow-xl p-6">
+              <div className="text-red-600 dark:text-red-300 text-sm font-semibold mb-2">At Risk</div>
+              <div className="text-4xl font-black text-gray-900 dark:text-white">
+                {species.filter(s => ['EN', 'CR', 'VU'].includes(s.status)).length}
+              </div>
+            </div>
+          </div>
+
+          {/* Action Cards */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <div 
             onClick={() => setShowAdminPanel(true)}
             className="group cursor-pointer relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 hover:rotate-1 overflow-hidden p-8"
@@ -55,6 +92,24 @@ export default function SecretAdminPage() {
               <p className="text-gray-600 dark:text-gray-300">Add, edit, and manage biodiversity data with comprehensive CRUD operations</p>
               <div className="mt-4 flex items-center text-emerald-600 dark:text-emerald-400 font-semibold">
                 <span>Manage Species</span>
+                <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div
+            onClick={handleResetData}
+            className="group cursor-pointer relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 hover:rotate-1 overflow-hidden p-8"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-red-500/20 to-yellow-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="relative z-10">
+              <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform duration-300">🔄</div>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">Reset to Default</h2>
+              <p className="text-gray-600 dark:text-gray-300">Restore all species data to the original defaults</p>
+              <div className="mt-4 flex items-center text-orange-600 dark:text-orange-400 font-semibold">
+                <span>Reset Data</span>
                 <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
@@ -111,6 +166,7 @@ export default function SecretAdminPage() {
               <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 font-medium">🚧 Under Development</div>
             </div>
           </div>
+        </div>
         </div>
       </div>
 

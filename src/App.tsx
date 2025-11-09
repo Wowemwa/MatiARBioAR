@@ -14,6 +14,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import PerformanceMonitor from './components/PerformanceMonitor'
 import FeedbackFloating from './components/FeedbackFloating'
 import { PageLoadingFallback, MapLoadingFallback } from './components/LoadingSpinner'
+import SecretAdminPage from './components/SecretAdminPage'
 import { initProgressiveEnhancement } from './utils/progressive-enhancement'
 import { DeviceProvider, useDeviceDetection } from './context/DeviceContext'
 import type { Hotspot, SpeciesDetail } from './data/hotspots'
@@ -3059,7 +3060,8 @@ export default function App() {
                         <Route path="/ar" element={<ARDemo />} />
                         <Route path="/admin/preview" element={<AdminPreview />} />
                         <Route path="/admin" element={<AdminPreview />} />
-                        {/* Admin route removed - component not found */}
+                        {/* Hidden admin route - only for authorized users */}
+                        <Route path="/mati-secret-admin-2024" element={<SecretAdminPage />} />
                         <Route path="/about" element={<About />} />
                         
                         <Route path="*" element={

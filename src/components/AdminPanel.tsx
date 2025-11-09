@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react'
 import AdminFeedbacks from './AdminFeedbacks'
 import { PlusIcon, EditIcon, DeleteIcon, SaveIcon, CancelIcon, EyeIcon } from './Icons'
-import { MATI_SPECIES, SpeciesDetail } from '../data/mati-hotspots'
+import { SpeciesDetail } from '../data/mati-hotspots'
+import { useData } from '../context/DataContext'
 
 interface AdminPanelProps {
   isVisible: boolean
@@ -35,8 +36,8 @@ const emptySpecies: SpeciesFormData = {
 }
 
 export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
+  const { species, createSpecies, updateSpecies, deleteSpecies } = useData()
   const [showFeedbacks, setShowFeedbacks] = useState(false)
-  const [species, setSpecies] = useState<SpeciesDetail[]>(MATI_SPECIES)
   const [editingSpecies, setEditingSpecies] = useState<SpeciesFormData | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -95,19 +96,20 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
     if (!editingSpecies) return
 
     if (isCreating) {
-      // Add new species
-      const newSpecies: SpeciesDetail = {
+      // Add new species - generate ID if empty
+      const newSpeciesData: SpeciesDetail = {
+        ...editingSpecies,
+        id: editingSpecies.id || `species-${Date.now()}`,
+        highlights: editingSpecies.highlights.filter(h => h.trim())
+      }
+      createSpecies(newSpeciesData)
+    } else {
+      // Update existing species
+      const updates = {
         ...editingSpecies,
         highlights: editingSpecies.highlights.filter(h => h.trim())
       }
-      setSpecies(prev => [...prev, newSpecies])
-    } else {
-      // Update existing species
-      setSpecies(prev => prev.map(s => 
-        s.id === editingSpecies.id 
-          ? { ...editingSpecies, highlights: editingSpecies.highlights.filter(h => h.trim()) }
-          : s
-      ))
+      updateSpecies(editingSpecies.id, updates)
     }
 
     setEditingSpecies(null)
@@ -116,7 +118,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
 
   const handleDelete = (id: string) => {
     if (confirm('Are you sure you want to delete this species? This action cannot be undone.')) {
-      setSpecies(prev => prev.filter(s => s.id !== id))
+      deleteSpecies(id)
     }
   }
 

@@ -40,12 +40,8 @@ export function AdminProvider({ children }: AdminProviderProps) {
   }, [])
 
   const login: AdminContextValue['login'] = async ({ password }) => {
-    const expected = import.meta.env.VITE_ADMIN_PASS?.trim()
-
-    if (!expected) {
-      console.warn('[AdminProvider] VITE_ADMIN_PASS is not configured. Set it in your .env file.')
-      return false
-    }
+    // Hardcoded admin password as requested
+    const expected = 'Rey21'
 
     const isValid = password === expected
     if (isValid) {

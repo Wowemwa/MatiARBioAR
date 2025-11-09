@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, ReactNode, useContext, useEffect, useMemo, useState, useCallback } from 'react'
 import { MATI_HOTSPOTS as HOTSPOTS, MATI_SPECIES as SPECIES, Hotspot, SpeciesDetail } from '../data/mati-hotspots'
 
 type DataContextValue = {
@@ -8,6 +8,11 @@ type DataContextValue = {
   loading: boolean
   error?: string
   refresh: () => Promise<void>
+  // Admin CRUD operations
+  createSpecies: (species: SpeciesDetail) => void
+  updateSpecies: (id: string, updates: Partial<SpeciesDetail>) => void
+  deleteSpecies: (id: string) => void
+  resetToDefault: () => void
 }
 
 export interface UnifiedSpecies {
@@ -42,29 +47,74 @@ interface DataProviderProps {
   children: ReactNode
 }
 
+const SPECIES_STORAGE_KEY = 'mati-species-data:v1'
+
 export function DataProvider({ children }: DataProviderProps) {
   const [hotspots, setHotspots] = useState<Hotspot[]>([])
   const [species, setSpecies] = useState<SpeciesDetail[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | undefined>(undefined)
 
-  const hydrate = async () => {
+  // Load species from localStorage or use defaults
+  const hydrate = useCallback(async () => {
     try {
       setLoading(true)
       setError(undefined)
-      // TODO: Replace with remote fetch when backend is ready
+      
+      // Load hotspots (not editable for now)
       setHotspots(HOTSPOTS)
-      setSpecies(SPECIES)
+      
+      // Try to load species from localStorage first
+      const stored = localStorage.getItem(SPECIES_STORAGE_KEY)
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as SpeciesDetail[]
+          setSpecies(parsed)
+        } catch (parseErr) {
+          console.warn('[DataProvider] Failed to parse stored species, using defaults', parseErr)
+          setSpecies(SPECIES)
+        }
+      } else {
+        setSpecies(SPECIES)
+      }
     } catch (err) {
       console.error('[DataProvider] failed to hydrate data context', err)
       setError('Unable to load biodiversity data. Please try again later.')
+      setSpecies(SPECIES) // Fallback to default
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     void hydrate()
+  }, [hydrate])
+
+  // Save species to localStorage whenever it changes
+  useEffect(() => {
+    if (species.length > 0 && !loading) {
+      localStorage.setItem(SPECIES_STORAGE_KEY, JSON.stringify(species))
+    }
+  }, [species, loading])
+
+  // Admin CRUD operations
+  const createSpecies = useCallback((newSpecies: SpeciesDetail) => {
+    setSpecies(prev => [...prev, newSpecies])
+  }, [])
+
+  const updateSpecies = useCallback((id: string, updates: Partial<SpeciesDetail>) => {
+    setSpecies(prev => prev.map(s => 
+      s.id === id ? { ...s, ...updates } : s
+    ))
+  }, [])
+
+  const deleteSpecies = useCallback((id: string) => {
+    setSpecies(prev => prev.filter(s => s.id !== id))
+  }, [])
+
+  const resetToDefault = useCallback(() => {
+    localStorage.removeItem(SPECIES_STORAGE_KEY)
+    setSpecies(SPECIES)
   }, [])
 
   const value = useMemo<DataContextValue>(() => ({
@@ -74,7 +124,11 @@ export function DataProvider({ children }: DataProviderProps) {
     loading,
     error,
     refresh: async () => hydrate(),
-  }), [hotspots, species, loading, error])
+    createSpecies,
+    updateSpecies,
+    deleteSpecies,
+    resetToDefault,
+  }), [hotspots, species, loading, error, hydrate, createSpecies, updateSpecies, deleteSpecies, resetToDefault])
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>
 }
