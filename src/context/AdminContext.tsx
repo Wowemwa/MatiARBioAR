@@ -1,6 +1,4 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react'
-import { storageService } from '../services/storage'
-import { getAdminPassword } from '../utils/runtimeConfig'
 
 type AdminContextValue = {
   isAdmin: boolean
@@ -42,10 +40,10 @@ export function AdminProvider({ children }: AdminProviderProps) {
   }, [])
 
   const login: AdminContextValue['login'] = async ({ password }) => {
-    const expected = await getAdminPassword()
+    const expected = import.meta.env.VITE_ADMIN_PASS?.trim()
 
     if (!expected) {
-      console.warn('[AdminProvider] Admin password is not configured. Provide VITE_ADMIN_PASS at build time or create /runtime-config.json')
+      console.warn('[AdminProvider] VITE_ADMIN_PASS is not configured. Set it in your .env file.')
       return false
     }
 
@@ -55,15 +53,6 @@ export function AdminProvider({ children }: AdminProviderProps) {
       setIsAdmin(true)
       setLastLoginAt(timestamp)
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ isAdmin: true, lastLoginAt: timestamp }))
-      
-      // 🔥 Log admin login to localStorage
-      try {
-        await storageService.logAdminLogin('admin')
-        console.log('✅ Admin login logged')
-      } catch (error) {
-        console.warn('⚠️ Failed to log admin login:', error)
-        // Continue even if logging fails
-      }
     }
     return isValid
   }

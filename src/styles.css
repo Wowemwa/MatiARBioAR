@@ -1,7 +1,14 @@
-/* Performance Optimizations */
+/* Import design tokens first - must be at the very top */
+@import './styles/design-tokens.css';
+
+/* Smooth Scroll Behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Performance & Rendering */
+/* Keep font smoothing for crisp typography; avoid forcing GPU on every element to prevent artifacts */
 * {
-  /* Use GPU acceleration for transforms and animations */
-  transform: translateZ(0);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -273,6 +280,15 @@ body.dark .gradient-text-subtle {
     background-position: 200% 0;
     opacity: 0;
   }
+}
+
+@keyframes gradient-bg {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-gradient {
+  animation: gradient-bg 3s ease infinite;
 }
 
 @keyframes pulse-glow {

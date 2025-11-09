@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import { useAdmin } from '../context/AdminContext'
 
 interface AdminLoginProps {
@@ -10,29 +10,7 @@ export default function AdminLogin({ isVisible, onClose }: AdminLoginProps) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const { login, openAdminPanel } = useAdmin()
-  const passwordRef = useRef<HTMLInputElement | null>(null)
-  const [showPassword, setShowPassword] = useState(false)
-
-  useEffect(() => {
-    if (isVisible && passwordRef.current) {
-      // focus the password input when modal opens
-      passwordRef.current.focus()
-      // select any existing value for convenience
-      passwordRef.current.select()
-    }
-  }, [isVisible])
-
-  // Close on Escape key
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isVisible && !isLoading) {
-        onClose()
-      }
-    }
-    document.addEventListener('keydown', handleEsc)
-    return () => document.removeEventListener('keydown', handleEsc)
-  }, [isVisible, isLoading, onClose])
+  const { login } = useAdmin()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,13 +20,6 @@ export default function AdminLogin({ isVisible, onClose }: AdminLoginProps) {
     try {
       const success = await login({ password })
       if (success) {
-        // open the admin panel automatically after successful login
-        try {
-          openAdminPanel()
-        } catch (err) {
-          // ignore if unavailable
-        }
-
         setPassword('')
         onClose()
       } else {
@@ -82,36 +53,20 @@ export default function AdminLogin({ isVisible, onClose }: AdminLoginProps) {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6" role="form" aria-labelledby="admin-login-title">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
                 🔑 Admin Password
               </label>
-              <div className="relative">
-                <input
-                  ref={passwordRef}
-                  id="admin-password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-5 py-4 pr-14 border-2 border-gray-200 dark:border-gray-600 rounded-2xl bg-white/80 dark:bg-slate-700/80 backdrop-blur-xl text-gray-900 dark:text-gray-100 focus:ring-4 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300 text-lg font-medium"
-                  placeholder="Enter your admin password"
-                  required
-                  disabled={isLoading}
-                  aria-label="Admin password"
-                />
-
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(v => !v)}
-                  className="absolute inset-y-0 right-3 flex items-center px-3 text-sm text-gray-600 dark:text-gray-300"
-                  aria-pressed={showPassword}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? 'Hide' : 'Show'}
-                </button>
-              </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-5 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-2xl bg-white/80 dark:bg-slate-700/80 backdrop-blur-xl text-gray-900 dark:text-gray-100 focus:ring-4 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300 text-lg font-medium"
+                placeholder="Enter your admin password"
+                required
+                disabled={isLoading}
+              />
             </div>
 
             {error && (
@@ -146,18 +101,16 @@ export default function AdminLogin({ isVisible, onClose }: AdminLoginProps) {
             </div>
           </form>
 
-          {import.meta.env.DEV && (
-            <div className="mt-8 pt-6 border-t border-gray-200/60 dark:border-gray-600/60">
-              <div className="text-center">
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                  �� Development Mode Only
-                </p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">
-                  Default password: <code className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-slate-700 dark:to-slate-600 px-3 py-1 rounded-lg font-mono font-bold text-emerald-600 dark:text-emerald-400">Rey21</code>
-                </p>
-              </div>
+          <div className="mt-8 pt-6 border-t border-gray-200/60 dark:border-gray-600/60">
+            <div className="text-center">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                🔐 Secure Admin Access
+              </p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                Password: <code className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-slate-700 dark:to-slate-600 px-3 py-1 rounded-lg font-mono font-bold text-emerald-600 dark:text-emerald-400">Rey21</code>
+              </p>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { Card, SoftCard, Badge, Button, SectionTitle, MediaThumb } from './compo
 import AnimatedText from './components/AnimatedText'
 import Atmosphere from './components/Atmosphere'
 import ComingSoon from './components/ComingSoon'
+import ModernHome from './components/ModernHome'
 import { WaveIcon, MountainIcon, SpeciesIcon, ARIcon, InfoIcon, MapIcon, CameraIcon, TargetIcon, StarIcon, MissionIcon, EducationIcon, TechIcon, ConservationIcon, LeafIcon } from './components/Icons'
 import useScrollPosition from './hooks/useScrollPosition'
 import { DataProvider, useData } from './context/DataContext'
@@ -15,9 +16,6 @@ import { PageLoadingFallback, MapLoadingFallback } from './components/LoadingSpi
 import { initProgressiveEnhancement } from './utils/progressive-enhancement'
 import { DeviceProvider, useDeviceDetection } from './context/DeviceContext'
 import type { Hotspot, SpeciesDetail } from './data/hotspots'
-import AdminControls from './components/AdminControls'
-import SecretAdminPage from './components/SecretAdminPage'
-import SecretAdminTrigger from './components/SecretAdminTrigger'
 
 type AdminTab = 'login' | 'dashboard' | 'data' | 'system'
 type DataViewMode = 'hotspots' | 'species'
@@ -168,38 +166,50 @@ const Navbar = memo(function Navbar() {
   }, [location.pathname])
 
   return (
-    <header className={`sticky top-0 z-40 transition-all duration-300 ${
+    <header className={`sticky top-0 z-40 transition-all duration-500 ${
         isMobileView 
           ? `mx-1 mt-1 ${deviceInfo.isIOS ? 'top-safe-area-inset-top' : ''}` 
           : 'mx-2 mt-2 hover:mx-1 hover:mt-1'
       } rounded-2xl overflow-hidden`}>
       <div
-        className={`relative border transition-all duration-500 ${
+        className={`relative border transition-all duration-700 ${
           scrolled
-            ? 'bg-white/95 dark:bg-slate-900/95 border-slate-200/60 dark:border-white/20 shadow-xl backdrop-blur-md'
-            : 'bg-white/85 dark:bg-slate-900/85 border-slate-200/40 dark:border-white/10 backdrop-blur-sm shadow-lg'
+            ? 'bg-white/95 dark:bg-slate-900/95 border-slate-200/70 dark:border-slate-700/50 shadow-2xl backdrop-blur-2xl'
+            : 'bg-white/90 dark:bg-slate-900/90 border-slate-200/50 dark:border-slate-700/30 backdrop-blur-xl shadow-xl'
         } ${isMobileView ? 'rounded-xl' : 'rounded-2xl hover:rounded-3xl'}`}
       >
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-slate-50/30 via-white/20 to-slate-100/40 dark:from-slate-800/20 dark:via-slate-700/10 dark:to-slate-800/25" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-slate-300/60 to-transparent dark:via-white/15" />
+        {/* Enhanced gradient overlays */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-blue-50/40 via-emerald-50/30 to-purple-50/40 dark:from-blue-900/10 dark:via-emerald-900/10 dark:to-purple-900/10 opacity-60" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-transparent via-white/30 to-transparent dark:via-slate-700/20" />
+        
+        {/* Animated gradient border */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent dark:via-emerald-500/40" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-400/40 to-transparent dark:via-blue-500/30" />
         <div className="relative mx-auto flex max-w-none flex-col gap-2 px-3 py-3 sm:px-4 lg:px-6 xl:px-8">
           <div className="flex items-center justify-between gap-4">
             <Link
               to="/"
-              className="group relative flex items-center gap-3 font-black text-2xl lg:text-3xl tracking-tight transition-transform duration-300 hover:scale-[1.02]"
+              className="group relative flex items-center gap-3 font-black text-2xl lg:text-3xl tracking-tight transition-all duration-500 hover:scale-[1.03]"
               onClick={() => setOpen(false)}
             >
               <div className="relative">
-                <span className="bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
+                {/* Glow effect on hover */}
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
+                
+                <span className="relative bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 bg-clip-text text-transparent group-hover:from-green-500 group-hover:via-blue-500 group-hover:to-purple-500 transition-all duration-500">
                   Mati
                 </span>
-                <span className="ml-1 bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent">
+                <span className="relative ml-1 bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent group-hover:from-green-400 group-hover:to-emerald-400 transition-all duration-500">
                   AR
                 </span>
-                <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                <span className="relative bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent group-hover:from-blue-500 group-hover:to-cyan-500 transition-all duration-500">
                   Bio
                 </span>
-                <div className="absolute -top-1 -right-2 h-3 w-3 rounded-full bg-gradient-to-r from-green-500 to-blue-500 opacity-70 transition-opacity group-hover:opacity-100 animate-pulse" />
+                
+                {/* Enhanced pulse dot */}
+                <div className="absolute -top-1 -right-2 h-3 w-3 rounded-full bg-gradient-to-r from-green-500 to-blue-500 opacity-70 group-hover:opacity-100 transition-opacity animate-pulse">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-green-400 to-blue-400 animate-ping opacity-75" />
+                </div>
               </div>
               <div className="hidden sm:flex flex-col leading-tight text-left text-xs text-gray-500 dark:text-gray-400">
                 <span className="font-semibold">Biodiversity Explorer</span>
@@ -213,16 +223,16 @@ const Navbar = memo(function Navbar() {
 
             <div className="hidden md:flex items-center gap-3">
               <div className="hidden lg:flex items-center gap-2 text-xs font-semibold">
-                <span className="flex items-center gap-2 rounded-xl border border-blue-200/60 bg-blue-50/80 px-3 py-1.5 text-blue-700 shadow-sm backdrop-blur dark:border-blue-700/40 dark:bg-blue-900/30 dark:text-blue-300">
-                  <WaveIcon className="h-4 w-4" />
+                <span className="group flex items-center gap-2 rounded-xl border border-blue-200/70 bg-blue-50/90 px-3 py-1.5 text-blue-700 shadow-sm backdrop-blur transition-all duration-300 hover:shadow-md hover:scale-105 hover:border-blue-300/80 dark:border-blue-700/50 dark:bg-blue-900/40 dark:text-blue-300">
+                  <WaveIcon className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
                   <span>{marineCount} marine</span>
                 </span>
-                <span className="flex items-center gap-2 rounded-xl border border-emerald-200/60 bg-emerald-50/80 px-3 py-1.5 text-emerald-700 shadow-sm backdrop-blur dark:border-emerald-700/40 dark:bg-emerald-900/30 dark:text-emerald-300">
-                  <MountainIcon className="h-4 w-4" />
+                <span className="group flex items-center gap-2 rounded-xl border border-emerald-200/70 bg-emerald-50/90 px-3 py-1.5 text-emerald-700 shadow-sm backdrop-blur transition-all duration-300 hover:shadow-md hover:scale-105 hover:border-emerald-300/80 dark:border-emerald-700/50 dark:bg-emerald-900/40 dark:text-emerald-300">
+                  <MountainIcon className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
                   <span>{terrestrialCount} terrestrial</span>
                 </span>
-                <span className="flex items-center gap-2 rounded-xl border border-purple-200/60 bg-purple-50/80 px-3 py-1.5 text-purple-700 shadow-sm backdrop-blur dark:border-purple-700/40 dark:bg-purple-900/30 dark:text-purple-300">
-                  <SpeciesIcon className="h-4 w-4" />
+                <span className="group flex items-center gap-2 rounded-xl border border-purple-200/70 bg-purple-50/90 px-3 py-1.5 text-purple-700 shadow-sm backdrop-blur transition-all duration-300 hover:shadow-md hover:scale-105 hover:border-purple-300/80 dark:border-purple-700/50 dark:bg-purple-900/40 dark:text-purple-300">
+                  <SpeciesIcon className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
                   <span>{loading ? '—' : `${species.length}+`} species</span>
                 </span>
               </div>
@@ -231,20 +241,22 @@ const Navbar = memo(function Navbar() {
                 <button
                   type="button"
                   onClick={logout}
-                  className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-xs font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-500/15 hover:text-emerald-900 dark:border-emerald-400/30 dark:bg-emerald-500/15 dark:text-emerald-200"
+                  className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/50 bg-emerald-500/15 px-4 py-2 text-xs font-semibold text-emerald-700 shadow-sm transition-all duration-300 hover:bg-emerald-500/20 hover:text-emerald-900 hover:shadow-md hover:scale-105 dark:border-emerald-400/40 dark:bg-emerald-500/20 dark:text-emerald-200"
                 >
                   Exit preview
                 </button>
               )}
               <Link
                 to="/ar"
-                className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-500 via-teal-500 to-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-transform duration-300 ease-out hover:scale-[1.02]"
+                className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-500 via-teal-500 to-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-500 hover:scale-105 hover:shadow-xl hover:-translate-y-0.5"
               >
+                {/* Shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 transform -skew-x-12 group-hover:translate-x-full" />
+                
                 <span className="relative z-10 flex items-center gap-2">
-                  <ARIcon className="h-4 w-4" />
+                  <ARIcon className="h-4 w-4 group-hover:rotate-12 transition-transform duration-300" />
                   <span>Launch AR</span>
                 </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100" />
               </Link>
             </div>
 
@@ -252,34 +264,35 @@ const Navbar = memo(function Navbar() {
               aria-label="Toggle menu"
               aria-expanded={open}
               onClick={() => setOpen((prev) => !prev)}
-              className={`md:hidden inline-flex h-11 w-11 items-center justify-center rounded-2xl border-2 transition-colors duration-300 ease-out ${
+              className={`md:hidden inline-flex h-11 w-11 items-center justify-center rounded-2xl border-2 transition-all duration-500 ${
                 open
-                  ? 'bg-gradient-to-r from-green-500 to-blue-500 border-transparent text-white shadow-lg'
-                  : 'border-white/60 text-gray-700 hover:bg-white/70 dark:border-white/20 dark:text-gray-200 dark:hover:bg-slate-800/70'
+                  ? 'bg-gradient-to-r from-green-500 to-blue-500 border-transparent text-white shadow-xl scale-110'
+                  : 'border-slate-300/70 text-gray-700 hover:bg-white/80 hover:shadow-lg hover:scale-105 dark:border-slate-600/50 dark:text-gray-200 dark:hover:bg-slate-800/80'
               }`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className={`h-6 w-6 transition-transform duration-200 ease-out ${open ? 'rotate-45' : ''}`}
+                className={`h-6 w-6 transition-all duration-500 ${open ? 'rotate-90 scale-110' : 'rotate-0'}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={open ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'} />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={open ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'} />
               </svg>
             </button>
           </div>
 
           <div className="hidden lg:flex items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-100/80 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-emerald-700 shadow-sm dark:border-emerald-400/30 dark:bg-emerald-900/40 dark:text-emerald-200">
+              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/50 bg-emerald-100/90 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-emerald-700 shadow-sm transition-all duration-300 hover:shadow-md hover:scale-105 dark:border-emerald-400/40 dark:bg-emerald-900/50 dark:text-emerald-200">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live Beta
+                Live Beta Testing
               </span>
             </div>
-            <div className="relative flex items-center gap-2 rounded-full border-2 border-emerald-300/60 bg-gradient-to-r from-emerald-100/95 via-teal-100/95 to-blue-100/95 px-3 py-2 shadow-2xl backdrop-blur-3xl dark:border-emerald-400/50 dark:bg-gradient-to-r dark:from-emerald-800/70 dark:via-teal-800/70 dark:to-blue-800/70">
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-emerald-500/25 via-teal-500/25 to-blue-500/25 rounded-full animate-[gradient_6s_ease-in-out_infinite]" />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-blue-400/20 via-purple-400/20 to-emerald-400/20 rounded-full animate-[gradient_8s_ease-in-out_infinite_reverse]" />
+            <div className="relative flex items-center gap-2 rounded-full border-2 border-emerald-300/70 bg-gradient-to-r from-emerald-100/95 via-teal-100/95 to-blue-100/95 px-3 py-2 shadow-2xl backdrop-blur-3xl transition-all duration-500 hover:shadow-3xl hover:border-emerald-400/80 dark:border-emerald-400/60 dark:bg-gradient-to-r dark:from-emerald-800/80 dark:via-teal-800/80 dark:to-blue-800/80">
+              {/* Animated gradient overlays */}
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-blue-500/20 rounded-full animate-[gradient-bg_6s_ease-in-out_infinite] opacity-50" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-blue-400/15 via-purple-400/15 to-emerald-400/15 rounded-full animate-[gradient-bg_8s_ease-in-out_infinite_reverse] opacity-50" />
               <div className="pointer-events-none absolute inset-0 bg-white/10 dark:bg-white/5 rounded-full shadow-inner" />
               
               {navItems.map((item) => {
@@ -290,26 +303,31 @@ const Navbar = memo(function Navbar() {
                   <NavLink
                     key={item.to}
                     to={item.to}
-                    className={`group relative z-10 inline-flex items-center gap-3 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-300 ease-out ${
+                    className={`group relative z-10 inline-flex items-center gap-3 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-500 ${
                       isActive
                         ? isAdminItem
-                          ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white shadow-lg scale-105'
-                          : 'bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500 text-white shadow-lg scale-105'
+                          ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white shadow-xl scale-110'
+                          : 'bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500 text-white shadow-xl scale-110'
                         : showSoon 
                           ? 'text-slate-400 dark:text-slate-500 cursor-not-allowed'
                           : isAdminItem
-                            ? 'text-purple-700 dark:text-purple-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-100/80 dark:hover:bg-purple-900/60'
-                            : 'text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white/80 dark:hover:bg-slate-700/60'
+                            ? 'text-purple-700 dark:text-purple-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-100/90 dark:hover:bg-purple-900/70 hover:scale-105 hover:shadow-lg'
+                            : 'text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white/90 dark:hover:bg-slate-700/70 hover:scale-105 hover:shadow-lg'
                     }`}
                   >
-                    <span className={`flex h-8 w-8 items-center justify-center rounded-full text-base transition-all duration-300 ${
+                    {/* Glow effect for active state */}
+                    {isActive && (
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-500/30 via-teal-500/30 to-blue-500/30 blur-xl" />
+                    )}
+                    
+                    <span className={`flex h-8 w-8 items-center justify-center rounded-full text-base transition-all duration-500 ${
                       isActive
-                        ? 'bg-white/20 text-white'
+                        ? 'bg-white/25 text-white shadow-lg'
                         : showSoon
                           ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500'
                           : isAdminItem
-                            ? 'bg-purple-100/80 dark:bg-purple-900/40 border border-purple-200/80 dark:border-purple-700/60 group-hover:bg-purple-50 dark:group-hover:bg-purple-900/60'
-                            : 'bg-white/60 dark:bg-slate-600/60 border border-white/80 dark:border-slate-500/60 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-900/30'
+                            ? 'bg-purple-100/90 dark:bg-purple-900/50 border border-purple-200/90 dark:border-purple-700/70 group-hover:bg-purple-50 dark:group-hover:bg-purple-900/70 group-hover:scale-110'
+                            : 'bg-white/70 dark:bg-slate-600/70 border border-white/90 dark:border-slate-500/70 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-900/40 group-hover:scale-110'
                     }`}>
                       {item.badge}
                     </span>
@@ -317,28 +335,23 @@ const Navbar = memo(function Navbar() {
                     <div className="flex flex-col items-start">
                       <span className="leading-tight">{item.label}</span>
                       {showSoon && (
-                        <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-700/50">
+                        <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-700/60 shadow-sm">
                           SOON
                         </span>
                       )}
                     </div>
-
-                    {/* Active indicator */}
-                    {isActive && (
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-blue-500/20 blur-lg" />
-                    )}
                   </NavLink>
                 )
               })}
             </div>
-            <div className="flex items-center gap-2 rounded-full border border-blue-200/60 bg-blue-50/80 px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-sm dark:border-blue-700/40 dark:bg-blue-900/30 dark:text-blue-300">
+            <div className="flex items-center gap-2 rounded-full border border-blue-200/70 bg-blue-50/90 px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-sm transition-all duration-300 hover:shadow-md hover:scale-105 dark:border-blue-700/50 dark:bg-blue-900/40 dark:text-blue-300">
               <MapIcon className="h-4 w-4 text-blue-500" />
               <span>Mati, Davao Oriental</span>
             </div>
           </div>
 
-          <div className={`md:hidden overflow-hidden transition-[max-height,opacity] duration-300 ease-out ${open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-            <div className={`space-y-3 rounded-2xl border border-white/60 bg-white/90 p-4 shadow-lg backdrop-blur-xl dark:border-white/15 dark:bg-slate-900/90 ${isMobileView ? 'rounded-xl p-3 space-y-2' : ''}`}>
+          <div className={`md:hidden overflow-hidden transition-[max-height,opacity] duration-500 ease-out ${open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className={`space-y-3 rounded-2xl border border-slate-200/70 bg-white/95 p-4 shadow-2xl backdrop-blur-2xl dark:border-slate-700/50 dark:bg-slate-900/95 ${isMobileView ? 'rounded-xl p-3 space-y-2' : ''}`}>
               {navItems.map((item) => {
                 const showSoon = item.comingSoon && !isAdmin
                 return (
@@ -346,12 +359,12 @@ const Navbar = memo(function Navbar() {
                     key={item.to}
                     to={item.to}
                     className={({ isActive }) => {
-                      return `flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-300 ease-out ${
+                      return `flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-500 ${
                         isActive
-                          ? 'bg-gradient-to-r from-emerald-500 to-blue-500 text-white shadow-lg scale-[1.02]'
+                          ? 'bg-gradient-to-r from-emerald-500 to-blue-500 text-white shadow-xl scale-[1.03]'
                           : showSoon
                             ? 'text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-slate-800/50 cursor-not-allowed'
-                            : 'text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:shadow-md'
+                            : 'text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:shadow-lg hover:scale-[1.02]'
                       }`
                     }}
                     onClick={() => setOpen(false)}
@@ -400,9 +413,13 @@ const Navbar = memo(function Navbar() {
               <Link
                 to="/ar"
                 onClick={() => setOpen(false)}
-                className="flex items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-xl"
+                className="group flex items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 py-3 text-sm font-semibold text-white shadow-xl transition-all duration-500 hover:shadow-2xl hover:scale-105 relative overflow-hidden"
               >
-                <ARIcon className="h-4 w-4" /> Try AR Demo
+                {/* Shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 transform -skew-x-12" />
+                
+                <ARIcon className="relative h-4 w-4 group-hover:rotate-12 transition-transform duration-300" /> 
+                <span className="relative">Try AR Demo</span>
               </Link>
             </div>
           </div>
@@ -625,11 +642,15 @@ const Home = memo(function Home() {
 
   return (
     <div className="space-y-8 min-h-screen">
-      <section className={`group relative overflow-hidden rounded-[32px] border transition-all duration-1000 ease-out ${isMobileView ? 'border-blue-400/50 bg-blue-50/90 dark:border-blue-500/40 dark:bg-blue-950/80' : 'border-white/60 bg-white/90 dark:border-white/30 dark:bg-slate-900/80'} backdrop-blur-2xl shadow-2xl hover:shadow-3xl hover:shadow-emerald-500/10 dark:hover:shadow-blue-500/10 ${isVisible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-8 opacity-0 scale-95'}`}>
+      <section className={`group relative overflow-hidden rounded-[32px] border transition-all duration-1000 ease-out ${isMobileView ? 'border-blue-400/60 bg-blue-50/95 dark:border-blue-500/50 dark:bg-blue-950/85' : 'border-slate-200/70 bg-white/95 dark:border-slate-700/60 dark:bg-slate-900/85'} backdrop-blur-3xl shadow-2xl hover:shadow-3xl hover:shadow-emerald-500/20 dark:hover:shadow-blue-500/15 ${isVisible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-8 opacity-0 scale-95'}`}>
         {/* Enhanced glass morphism background with animated gradients */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-sky-50/40 via-purple-50/30 to-emerald-50/50 dark:from-slate-800/40 dark:via-slate-700/20 dark:to-slate-800/35 group-hover:from-white/70 group-hover:via-sky-50/50 group-hover:to-emerald-50/60 transition-all duration-700" />
-        <div className="absolute inset-0 bg-[conic-gradient(from_0deg_at_50%_50%,rgba(16,185,129,0.1),rgba(59,130,246,0.08),rgba(147,51,234,0.1),rgba(6,182,212,0.08),rgba(16,185,129,0.1))] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/8 via-blue-500/6 to-purple-500/8 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-emerald-50/40 to-purple-50/40 dark:from-blue-900/20 dark:via-emerald-900/15 dark:to-purple-900/15 group-hover:from-blue-50/70 group-hover:via-emerald-50/60 group-hover:to-purple-50/60 dark:group-hover:from-blue-900/30 dark:group-hover:via-emerald-900/25 dark:group-hover:to-purple-900/25 transition-all duration-1000" />
+        
+        {/* Animated gradient orbs */}
+        <div className="absolute top-20 left-20 w-72 h-72 bg-gradient-to-br from-blue-400/20 to-emerald-400/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-br from-emerald-400/20 to-purple-400/10 rounded-full blur-3xl animate-pulse delay-1000" />
+        
+        <div className="absolute inset-0 bg-[conic-gradient(from_0deg_at_50%_50%,rgba(16,185,129,0.12),rgba(59,130,246,0.1),rgba(147,51,234,0.12),rgba(6,182,212,0.1),rgba(16,185,129,0.12))] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
         <Atmosphere variant="hero" className="hidden md:block" />
         <div className={`relative z-10 ${isMobileView 
             ? `flex flex-col gap-4 p-4 ${deviceInfo.isTablet ? 'p-6 gap-6' : ''} ${deviceInfo.isIOS ? 'pb-safe-area-inset-bottom' : ''}` 
@@ -637,12 +658,14 @@ const Home = memo(function Home() {
           }`}>
           <div className="space-y-10">
             <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-emerald-600 shadow-sm dark:bg-slate-800/70 dark:text-emerald-300">
-                <span className="h-2 w-2 rounded-full bg-gradient-to-r from-green-500 to-blue-500" />
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-semibold text-emerald-600 shadow-lg backdrop-blur-xl border border-emerald-200/50 transition-all duration-300 hover:shadow-xl hover:scale-105 dark:bg-slate-800/80 dark:text-emerald-300 dark:border-emerald-700/50">
+                <span className="h-2 w-2 rounded-full bg-gradient-to-r from-green-500 to-blue-500 animate-pulse">
+                  <span className="absolute h-2 w-2 rounded-full bg-gradient-to-r from-green-400 to-blue-400 animate-ping opacity-75" />
+                </span>
                 Live beta experience
               </span>
               {isMobileView && (
-                <span className="inline-flex items-center gap-2 rounded-full bg-blue-50/70 px-4 py-2 text-sm font-semibold text-blue-600 shadow-sm dark:bg-blue-900/30 dark:text-blue-300">
+                <span className="inline-flex items-center gap-2 rounded-full bg-blue-50/80 px-4 py-2 text-sm font-semibold text-blue-600 shadow-lg backdrop-blur-xl border border-blue-200/50 transition-all duration-300 hover:scale-105 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700/50">
                   <span className="text-xs">📱</span>
                   Auto-detected
                   {deviceInfo.isIOS && ' • iOS'}
@@ -653,7 +676,7 @@ const Home = memo(function Home() {
             <div className={`space-y-6 ${isMobileView ? 'text-center' : ''}`}>
               <AnimatedText 
                 as="h1" 
-                className={`font-black tracking-tight text-slate-900 dark:text-white ${
+                className={`font-black tracking-tight bg-gradient-to-r from-slate-900 via-blue-900 to-emerald-900 dark:from-white dark:via-blue-100 dark:to-emerald-100 bg-clip-text text-transparent ${
                   isMobileView 
                     ? `!text-4xl ${deviceInfo.isTablet ? '!text-5xl' : ''} ${deviceInfo.isIOS ? 'tracking-tighter' : ''}` 
                     : '!text-5xl lg:!text-7xl xl:!text-8xl'
@@ -662,14 +685,14 @@ const Home = memo(function Home() {
               />
               <AnimatedText 
                 as="div" 
-                className={`!font-semibold text-slate-800 dark:text-slate-100 ${
+                className={`!font-bold text-slate-800 dark:text-slate-100 ${
                   isMobileView 
                     ? `!text-lg ${deviceInfo.isTablet ? '!text-xl' : ''}` 
                     : '!text-xl lg:!text-2xl xl:!text-3xl'
                 }`}
                 text="Explore biodiversity through maps, data, and AR experiences." 
               />
-              <p className={`text-slate-600 dark:text-slate-300 ${
+              <p className={`text-slate-600 dark:text-slate-300 leading-relaxed ${
                 isMobileView 
                   ? `text-base mx-auto max-w-md ${deviceInfo.isTablet ? 'text-lg max-w-lg' : ''}` 
                   : 'text-lg max-w-2xl xl:text-xl xl:max-w-3xl'
@@ -684,40 +707,47 @@ const Home = memo(function Home() {
               <Button
                 variant="primary"
                 onClick={() => navigate('/gis')}
-                className={`group relative overflow-hidden flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-500 via-blue-500 via-purple-500 to-cyan-500 hover:from-emerald-600 hover:via-blue-600 hover:via-purple-600 hover:to-cyan-600 text-white font-bold shadow-2xl hover:shadow-3xl transition-all duration-700 ease-out ${
+                className={`group relative overflow-hidden flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-500 via-blue-500 via-purple-500 to-cyan-500 hover:from-emerald-600 hover:via-blue-600 hover:via-purple-600 hover:to-cyan-600 text-white font-bold shadow-2xl hover:shadow-3xl hover:shadow-emerald-500/50 transition-all duration-700 ease-out ${
                   isMobileView 
                     ? `w-full py-6 text-lg rounded-3xl shadow-2xl ${deviceInfo.isIOS ? 'active:scale-[0.98]' : 'active:scale-[0.96]'} ${deviceInfo.isAndroid ? 'min-h-[56px]' : 'min-h-[52px]'}` 
-                    : 'hover:scale-110 hover:shadow-2xl hover:shadow-emerald-500/40 hover:-rotate-1 hover:-translate-y-1 xl:px-12 xl:py-6 xl:text-xl rounded-3xl'
+                    : 'hover:scale-110 hover:shadow-2xl hover:-rotate-1 hover:-translate-y-2 xl:px-12 xl:py-6 xl:text-xl rounded-3xl'
                 }`}
               >
                 {/* Enhanced button visual effects */}
                 <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-white/15 to-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
                 <div className="absolute inset-0 bg-[conic-gradient(from_0deg,rgba(255,255,255,0.3),transparent,rgba(255,255,255,0.3))] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                <span className={`${isMobileView ? 'text-2xl' : 'text-2xl xl:text-3xl'}`}>🌊</span>
-                <span>{isMobileView ? 'Explore Map' : 'Explore the map'}</span>
-                <svg className={`${isMobileView ? 'h-5 w-5' : 'h-5 w-5 xl:h-6 xl:w-6'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                
+                {/* Glow effect */}
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-emerald-400 to-blue-400 blur-xl opacity-0 group-hover:opacity-60 transition-opacity duration-500" />
+                
+                <span className={`relative ${isMobileView ? 'text-2xl' : 'text-2xl xl:text-3xl'} group-hover:scale-110 transition-transform duration-300`}>🌊</span>
+                <span className="relative">{isMobileView ? 'Explore Map' : 'Explore the map'}</span>
+                <svg className={`relative ${isMobileView ? 'h-5 w-5' : 'h-5 w-5 xl:h-6 xl:w-6'} group-hover:translate-x-2 transition-transform duration-300`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </Button>
               <Link to="/ar" className={isMobileView ? 'w-full' : ''}>
                 <Button 
                   variant="secondary" 
-                  className={`flex items-center justify-center gap-3 transition-all duration-300 ${
+                  className={`group relative overflow-hidden flex items-center justify-center gap-3 transition-all duration-500 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border-2 border-slate-300 dark:border-slate-600 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-500/30 ${
                     isMobileView 
                       ? `w-full py-4 text-lg font-semibold rounded-2xl shadow-lg ${deviceInfo.isIOS ? 'active:scale-98' : 'active:scale-95'} ${deviceInfo.isAndroid ? 'min-h-[48px]' : 'min-h-[44px]'}` 
-                      : 'hover:scale-105 hover:shadow-xl hover:shadow-blue-500/25 xl:px-8 xl:py-4 xl:text-lg'
+                      : 'hover:scale-105 hover:-translate-y-1 xl:px-8 xl:py-4 xl:text-lg'
                   }`}
                 >
-                  <ARIcon className={`${isMobileView ? 'h-5 w-5' : 'h-5 w-5 xl:h-6 xl:w-6'}`} />
-                  <span>{isMobileView ? 'AR Demo' : 'Launch AR demo'}</span>
+                  {/* Animated gradient background */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  
+                  <ARIcon className={`relative ${isMobileView ? 'h-5 w-5' : 'h-5 w-5 xl:h-6 xl:w-6'} group-hover:rotate-12 transition-transform duration-300`} />
+                  <span className="relative">{isMobileView ? 'AR Demo' : 'Launch AR demo'}</span>
                 </Button>
               </Link>
             </div>
             <div className={`gap-4 ${isMobileView ? 'flex flex-col' : 'grid sm:grid-cols-2'}`}>
               {heroHighlights.map((item) => (
-                <div key={item.title} className={`flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white/90 shadow-md backdrop-blur dark:border-white/20 dark:bg-slate-900/75 ${isMobileView ? 'px-3 py-4' : 'px-4 py-3'}`}>
-                  <span className={`flex items-center justify-center rounded-xl bg-gradient-to-br from-green-500/15 to-blue-500/25 text-lg ${isMobileView ? 'h-12 w-12' : 'h-9 w-9'}`}>
+                <div key={item.title} className={`group flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white/95 shadow-lg backdrop-blur-xl transition-all duration-500 hover:shadow-xl hover:scale-[1.02] hover:border-emerald-300/60 dark:border-slate-700/60 dark:bg-slate-900/85 dark:hover:border-emerald-500/50 ${isMobileView ? 'px-3 py-4' : 'px-4 py-3'}`}>
+                  <span className={`flex items-center justify-center rounded-xl bg-gradient-to-br from-green-500/15 to-blue-500/25 text-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 ${isMobileView ? 'h-12 w-12' : 'h-9 w-9'}`}>
                     {item.icon}
                   </span>
                   <div className="space-y-1">
@@ -2778,8 +2808,6 @@ export default function App() {
               </div>
               
               <div className="app relative z-10">
-                <SecretAdminTrigger />
-                
                 <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-green-600 text-white px-4 py-2 rounded-lg shadow-glow-green">
                   Skip to content
                 </a>
@@ -2792,7 +2820,7 @@ export default function App() {
                   <div className="w-full px-2 pb-8 sm:px-4 lg:px-6 xl:px-8">
                     <ErrorBoundary>
                       <Routes>
-                        <Route path="/" element={<Home />} />
+                        <Route path="/" element={<ModernHome />} />
                         
                         <Route path="/gis" element={
                           <Suspense fallback={<MapLoadingFallback />}>
@@ -2818,8 +2846,8 @@ export default function App() {
                         
                         <Route path="/ar" element={<ARDemo />} />
                         <Route path="/admin/preview" element={<AdminPreview />} />
-                        <Route path="/admin" element={<SecretAdminPage />} />
-                        <Route path="/secret-admin-portal-2024" element={<SecretAdminPage />} />
+                        <Route path="/admin" element={<AdminPreview />} />
+                        {/* Admin route removed - component not found */}
                         <Route path="/about" element={<About />} />
                         
                         <Route path="*" element={

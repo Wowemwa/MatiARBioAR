@@ -55,9 +55,9 @@ export const Badge = memo(({ tone = 'default', size = 'sm', className = '', chil
 
 export const Button = memo(({ variant = 'primary', size = 'md', className = '', children, ...props }: ButtonProps) => {
   const variants = {
-    primary: 'group relative overflow-hidden bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 text-white hover:from-emerald-600 hover:via-blue-600 hover:to-purple-600 shadow-2xl hover:shadow-3xl hover:shadow-emerald-500/30 hover:scale-105 hover:-translate-y-0.5',
-    secondary: 'group relative overflow-hidden bg-white/85 dark:bg-slate-800/85 text-slate-700 dark:text-slate-200 border border-white/70 dark:border-white/25 hover:bg-white/95 dark:hover:bg-slate-800/95 shadow-xl hover:shadow-2xl hover:scale-105 hover:-translate-y-0.5',
-    ghost: 'group relative overflow-hidden bg-transparent text-slate-600 dark:text-slate-300 hover:bg-white/60 dark:hover:bg-slate-800/60 border border-transparent hover:border-white/40 dark:hover:border-white/20 hover:scale-105 hover:-translate-y-0.5',
+    primary: 'group relative overflow-hidden text-white shadow-lg hover:shadow-glow token-gradient-brand hover:scale-[1.03] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+    secondary: 'group relative overflow-hidden button-secondary text-slate-700 dark:text-slate-200 border border-white/60 dark:border-white/20 hover:scale-[1.02] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+    ghost: 'group relative overflow-hidden bg-transparent text-slate-600 dark:text-slate-300 hover:bg-white/50 dark:hover:bg-slate-800/50 border border-transparent hover:border-white/40 dark:hover:border-white/20 hover:scale-[1.02] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
   }
   
   const sizes = {
@@ -72,8 +72,8 @@ export const Button = memo(({ variant = 'primary', size = 'md', className = '', 
       {...props}
     >
       {/* Enhanced button visual effects */}
-      <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/10 to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+  <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-white/20 via-white/10 to-white/20" />
+  <div className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
       <span className="relative z-10">
         {children}
       </span>

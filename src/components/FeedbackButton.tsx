@@ -31,22 +31,21 @@ export default function FeedbackButton() {
 
   return (
     <>
-      {/* Floating Button - Always visible in viewport with animation */}
+      {/* Floating Button - Positioned in hero, always visible */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-[9999] w-14 h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
+        className="fixed right-6 top-32 z-[99999] w-14 h-14 bg-gradient-to-br from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white rounded-full shadow-lg hover:shadow-2xl transition-all duration-300 flex items-center justify-center group hover:scale-110"
         aria-label="Send Feedback"
         style={{ 
           position: 'fixed',
-          bottom: '1.5rem',
           right: '1.5rem',
-          zIndex: 9999,
-          animation: 'float 4s ease-in-out infinite'
+          top: '8rem',
+          zIndex: 99999
         }}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6 transition-transform group-hover:scale-110"
+          className="h-6 w-6 transition-transform group-hover:rotate-12"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -60,15 +59,15 @@ export default function FeedbackButton() {
         </svg>
       </button>
 
-      {/* Feedback Panel - Fixed in viewport */}
+      {/* Feedback Panel - Fixed near button */}
       {isOpen && (
         <div 
-          className="fixed bottom-24 right-6 z-[9999] w-80 md:w-96 animate-in fade-in slide-in-from-bottom-5 duration-300" 
+          className="fixed right-6 top-48 z-[99999] w-80 md:w-96 animate-in fade-in slide-in-from-right-5 duration-300" 
           style={{ 
             position: 'fixed',
-            bottom: '6rem',
             right: '1.5rem',
-            zIndex: 9999 
+            top: '12rem',
+            zIndex: 99999 
           }}
         >
           <SoftCard className="p-6 border border-emerald-200/40 bg-white/95 dark:border-emerald-800/40 dark:bg-slate-800/95 backdrop-blur-sm shadow-2xl">
