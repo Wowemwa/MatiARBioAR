@@ -220,8 +220,8 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
   if (!isVisible) return null
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-      <div className="group relative rounded-3xl backdrop-blur-xl bg-white/90 dark:bg-slate-800/90 border border-white/40 dark:border-white/20 shadow-2xl w-full max-w-7xl h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-2">
+      <div className="group relative rounded-3xl backdrop-blur-xl bg-white/90 dark:bg-slate-800/90 border border-white/40 dark:border-white/20 shadow-2xl w-full max-w-[92vw] h-[93vh] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         {/* Header */}
         <div className="relative z-10 bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 text-white p-8">
@@ -352,136 +352,188 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
           </div>
 
           {/* Edit Form */}
-          <div className="w-1/2 p-6 overflow-y-auto">
+          <div className="w-1/2 p-8 overflow-y-auto bg-gradient-to-br from-slate-50/50 to-blue-50/30 dark:from-slate-900/50 dark:to-blue-900/20">
             {editingSpecies ? (
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                    {isCreating ? 'Create New Species' : 'Edit Species'}
-                  </h3>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={handleSave}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors"
-                    >
-                      <SaveIcon className="w-4 h-4" />
-                      Save
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleCancel}
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-xl font-semibold hover:bg-gray-600 transition-colors"
-                    >
-                      <CancelIcon className="w-4 h-4" />
-                      Cancel
-                    </button>
+                {/* Enhanced Header */}
+                <div className="bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 rounded-2xl p-6 shadow-xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-white">
+                          {isCreating ? '✨ Create New Species' : '📝 Edit Species'}
+                        </h3>
+                        <p className="text-white/80 text-sm">Fill in the details below</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={addImage}
+                        className="flex items-center gap-2 px-5 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl font-bold backdrop-blur-sm transition-all duration-300 hover:scale-105"
+                      >
+                        <PlusIcon className="w-5 h-5" />
+                        Display Image
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSave}
+                        className="flex items-center gap-2 px-5 py-3 bg-white hover:bg-gray-50 text-emerald-600 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                      >
+                        <SaveIcon className="w-5 h-5" />
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCancel}
+                        className="flex items-center gap-2 px-5 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl font-bold backdrop-blur-sm transition-all duration-300 hover:scale-105"
+                      >
+                        <CancelIcon className="w-5 h-5" />
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Species ID
-                    </label>
-                    <input
-                      type="text"
-                      value={editingSpecies.id}
-                      onChange={(e) => setEditingSpecies({...editingSpecies, id: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
-                      placeholder="unique-species-id"
-                    />
+                {/* Form Fields with Enhanced Styling */}
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg space-y-6 border border-gray-100 dark:border-gray-700">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="group">
+                      <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                        <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                        </svg>
+                        Species ID
+                      </label>
+                      <input
+                        type="text"
+                        value={editingSpecies.id}
+                        onChange={(e) => setEditingSpecies({...editingSpecies, id: e.target.value})}
+                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all group-hover:border-purple-300 dark:group-hover:border-purple-700"
+                        placeholder="unique-species-id"
+                      />
+                    </div>
+                    <div className="group">
+                      <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                        <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                        </svg>
+                        Category
+                      </label>
+                      <select
+                        value={editingSpecies.category}
+                        onChange={(e) => setEditingSpecies({...editingSpecies, category: e.target.value as any})}
+                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all group-hover:border-emerald-300 dark:group-hover:border-emerald-700 cursor-pointer"
+                      >
+                        <option value="flora">🌱 Flora (Plants)</option>
+                        <option value="fauna">🦊 Fauna (Animals)</option>
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Category
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="group">
+                      <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                        <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        Common Name
+                      </label>
+                      <input
+                        type="text"
+                        value={editingSpecies.commonName}
+                        onChange={(e) => setEditingSpecies({...editingSpecies, commonName: e.target.value})}
+                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all group-hover:border-blue-300 dark:group-hover:border-blue-700"
+                        placeholder="e.g., Philippine Eagle"
+                      />
+                    </div>
+                    <div className="group">
+                      <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                        <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Scientific Name
+                      </label>
+                      <input
+                        type="text"
+                        value={editingSpecies.scientificName}
+                        onChange={(e) => setEditingSpecies({...editingSpecies, scientificName: e.target.value})}
+                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 italic transition-all group-hover:border-indigo-300 dark:group-hover:border-indigo-700"
+                        placeholder="Genus species"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="group">
+                    <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                      <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      Conservation Status
                     </label>
                     <select
-                      value={editingSpecies.category}
-                      onChange={(e) => setEditingSpecies({...editingSpecies, category: e.target.value as any})}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
+                      value={editingSpecies.status}
+                      onChange={(e) => setEditingSpecies({...editingSpecies, status: e.target.value as any})}
+                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all group-hover:border-amber-300 dark:group-hover:border-amber-700 cursor-pointer"
                     >
-                      <option value="flora">Flora</option>
-                      <option value="fauna">Fauna</option>
+                      {statusOptions.map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.value === 'CR' ? '🔴' : option.value === 'EN' ? '🟠' : option.value === 'VU' ? '🟡' : option.value === 'NT' ? '⚠️' : option.value === 'LC' ? '✅' : '❓'} {option.value} - {option.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Common Name
+                  <div className="group">
+                    <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                      <svg className="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Habitat
                     </label>
                     <input
                       type="text"
-                      value={editingSpecies.commonName}
-                      onChange={(e) => setEditingSpecies({...editingSpecies, commonName: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
+                      value={editingSpecies.habitat}
+                      onChange={(e) => setEditingSpecies({...editingSpecies, habitat: e.target.value})}
+                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all group-hover:border-teal-300 dark:group-hover:border-teal-700"
+                      placeholder="e.g., Tropical rainforests, mountainous regions"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Scientific Name
+
+                  <div className="group">
+                    <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                      <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                      </svg>
+                      Description
                     </label>
-                    <input
-                      type="text"
-                      value={editingSpecies.scientificName}
-                      onChange={(e) => setEditingSpecies({...editingSpecies, scientificName: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
-                      placeholder="Genus species"
+                    <textarea
+                      value={editingSpecies.blurb}
+                      onChange={(e) => setEditingSpecies({...editingSpecies, blurb: e.target.value})}
+                      rows={4}
+                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all group-hover:border-slate-300 dark:group-hover:border-slate-700 resize-none"
+                      placeholder="Provide a detailed description..."
                     />
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Conservation Status
-                  </label>
-                  <select
-                    value={editingSpecies.status}
-                    onChange={(e) => setEditingSpecies({...editingSpecies, status: e.target.value as any})}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
-                  >
-                    {statusOptions.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.value} - {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Habitat
-                  </label>
-                  <input
-                    type="text"
-                    value={editingSpecies.habitat}
-                    onChange={(e) => setEditingSpecies({...editingSpecies, habitat: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    value={editingSpecies.blurb}
-                    onChange={(e) => setEditingSpecies({...editingSpecies, blurb: e.target.value})}
-                    rows={4}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
-                  />
                 </div>
 
                 {/* Sites */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
+                  <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">
+                    <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
                     Sites Found
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-3">
                     {siteOptions.map(site => (
-                      <label key={site} className="flex items-center gap-2">
+                      <label key={site} className="flex items-center gap-3 p-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700/50 cursor-pointer transition-all hover:border-green-300 dark:hover:border-green-700">
                         <input
                           type="checkbox"
                           checked={editingSpecies.siteIds.includes(site)}
@@ -498,9 +550,9 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                               })
                             }
                           }}
-                          className="rounded"
+                          className="rounded w-5 h-5 text-green-500 focus:ring-2 focus:ring-green-500"
                         />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           {site.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                         </span>
                       </label>
@@ -509,36 +561,48 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                 </div>
 
                 {/* Highlights */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
+                  <div className="flex items-center justify-between mb-4">
+                    <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300">
+                      <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                      </svg>
                       Key Highlights
                     </label>
                     <button
                       type="button"
                       onClick={addHighlight}
-                      className="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl text-sm font-bold shadow-lg transition-all hover:scale-105"
                     >
+                      <PlusIcon className="w-4 h-4" />
                       Add
                     </button>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {editingSpecies.highlights.map((highlight, index) => (
-                      <div key={index} className="flex gap-2">
-                        <input
-                          type="text"
-                          value={highlight}
-                          onChange={(e) => {
-                            const newHighlights = [...editingSpecies.highlights]
-                            newHighlights[index] = e.target.value
-                            setEditingSpecies({...editingSpecies, highlights: newHighlights})
-                          }}
-                          className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
-                        />
+                      <div key={index} className="flex gap-2 group">
+                        <div className="flex-1 relative">
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                          <input
+                            type="text"
+                            value={highlight}
+                            onChange={(e) => {
+                              const newHighlights = [...editingSpecies.highlights]
+                              newHighlights[index] = e.target.value
+                              setEditingSpecies({...editingSpecies, highlights: newHighlights})
+                            }}
+                            className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all"
+                            placeholder="Enter a key highlight..."
+                          />
+                        </div>
                         <button
                           type="button"
                           onClick={() => removeHighlight(index)}
-                          className="px-3 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors"
+                          className="px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-all hover:scale-105 shadow-md"
                         >
                           <DeleteIcon className="w-4 h-4" />
                         </button>
@@ -548,39 +612,41 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                 </div>
 
                 {/* Images */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Images
-                    </label>
-                    <button
-                      type="button"
-                      onClick={addImage}
-                      className="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors"
-                    >
-                      Add Image
-                    </button>
-                  </div>
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
+                  <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">
+                    <svg className="w-5 h-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Images ({editingSpecies.images.length})
+                  </label>
                   <div className="space-y-3">
                     {editingSpecies.images.map((image, index) => (
-                      <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-xl p-3 bg-gray-50 dark:bg-slate-700/50">
-                        <div className="flex gap-2 mb-2">
-                          <input
-                            type="url"
-                            value={image.startsWith('data:') ? '' : image}
-                            onChange={(e) => {
-                              const newImages = [...editingSpecies.images]
-                              newImages[index] = e.target.value
-                              setEditingSpecies({...editingSpecies, images: newImages})
-                            }}
-                            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 text-sm"
-                            placeholder="https://example.com/image.jpg or upload file below"
-                          />
+                      <div key={index} className="border-2 border-gray-200 dark:border-gray-600 rounded-xl p-4 bg-gradient-to-br from-gray-50 to-blue-50/30 dark:from-slate-700/50 dark:to-blue-900/10 hover:shadow-md transition-all">
+                        <div className="flex gap-2 mb-3">
+                          <div className="flex-1 relative">
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                              </svg>
+                            </div>
+                            <input
+                              type="url"
+                              value={image.startsWith('data:') ? '' : image}
+                              onChange={(e) => {
+                                const newImages = [...editingSpecies.images]
+                                newImages[index] = e.target.value
+                                setEditingSpecies({...editingSpecies, images: newImages})
+                              }}
+                              className="w-full pl-10 pr-3 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all"
+                              placeholder="https://example.com/image.jpg or upload file below"
+                            />
+                          </div>
                           {image && (
                             <button
                               type="button"
                               onClick={() => setPreviewImage(image)}
-                              className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                              className="px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-md transition-all hover:scale-105"
+                              title="Preview image"
                             >
                               <EyeIcon className="w-4 h-4" />
                             </button>
@@ -588,12 +654,13 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                           <button
                             type="button"
                             onClick={() => removeImage(index)}
-                            className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                            className="px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md transition-all hover:scale-105"
+                            title="Remove image"
                           >
                             <DeleteIcon className="w-4 h-4" />
                           </button>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-600">
                           <input
                             type="file"
                             accept="image/*"
@@ -604,10 +671,10 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                                 handleImageUpload(index, file)
                               }
                             }}
-                            className="flex-1 text-sm text-gray-600 dark:text-gray-400 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900/30 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 text-sm text-gray-600 dark:text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-gradient-to-r file:from-blue-500 file:to-indigo-500 file:text-white hover:file:from-blue-600 hover:file:to-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed file:shadow-md file:transition-all"
                           />
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                            {uploadingImages.has(index) ? '⏳ Uploading...' : image.startsWith('data:') ? '📎 Uploaded' : '🔗 URL or Upload'}
+                          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                            {uploadingImages.has(index) ? '⏳ Uploading...' : image.startsWith('data:') ? '✅ Uploaded' : '🔗 URL or Upload'}
                           </span>
                         </div>
                       </div>
@@ -619,10 +686,26 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
               showFeedbacks ? (
                 <AdminFeedbacks />
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                  <div className="text-center">
-                    <EditIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                    <p className="text-lg">Select a species to edit or create a new one</p>
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center p-12 max-w-md">
+                    <div className="relative mb-6">
+                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-blue-500/20 to-purple-500/20 blur-3xl" />
+                      <div className="relative bg-gradient-to-br from-gray-100 to-blue-100 dark:from-slate-800 dark:to-blue-900/30 rounded-3xl p-8 border-2 border-gray-200 dark:border-gray-700 shadow-xl">
+                        <svg className="w-20 h-20 mx-auto text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
+                      No Species Selected
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-6">
+                      Select a species from the list to edit, or click the "Add New Species" button to create one
+                    </p>
+                    <div className="flex gap-2 text-xs text-gray-500 dark:text-gray-500 justify-center">
+                      <span>💡</span>
+                      <span>Tip: Use the search bar to find species quickly</span>
+                    </div>
                   </div>
                 </div>
               )

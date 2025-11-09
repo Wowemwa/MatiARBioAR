@@ -2669,6 +2669,9 @@ const HotspotForm = memo(function HotspotForm({ initialData, onSave, onCancel }:
 
 const SpeciesForm = memo(function SpeciesForm({ initialData, onSave, onCancel }: { initialData?: SpeciesDetail, onSave: (data: SpeciesFormValues) => void, onCancel: () => void }) {
   const [formData, setFormData] = useState<SpeciesFormValues>(() => createSpeciesFormValues(initialData))
+  const [showImageModal, setShowImageModal] = useState(false)
+  const [imageUrlInput, setImageUrlInput] = useState('')
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   useEffect(() => {
     setFormData(createSpeciesFormValues(initialData))
@@ -2679,11 +2682,111 @@ const SpeciesForm = memo(function SpeciesForm({ initialData, onSave, onCancel }:
     onSave(formData)
   }
 
+  const handleAddImageUrl = () => {
+    if (imageUrlInput.trim()) {
+      setFormData((prev) => ({ 
+        ...prev, 
+        images: [...(prev.images || []), imageUrlInput.trim()] 
+      }))
+      setImageUrlInput('')
+      setShowImageModal(false)
+    }
+  }
+
+  const handleImageUpload = async (file: File) => {
+    if (!file) return
+    
+    setUploadingImage(true)
+    try {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string
+        setFormData((prev) => ({ 
+          ...prev, 
+          images: [...(prev.images || []), base64] 
+        }))
+        setUploadingImage(false)
+        setShowImageModal(false)
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      setUploadingImage(false)
+    }
+  }
+
+  const removeImage = (index: number) => {
+    setFormData((prev) => ({ 
+      ...prev, 
+      images: prev.images?.filter((_, i) => i !== index) || [] 
+    }))
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
+    <>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Form Header with Icon */}
+        <div className="flex items-center gap-3 pb-4 border-b border-slate-200 dark:border-slate-700">
+          <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl shadow-lg">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+              {initialData ? 'Edit Species' : 'Add New Species'}
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Fill in the details about the species
+            </p>
+          </div>
+        </div>
+
+        {/* Image Gallery Preview */}
+        {formData.images && formData.images.length > 0 && (
+          <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Images ({formData.images.length})
+              </h4>
+              <button
+                type="button"
+                onClick={() => setShowImageModal(true)}
+                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
+              >
+                Manage
+              </button>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {formData.images.slice(0, 5).map((image, index) => (
+                <img 
+                  key={index}
+                  src={image} 
+                  alt={`Preview ${index + 1}`} 
+                  className="w-20 h-20 object-cover rounded-lg border-2 border-white dark:border-slate-700 shadow-md"
+                />
+              ))}
+              {formData.images.length > 5 && (
+                <div className="w-20 h-20 flex items-center justify-center bg-slate-200 dark:bg-slate-700 rounded-lg border-2 border-white dark:border-slate-600">
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                    +{formData.images.length - 5}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Form Fields with Icons */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="group">
+          <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+            <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
             Common Name *
           </label>
           <input
@@ -2691,12 +2794,16 @@ const SpeciesForm = memo(function SpeciesForm({ initialData, onSave, onCancel }:
             required
             value={formData.commonName}
             onChange={(e) => setFormData((prev) => ({ ...prev, commonName: e.target.value }))}
-            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            placeholder="e.g., Philippine Eagle"
+            className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all group-hover:border-emerald-300 dark:group-hover:border-emerald-700"
           />
         </div>
         
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
+        <div className="group">
+          <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+            <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
             Scientific Name *
           </label>
           <input
@@ -2704,12 +2811,16 @@ const SpeciesForm = memo(function SpeciesForm({ initialData, onSave, onCancel }:
             required
             value={formData.scientificName}
             onChange={(e) => setFormData((prev) => ({ ...prev, scientificName: e.target.value }))}
-            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 italic"
+            placeholder="e.g., Pithecophaga jefferyi"
+            className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 italic transition-all group-hover:border-blue-300 dark:group-hover:border-blue-700"
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
+        <div className="group">
+          <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+            <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+            </svg>
             Category *
           </label>
           <select
@@ -2718,15 +2829,18 @@ const SpeciesForm = memo(function SpeciesForm({ initialData, onSave, onCancel }:
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, category: e.target.value as SpeciesDetail['category'] }))
             }
-            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all group-hover:border-purple-300 dark:group-hover:border-purple-700 cursor-pointer"
           >
-            <option value="flora">Flora</option>
-            <option value="fauna">Fauna</option>
+            <option value="flora">🌱 Flora (Plants)</option>
+            <option value="fauna">🦊 Fauna (Animals)</option>
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
+        <div className="group">
+          <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+            <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
             Conservation Status *
           </label>
           <select
@@ -2735,20 +2849,23 @@ const SpeciesForm = memo(function SpeciesForm({ initialData, onSave, onCancel }:
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, status: e.target.value as SpeciesDetail['status'] }))
             }
-            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all group-hover:border-amber-300 dark:group-hover:border-amber-700 cursor-pointer"
           >
-            <option value="LC">Least Concern (LC)</option>
-            <option value="NT">Near Threatened (NT)</option>
-            <option value="VU">Vulnerable (VU)</option>
-            <option value="EN">Endangered (EN)</option>
-            <option value="CR">Critically Endangered (CR)</option>
-            <option value="DD">Data Deficient (DD)</option>
+            <option value="LC">✅ Least Concern (LC)</option>
+            <option value="NT">⚠️ Near Threatened (NT)</option>
+            <option value="VU">🟡 Vulnerable (VU)</option>
+            <option value="EN">🟠 Endangered (EN)</option>
+            <option value="CR">🔴 Critically Endangered (CR)</option>
+            <option value="DD">❓ Data Deficient (DD)</option>
           </select>
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
+      <div className="group">
+        <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+          <svg className="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
           Habitat *
         </label>
         <input
@@ -2756,12 +2873,16 @@ const SpeciesForm = memo(function SpeciesForm({ initialData, onSave, onCancel }:
           required
           value={formData.habitat}
           onChange={(e) => setFormData((prev) => ({ ...prev, habitat: e.target.value }))}
-          className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          placeholder="e.g., Tropical rainforests, mountainous regions"
+          className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all group-hover:border-teal-300 dark:group-hover:border-teal-700"
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
+      <div className="group">
+        <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+          <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+          </svg>
           Description *
         </label>
         <textarea
@@ -2769,40 +2890,169 @@ const SpeciesForm = memo(function SpeciesForm({ initialData, onSave, onCancel }:
           rows={4}
           value={formData.blurb}
           onChange={(e) => setFormData((prev) => ({ ...prev, blurb: e.target.value }))}
-          className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          placeholder="Provide a detailed description of the species..."
+          className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all group-hover:border-indigo-300 dark:group-hover:border-indigo-700 resize-none"
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
-          Image URL
-        </label>
-        <input
-          type="url"
-          value={formData.images[0] ?? ''}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, images: e.target.value ? [e.target.value] : [] }))
-          }
-          className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-        />
-      </div>
-
-      <div className="flex gap-3 justify-end pt-4 border-t border-slate-200 dark:border-slate-700">
+      <div className="flex gap-3 justify-between pt-6 border-t border-slate-200 dark:border-slate-700">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-xl font-medium transition-all"
+          className="px-6 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl font-semibold transition-all shadow-sm hover:shadow-md"
         >
           Cancel
         </button>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-all"
-        >
-          {initialData ? 'Update' : 'Create'} Species
-        </button>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => setShowImageModal(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Add Images ({formData.images?.length || 0})
+          </button>
+          <button
+            type="submit"
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            {initialData ? 'Update' : 'Create'} Species
+          </button>
+        </div>
       </div>
     </form>
+
+    {/* Image Management Modal */}
+    {showImageModal && (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4">
+          <div className="flex items-center justify-between sticky top-0 bg-white dark:bg-slate-800 pb-4 border-b border-slate-200 dark:border-slate-700">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Manage Images</h3>
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 p-2"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Current Images */}
+          {formData.images && formData.images.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Current Images ({formData.images.length})</h4>
+              <div className="grid grid-cols-2 gap-3">
+                {formData.images.map((image, index) => (
+                  <div key={index} className="relative group">
+                    <img 
+                      src={image} 
+                      alt={`Image ${index + 1}`} 
+                      className="w-full h-32 object-cover rounded-lg border border-slate-200 dark:border-slate-700"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {/* URL Input Option */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+                Add Image from URL
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={imageUrlInput}
+                  onChange={(e) => setImageUrlInput(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddImageUrl}
+                  disabled={!imageUrlInput.trim()}
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-all"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-300 dark:border-slate-600"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white dark:bg-slate-800 text-slate-500">or</span>
+              </div>
+            </div>
+
+            {/* File Upload Option */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+                Upload Image File
+              </label>
+              <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center hover:border-emerald-500 transition-colors">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleImageUpload(file)
+                  }}
+                  className="hidden"
+                  id="image-upload"
+                  disabled={uploadingImage}
+                />
+                <label htmlFor="image-upload" className="cursor-pointer">
+                  {uploadingImage ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-500"></div>
+                      <span className="text-slate-600 dark:text-slate-400">Uploading...</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <svg className="w-12 h-12 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Click to upload or drag and drop
+                      </p>
+                      <p className="text-xs text-slate-500">PNG, JPG, GIF up to 10MB</p>
+                    </div>
+                  )}
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4 border-t border-slate-200 dark:border-slate-700">
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-all"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 })
 
