@@ -93,23 +93,43 @@ export function DataProvider({ children }: DataProviderProps) {
   // Save species to localStorage whenever it changes
   useEffect(() => {
     if (species.length > 0 && !loading) {
-      localStorage.setItem(SPECIES_STORAGE_KEY, JSON.stringify(species))
+      try {
+        localStorage.setItem(SPECIES_STORAGE_KEY, JSON.stringify(species))
+        console.log('[DataContext] Saved species to localStorage:', species.length)
+      } catch (err) {
+        console.error('[DataContext] Failed to save to localStorage:', err)
+      }
     }
   }, [species, loading])
 
   // Admin CRUD operations
   const createSpecies = useCallback((newSpecies: SpeciesDetail) => {
-    setSpecies(prev => [...prev, newSpecies])
+    console.log('[DataContext] Creating species:', newSpecies.commonName)
+    setSpecies(prev => {
+      const updated = [...prev, newSpecies]
+      console.log('[DataContext] New species count:', updated.length)
+      return updated
+    })
   }, [])
 
   const updateSpecies = useCallback((id: string, updates: Partial<SpeciesDetail>) => {
-    setSpecies(prev => prev.map(s => 
-      s.id === id ? { ...s, ...updates } : s
-    ))
+    console.log('[DataContext] Updating species:', id, updates)
+    setSpecies(prev => {
+      const updated = prev.map(s => 
+        s.id === id ? { ...s, ...updates } : s
+      )
+      console.log('[DataContext] Species updated')
+      return updated
+    })
   }, [])
 
   const deleteSpecies = useCallback((id: string) => {
-    setSpecies(prev => prev.filter(s => s.id !== id))
+    console.log('[DataContext] Deleting species:', id)
+    setSpecies(prev => {
+      const updated = prev.filter(s => s.id !== id)
+      console.log('[DataContext] New species count:', updated.length)
+      return updated
+    })
   }, [])
 
   const resetToDefault = useCallback(() => {

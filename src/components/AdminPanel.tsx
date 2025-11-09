@@ -95,6 +95,8 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
   const handleSave = () => {
     if (!editingSpecies) return
 
+    console.log('[AdminPanel] Saving species:', editingSpecies.commonName, 'Creating:', isCreating)
+
     if (isCreating) {
       // Add new species - generate ID if empty
       const newSpeciesData: SpeciesDetail = {
@@ -102,6 +104,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
         id: editingSpecies.id || `species-${Date.now()}`,
         highlights: editingSpecies.highlights.filter(h => h.trim())
       }
+      console.log('[AdminPanel] Creating new species:', newSpeciesData)
       createSpecies(newSpeciesData)
     } else {
       // Update existing species
@@ -109,16 +112,20 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
         ...editingSpecies,
         highlights: editingSpecies.highlights.filter(h => h.trim())
       }
+      console.log('[AdminPanel] Updating species:', editingSpecies.id)
       updateSpecies(editingSpecies.id, updates)
     }
 
     setEditingSpecies(null)
     setIsCreating(false)
+    alert('✅ Species saved successfully!')
   }
 
   const handleDelete = (id: string) => {
     if (confirm('Are you sure you want to delete this species? This action cannot be undone.')) {
+      console.log('[AdminPanel] Deleting species:', id)
       deleteSpecies(id)
+      alert('✅ Species deleted successfully!')
     }
   }
 
