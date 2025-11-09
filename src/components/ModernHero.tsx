@@ -78,7 +78,7 @@ const ModernHero = memo(function ModernHero() {
             style={{ transform: 'none', backfaceVisibility: 'hidden', WebkitFontSmoothing: 'antialiased' }}
           >
             <span className="block text-slate-900 dark:text-white">
-              Discover Nature
+              Discover Mati
             </span>
             <span className="block mt-1 md:mt-2 relative z-40 text-blue-600 dark:text-emerald-400 pb-0.5">
               Through Technology
