@@ -362,7 +362,7 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
         
         <div 
           id="mati-gis-map" 
-          className="h-[70vh] w-full relative z-0"
+          className="h-[60vh] sm:h-[70vh] w-full relative z-0"
         />
         
         {/* Map Legend */}

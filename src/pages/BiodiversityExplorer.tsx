@@ -34,7 +34,7 @@ export default function BiodiversityExplorer() {
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23059669' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
       }} />
       
-      <div className="relative space-y-12 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="relative space-y-8 sm:space-y-10 lg:space-y-12 px-4 py-8 sm:px-6 lg:px-8">
         {/* Enhanced Header */}
         <header className="relative overflow-hidden rounded-3xl border border-white/30 bg-white/80 backdrop-blur-2xl shadow-2xl dark:border-white/10 dark:bg-slate-900/80">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-blue-500/5 to-purple-500/5" />
@@ -48,7 +48,7 @@ export default function BiodiversityExplorer() {
                 <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Mati City Biodiversity Database</span>
               </div>
               
-              <h1 className="text-6xl md:text-7xl font-black tracking-tight bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">
                 <AnimatedText text="Biodiversity Explorer" />
               </h1>
               

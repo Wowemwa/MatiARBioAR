@@ -66,7 +66,7 @@ export default function GISMapPage({ className = '' }: GISMapPageProps) {
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230369a1' fill-opacity='0.03'%3E%3Cpath d='M30 30l15-15v30l-15-15zm0 0l-15-15h30l-15 15z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
       }} />
       
-      <div className="relative space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="relative space-y-6 sm:space-y-8 px-4 py-8 sm:px-6 lg:px-8">
         {/* Enhanced Header */}
         <header className="relative overflow-hidden rounded-3xl border border-white/30 bg-white/80 backdrop-blur-2xl shadow-2xl dark:border-white/10 dark:bg-slate-900/80">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-emerald-500/5 to-teal-500/5" />
@@ -80,7 +80,7 @@ export default function GISMapPage({ className = '' }: GISMapPageProps) {
                 <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">Interactive GIS Mapping System</span>
               </div>
               
-              <h1 className="text-6xl md:text-7xl font-black tracking-tight bg-gradient-to-r from-blue-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-6">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight bg-gradient-to-r from-blue-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-6">
                 <AnimatedText text="GIS Map Explorer" />
               </h1>
               

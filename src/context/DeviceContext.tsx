@@ -45,17 +45,14 @@ export const DeviceProvider: React.FC<DeviceProviderProps> = ({ children }) => {
       const isIOS = /iPad|iPhone|iPod/.test(userAgent);
       const isAndroid = /Android/.test(userAgent);
       
-      // Better tablet detection
-      const isTablet = /iPad/.test(userAgent) || 
-        (isAndroid && !/Mobile/.test(userAgent)) ||
-        (screenWidth >= 768 && screenWidth <= 1280 && 
-         (screenHeight / screenWidth < 1.5 || screenWidth / screenHeight < 1.5));
+      // Better tablet detection - tablets are between 768px and 1024px with touch
+      const isTablet = (screenWidth >= 768 && screenWidth <= 1024) && 
+        ('ontouchstart' in window || /iPad|Android/.test(userAgent));
       
-      // Comprehensive mobile detection with better breakpoints
-      const isMobileDevice = isIOS || isAndroid || 
-        /webOS|BlackBerry|IEMobile|Opera Mini/i.test(userAgent) ||
-        screenWidth <= 768 ||
-        (screenWidth <= 1024 && 'ontouchstart' in window);
+      // More accurate mobile detection - true mobiles are smaller screens with touch
+      const isMobileDevice = (screenWidth <= 640) || 
+        (screenWidth <= 768 && 'ontouchstart' in window && !isTablet) ||
+        /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
 
       setDeviceInfo({
         isMobile: isMobileDevice,

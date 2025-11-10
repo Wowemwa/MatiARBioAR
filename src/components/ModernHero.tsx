@@ -72,7 +72,7 @@ const ModernHero = memo(function ModernHero() {
 
           {/* Main Heading - solid colors (no gradient, no per-char animation) */}
           <h1
-            className={`relative z-[999] -mt-12 md:-mt-16 text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight leading-tight md:leading-snug transition-opacity duration-1000 delay-100 ${
+            className={`relative z-[999] -mt-12 md:-mt-16 text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight leading-tight md:leading-snug transition-opacity duration-1000 delay-100 ${
               isVisible ? 'opacity-100' : 'opacity-0'
             }`}
             style={{ transform: 'none', backfaceVisibility: 'hidden', WebkitFontSmoothing: 'antialiased' }}
@@ -86,7 +86,7 @@ const ModernHero = memo(function ModernHero() {
           </h1>
 
           {/* Subtitle */}
-          <p className={`mt-6 sm:mt-8 text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto font-medium leading-relaxed transition-all duration-1000 delay-200 bg-transparent backdrop-blur-none ${
+          <p className={`mt-6 sm:mt-8 text-base sm:text-lg md:text-xl lg:text-2xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto font-medium leading-relaxed transition-all duration-1000 delay-200 bg-transparent backdrop-blur-none ${
             isVisible ? 'mt-0 opacity-100' : 'mt-3 opacity-0'
           }`}>
             Explore Mati's rich biodiversity through interactive maps, AR experiences,
