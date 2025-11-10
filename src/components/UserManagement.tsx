@@ -14,7 +14,7 @@ export default function UserManagement({ isVisible, onClose }: UserManagementPro
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-2">
-      <div className="group relative rounded-3xl backdrop-blur-xl bg-white/90 dark:bg-slate-800/90 border border-white/40 dark:border-white/20 shadow-2xl w-full max-w-[92vw] h-[93vh] overflow-hidden">
+      <div className="group relative rounded-3xl backdrop-blur-xl bg-white/90 dark:bg-slate-800/90 border border-white/40 dark:border-white/20 shadow-2xl w-full max-w-[92vw] h-[85vh] sm:h-[90vh] lg:h-[93vh] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-cyan-500/5 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         
         {/* Header */}
@@ -50,7 +50,7 @@ export default function UserManagement({ isVisible, onClose }: UserManagementPro
         </div>
 
         {/* Content Area */}
-        <div className="relative z-10 p-8 overflow-y-auto h-[calc(100vh-240px)]">
+        <div className="relative z-10 p-8 overflow-y-auto h-[calc(100vh-240px)] sm:h-[calc(100vh-280px)] lg:h-[calc(100vh-320px)]">
           {activeTab === 'team' && <AdminTeam />}
         </div>
       </div>

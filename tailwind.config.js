@@ -2,7 +2,7 @@
 export default {
   darkMode: 'class',
   content: ['./index.html', './src/**/*.{ts,tsx}'],
-  theme: { 
+  theme: {
     extend: {
       colors: {
         brand: {
@@ -17,8 +17,16 @@ export default {
       },
       transitionTimingFunction: {
         'bounce-soft': 'cubic-bezier(.34,1.56,.64,1)'
+      },
+      screens: {
+        '3xl': '1920px',
+        '4xl': '2560px',
+      },
+      maxWidth: {
+        '8xl': '88rem', // 1408px for ultrawide
+        '9xl': '96rem', // 1536px for very wide screens
       }
-    } 
+    }
   },
   plugins: [],
 }

@@ -40,7 +40,7 @@ const ModernHero = memo(function ModernHero() {
   ]
 
   return (
-    <div className={`relative min-h-[85vh] flex items-center justify-center overflow-hidden rounded-3xl transition-all duration-1000 ${
+    <div className={`relative min-h-[70vh] sm:min-h-[80vh] lg:min-h-[85vh] flex items-center justify-center overflow-hidden rounded-3xl transition-all duration-1000 ${
       isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
     }`}>
       {/* Subtle overlay - works with main app background */}

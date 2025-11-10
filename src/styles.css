@@ -24,6 +24,48 @@ html {
   }
 }
 
+/* High DPI display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Ultrawide screen optimizations */
+@media (min-width: 1920px) {
+  .container-responsive {
+    max-width: 1408px; /* 88rem */
+  }
+}
+
+@media (min-width: 2560px) {
+  .container-responsive {
+    max-width: 1536px; /* 96rem */
+  }
+}
+
+/* Portrait orientation adjustments */
+@media (orientation: portrait) and (max-height: 600px) {
+  .hero-responsive {
+    min-height: 60vh !important;
+  }
+}
+
+/* Landscape orientation adjustments for very wide screens */
+@media (orientation: landscape) and (min-width: 1920px) {
+  .hero-responsive {
+    min-height: 75vh;
+  }
+}
+
+/* Square/near-square aspect ratios */
+@media (max-aspect-ratio: 4/3) {
+  .grid-responsive {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+}
+
 /* Modern UI Utilities */
 .modern-glass {
   background: rgba(255, 255, 255, 0.85);

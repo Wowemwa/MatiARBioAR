@@ -214,7 +214,7 @@ export default function BiodiversityExplorer() {
           </div>
 
           {/* Species Grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-6">
             {results.map((s, index) => (
               <div 
                 key={s.id} 

@@ -105,7 +105,7 @@ const ModernFeatures = memo(function ModernFeatures() {
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl" />
       
-      <div className="relative max-w-7xl mx-auto">
+      <div className="relative max-w-7xl 3xl:max-w-8xl 4xl:max-w-9xl mx-auto">
         {/* Section Header */}
         <div className="text-center mb-12 space-y-4">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500/10 to-emerald-500/10 backdrop-blur-sm border border-blue-500/20 rounded-full text-sm font-bold text-blue-700 dark:text-emerald-400 mb-4">

@@ -221,7 +221,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-2">
-      <div className="group relative rounded-3xl backdrop-blur-xl bg-white/90 dark:bg-slate-800/90 border border-white/40 dark:border-white/20 shadow-2xl w-full max-w-[92vw] h-[93vh] overflow-hidden">
+      <div className="group relative rounded-3xl backdrop-blur-xl bg-white/90 dark:bg-slate-800/90 border border-white/40 dark:border-white/20 shadow-2xl w-full max-w-[92vw] h-[85vh] sm:h-[90vh] lg:h-[93vh] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         {/* Header */}
         <div className="relative z-10 bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 text-white p-8">
