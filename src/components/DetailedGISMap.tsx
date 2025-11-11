@@ -1,8 +1,9 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useData } from '../context/DataContext'
-import { WaveIcon, MountainIcon, SpeciesIcon } from './Icons'
+import { useAdmin } from '../context/AdminContext'
+import { supabase } from '../supabaseClient'
 
 // Fix for Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -18,24 +19,53 @@ interface DetailedGISMapProps {
 
 export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) {
   const { hotspots, species, loading } = useData()
+  const { isAdmin } = useAdmin()
   const [map, setMap] = useState<L.Map | null>(null)
   const [filter, setFilter] = useState<'all' | 'marine' | 'terrestrial'>('all')
   const [selectedHotspot, setSelectedHotspot] = useState<string | null>(null)
+  const [panelOpen, setPanelOpen] = useState(false)
+  const [showGallery, setShowGallery] = useState(false)
+  const [selectedSpeciesId, setSelectedSpeciesId] = useState<string | null>(null)
   const [isMapReady, setIsMapReady] = useState(false)
+  const [activeMarkers, setActiveMarkers] = useState<Map<string, L.Marker>>(new Map())
+  const [currentLayer, setCurrentLayer] = useState<'street' | 'satellite' | 'topo'>('street')
+  
+  // Admin marker placement state
+  const [adminMode, setAdminMode] = useState(false)
+  const [markerType, setMarkerType] = useState<'marine' | 'terrestrial'>('marine')
+  const [tempMarker, setTempMarker] = useState<L.Marker | null>(null)
+  const [showMarkerForm, setShowMarkerForm] = useState(false)
+  const [newHotspotData, setNewHotspotData] = useState({
+    name: '',
+    barangay: '',
+    designation: '',
+    description: '',
+    areaHectares: 0,
+    lat: 0,
+    lng: 0,
+    type: 'marine' as 'marine' | 'terrestrial',
+    features: [] as string[],
+    selectedSpeciesIds: [] as string[]
+  })
+
+  // Focus on Mati City only
+  const cityHotspots = useMemo(() => (
+    hotspots.filter(site => (site.city || '').toLowerCase().includes('mati'))
+  ), [hotspots])
 
   // Filter hotspots based on current selection
-  const filteredHotspots = useMemo(() => {
-    return hotspots.filter(site => filter === 'all' || site.type === filter)
-  }, [hotspots, filter])
+  const filteredHotspots = useMemo(() => (
+    cityHotspots.filter(site => filter === 'all' || site.type === filter)
+  ), [cityHotspots, filter])
 
   // Statistics for Mati City
   const stats = useMemo(() => ({
-    total: hotspots.length,
-    marine: hotspots.filter(s => s.type === 'marine').length,
-    terrestrial: hotspots.filter(s => s.type === 'terrestrial').length,
+    total: cityHotspots.length,
+    marine: cityHotspots.filter(s => s.type === 'marine').length,
+    terrestrial: cityHotspots.filter(s => s.type === 'terrestrial').length,
     totalSpecies: species.length,
-    protectedArea: hotspots.reduce((total, site) => total + (site.areaHectares || 0), 0)
-  }), [hotspots, species])
+    protectedArea: cityHotspots.reduce((total, site) => total + (site.areaHectares || 0), 0)
+  }), [cityHotspots, species])
 
   // Initialize map centered on Mati City
   useEffect(() => {
@@ -43,9 +73,19 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
       const mapInstance = L.map('mati-gis-map', {
         center: [6.9483, 126.2272], // Mati City coordinates
         zoom: 11,
-        zoomControl: true,
-        attributionControl: true
+        zoomControl: false, // We'll add custom zoom controls
+        attributionControl: true,
+        minZoom: 10,
+        maxZoom: 18
       })
+
+      // Restrict view to Mati City bounds (approx)
+      const bounds = L.latLngBounds([
+        [6.70, 126.10], // SW
+        [7.02, 126.32]  // NE
+      ])
+      mapInstance.setMaxBounds(bounds)
+      mapInstance.on('drag', () => mapInstance.panInsideBounds(bounds, { animate: false }))
 
       // Add multiple tile layer options
       const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -66,16 +106,95 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
       // Default to street layer
       streetLayer.addTo(mapInstance)
 
-      // Layer control
-      const baseMaps = {
-        'Street Map': streetLayer,
-        'Satellite': satelliteLayer,
-        'Topographic': topoLayer
-      }
-      L.control.layers(baseMaps).addTo(mapInstance)
+      // Store layer references
+      ;(mapInstance as any).layers = { streetLayer, satelliteLayer, topoLayer }
+
+      // Custom zoom controls with animation
+      L.Control.extend({
+        onAdd: function() {
+          const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control')
+          div.innerHTML = `
+            <a href="#" class="leaflet-control-zoom-in" title="Zoom in" role="button" aria-label="Zoom in" style="width:34px;height:34px;line-height:34px;font-size:18px;font-weight:bold;background:white;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #ccc;transition:all 0.2s;">+</a>
+            <a href="#" class="leaflet-control-zoom-out" title="Zoom out" role="button" aria-label="Zoom out" style="width:34px;height:34px;line-height:34px;font-size:18px;font-weight:bold;background:white;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">−</a>
+          `
+          div.onclick = (e) => {
+            e.preventDefault()
+            const target = e.target as HTMLElement
+            if (target.classList.contains('leaflet-control-zoom-in')) {
+              mapInstance.zoomIn()
+            } else if (target.classList.contains('leaflet-control-zoom-out')) {
+              mapInstance.zoomOut()
+            }
+          }
+          return div
+        }
+      } as any)
+      new (L.Control.extend({
+        onAdd: function() {
+          const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control')
+          div.innerHTML = `
+            <a href="#" class="leaflet-control-zoom-in" title="Zoom in" role="button" aria-label="Zoom in" style="width:34px;height:34px;line-height:34px;font-size:18px;font-weight:bold;background:white;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #ccc;transition:all 0.2s;">+</a>
+            <a href="#" class="leaflet-control-zoom-out" title="Zoom out" role="button" aria-label="Zoom out" style="width:34px;height:34px;line-height:34px;font-size:18px;font-weight:bold;background:white;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">−</a>
+          `
+          div.onclick = (e) => {
+            e.preventDefault()
+            const target = e.target as HTMLElement
+            if (target.classList.contains('leaflet-control-zoom-in')) {
+              mapInstance.zoomIn()
+            } else if (target.classList.contains('leaflet-control-zoom-out')) {
+              mapInstance.zoomOut()
+            }
+          }
+          return div
+        }
+      }) as any)({ position: 'topright' }).addTo(mapInstance)
+
+      // Add locate control (find my location)
+      new (L.Control.extend({
+        onAdd: function() {
+          const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control')
+          div.innerHTML = `
+            <a href="#" title="Find my location" role="button" aria-label="Find my location" style="width:34px;height:34px;line-height:34px;font-size:18px;background:white;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">📍</a>
+          `
+          div.onclick = (e) => {
+            e.preventDefault()
+            if (navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition((position) => {
+                mapInstance.flyTo([position.coords.latitude, position.coords.longitude], 13, {
+                  duration: 1.5
+                })
+                L.circle([position.coords.latitude, position.coords.longitude], {
+                  radius: 100,
+                  color: '#3b82f6',
+                  fillColor: '#3b82f6',
+                  fillOpacity: 0.2
+                }).addTo(mapInstance)
+              })
+            }
+          }
+          return div
+        }
+      }) as any)({ position: 'topright' }).addTo(mapInstance)
 
       // Scale control
-      L.control.scale().addTo(mapInstance)
+      L.control.scale({ position: 'bottomright' }).addTo(mapInstance)
+
+      // Add map event listeners for interactivity
+      mapInstance.on('zoomstart', () => {
+        mapInstance.getContainer().style.cursor = 'zoom-in'
+      })
+      
+      mapInstance.on('zoomend', () => {
+        mapInstance.getContainer().style.cursor = ''
+      })
+
+      mapInstance.on('movestart', () => {
+        mapInstance.getContainer().style.cursor = 'grabbing'
+      })
+
+      mapInstance.on('moveend', () => {
+        mapInstance.getContainer().style.cursor = ''
+      })
 
       setMap(mapInstance)
       setIsMapReady(true)
@@ -86,167 +205,219 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
     }
   }, [])
 
-  // Add markers for hotspots
+  // Admin: Handle map clicks to place markers
   useEffect(() => {
-    if (!map || !isMapReady || loading) return
+    if (!map || !isMapReady || !adminMode) return
 
-    // Clear existing markers
-    map.eachLayer(layer => {
-      if (layer instanceof L.Marker) {
-        map.removeLayer(layer)
+    const handleMapClick = (e: L.LeafletMouseEvent) => {
+      // Remove previous temp marker if exists
+      if (tempMarker) {
+        map.removeLayer(tempMarker)
       }
-    })
 
-    // Add markers for filtered hotspots
-    filteredHotspots.forEach(site => {
-      // Custom icons based on site type
-      const iconHtml = site.type === 'marine' 
-        ? `<div style="
-            width: 32px; 
-            height: 32px; 
+      // Create temp marker at clicked location
+      const iconHtml = markerType === 'marine'
+        ? `<div class="marker-pulse temp-marker" style="
+            width: 40px; 
+            height: 40px; 
             background: linear-gradient(135deg, #0ea5e9, #0284c7); 
             border: 3px solid white; 
             border-radius: 50%; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            font-size: 16px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            font-size: 18px; 
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
             cursor: pointer;
+            animation: bounce 0.5s ease;
           ">🌊</div>`
-        : `<div style="
-            width: 32px; 
-            height: 32px; 
+        : `<div class="marker-pulse temp-marker" style="
+            width: 40px; 
+            height: 40px; 
             background: linear-gradient(135deg, #10b981, #059669); 
             border: 3px solid white; 
             border-radius: 50%; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            font-size: 16px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            font-size: 18px; 
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
             cursor: pointer;
+            animation: bounce 0.5s ease;
+          ">🏔️</div>`
+
+      const tempIcon = L.divIcon({
+        html: iconHtml,
+        className: 'custom-div-icon',
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
+      })
+
+      const newTempMarker = L.marker([e.latlng.lat, e.latlng.lng], { 
+        icon: tempIcon,
+        draggable: true 
+      }).addTo(map)
+
+      // Update coordinates when marker is dragged
+      newTempMarker.on('dragend', () => {
+        const pos = newTempMarker.getLatLng()
+        setNewHotspotData(prev => ({
+          ...prev,
+          lat: pos.lat,
+          lng: pos.lng
+        }))
+      })
+
+      setTempMarker(newTempMarker)
+      setNewHotspotData(prev => ({
+        ...prev,
+        lat: e.latlng.lat,
+        lng: e.latlng.lng,
+        type: markerType
+      }))
+      setShowMarkerForm(true)
+    }
+
+    map.on('click', handleMapClick)
+
+    return () => {
+      map.off('click', handleMapClick)
+    }
+  }, [map, isMapReady, adminMode, markerType, tempMarker])
+
+  // Add markers for hotspots
+  useEffect(() => {
+    if (!map || !isMapReady || loading) return
+
+    // Clear existing markers
+    activeMarkers.forEach(marker => map.removeLayer(marker))
+    const newMarkers = new Map<string, L.Marker>()
+
+  // Add markers for filtered hotspots
+    filteredHotspots.forEach(site => {
+      // Custom icons based on site type with pulse animation
+      const iconHtml = site.type === 'marine' 
+        ? `<div class="marker-pulse" style="
+            width: 40px; 
+            height: 40px; 
+            background: linear-gradient(135deg, #0ea5e9, #0284c7); 
+            border: 3px solid white; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 18px; 
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+            cursor: pointer;
+            transition: all 0.3s ease;
+          ">🌊</div>`
+        : `<div class="marker-pulse" style="
+            width: 40px; 
+            height: 40px; 
+            background: linear-gradient(135deg, #10b981, #059669); 
+            border: 3px solid white; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 18px; 
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            cursor: pointer;
+            transition: all 0.3s ease;
           ">🏔️</div>`
 
       const customIcon = L.divIcon({
         html: iconHtml,
         className: 'custom-div-icon',
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
       })
 
-      const marker = L.marker([site.lat, site.lng], { icon: customIcon })
-        .addTo(map)
+  const marker = L.marker([site.lat, site.lng], { 
+    icon: customIcon,
+    riseOnHover: true
+  }).addTo(map)
 
-      // Enhanced popup with detailed information including species
-      const siteSpecies = species.filter(sp => sp.siteIds.includes(site.id))
-      const floraCount = siteSpecies.filter(sp => sp.category === 'flora').length
-      const faunaCount = siteSpecies.filter(sp => sp.category === 'fauna').length
-      
-      const highlightSpecies = siteSpecies.filter(sp => site.highlightSpeciesIds.includes(sp.id))
-      
-      const popupContent = `
-        <div style="min-width: 350px; max-width: 450px; font-family: system-ui, -apple-system, sans-serif;">
-          <div style="
-            background: linear-gradient(135deg, ${site.type === 'marine' ? '#0ea5e9, #0284c7' : '#10b981, #059669'}); 
-            color: white; 
-            padding: 12px; 
-            margin: -12px -12px 12px -12px; 
-            border-radius: 8px 8px 0 0;
-          ">
-            <h3 style="margin: 0; font-size: 16px; font-weight: 700;">${site.name}</h3>
-            <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">${site.designation}</p>
-          </div>
-          
-          <div style="padding: 0;">
-            <p style="margin: 0 0 12px 0; font-size: 14px; line-height: 1.4; color: #374151;">
-              ${site.summary}
-            </p>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin: 12px 0;">
-              <div style="background: #f3f4f6; padding: 8px; border-radius: 6px;">
-                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase; font-weight: 600;">Area</div>
-                <div style="font-size: 13px; font-weight: 700; color: #111827;">
-                  ${site.areaHectares ? `${site.areaHectares.toLocaleString()} ha` : 'N/A'}
-                </div>
-              </div>
-              <div style="background: #f0fdf4; padding: 8px; border-radius: 6px; border: 1px solid #bbf7d0;">
-                <div style="font-size: 10px; color: #15803d; text-transform: uppercase; font-weight: 600;">Flora</div>
-                <div style="font-size: 13px; font-weight: 700; color: #15803d;">
-                  ${floraCount} species
-                </div>
-              </div>
-              <div style="background: #fef3c7; padding: 8px; border-radius: 6px; border: 1px solid #fcd34d;">
-                <div style="font-size: 10px; color: #92400e; text-transform: uppercase; font-weight: 600;">Fauna</div>
-                <div style="font-size: 13px; font-weight: 700; color: #92400e;">
-                  ${faunaCount} species
-                </div>
-              </div>
-            </div>
-            
-            ${highlightSpecies.length > 0 ? `
-              <div style="margin: 12px 0;">
-                <div style="font-size: 11px; color: #6b7280; text-transform: uppercase; font-weight: 600; margin-bottom: 6px;">Flagship Species</div>
-                <div style="display: flex; flex-direction: column; gap: 4px;">
-                  ${highlightSpecies.slice(0, 3).map(sp => `
-                    <div style="background: ${sp.category === 'flora' ? '#f0fdf4' : '#fef3c7'}; border: 1px solid ${sp.category === 'flora' ? '#bbf7d0' : '#fcd34d'}; padding: 6px 8px; border-radius: 4px;">
-                      <div style="font-size: 12px; font-weight: 600; color: #111827;">${sp.commonName}</div>
-                      <div style="font-size: 10px; color: #6b7280; font-style: italic;">${sp.scientificName}</div>
-                      <div style="font-size: 10px; margin-top: 2px;">
-                        <span style="background: ${sp.status === 'CR' ? '#fecaca' : sp.status === 'EN' ? '#fed7aa' : sp.status === 'VU' ? '#fef3c7' : '#d1fae5'}; 
-                                     color: ${sp.status === 'CR' ? '#991b1b' : sp.status === 'EN' ? '#9a3412' : sp.status === 'VU' ? '#92400e' : '#166534'}; 
-                                     padding: 2px 6px; border-radius: 12px; font-weight: 600;">${sp.status}</span>
-                      </div>
-                    </div>
-                  `).join('')}
-                </div>
-                ${siteSpecies.length > 3 ? `<div style="font-size: 11px; color: #6b7280; margin-top: 6px; text-align: center;">+${siteSpecies.length - 3} more species found here</div>` : ''}
-              </div>
-            ` : ''}
-            
-            <div style="margin: 12px 0;">
-              <div style="font-size: 11px; color: #6b7280; text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Key Features</div>
-              <ul style="margin: 0; padding-left: 16px; font-size: 11px; color: #374151; line-height: 1.4;">
-                ${site.features.slice(0, 3).map(feature => `<li>${feature}</li>`).join('')}
-              </ul>
-            </div>
-            
-            ${site.visitorNotes ? `
-              <div style="background: #eff6ff; border: 1px solid #3b82f6; border-radius: 6px; padding: 8px; margin-top: 12px;">
-                <div style="font-size: 11px; color: #1e40af; text-transform: uppercase; font-weight: 600; margin-bottom: 2px;">
-                  Visitor Information
-                </div>
-                <div style="font-size: 11px; color: #1e40af; line-height: 1.4;">${site.visitorNotes}</div>
-              </div>
-            ` : ''}
-            
-            <div style="text-align: center; margin-top: 12px;">
-              <div style="font-size: 10px; color: #9ca3af;">Click site name above for detailed species list</div>
-            </div>
-          </div>
-        </div>
-      `
-
-      marker.bindPopup(popupContent, {
-        maxWidth: 400,
-        className: 'custom-popup'
-      })
-
-      // Highlight selected hotspot
+      // Enhanced marker interactions
       marker.on('click', () => {
         setSelectedHotspot(site.id)
+        setPanelOpen(true)
+        setShowGallery(false)
+        setSelectedSpeciesId(null)
+        
+        // Fly to marker with smooth animation
+        map.flyTo([site.lat, site.lng], 13, {
+          duration: 1.5,
+          easeLinearity: 0.5
+        })
+        
+        // Highlight the clicked marker
+        newMarkers.forEach(m => {
+          const el = m.getElement()
+          if (el) el.style.filter = 'none'
+        })
+        const el = marker.getElement()
+        if (el) {
+          el.style.filter = 'drop-shadow(0 0 10px rgba(59, 130, 246, 0.8))'
+        }
       })
+
+      // Hover effects with tooltip
+      marker.on('mouseover', function(this: L.Marker) {
+        const el = this.getElement()
+        if (el) {
+          const innerDiv = el.querySelector('.marker-pulse') as HTMLElement
+          if (innerDiv) {
+            innerDiv.style.transform = 'scale(1.2)'
+            innerDiv.style.zIndex = '1000'
+          }
+        }
+        
+        // Show tooltip with site name
+        this.bindTooltip(site.name, {
+          permanent: false,
+          direction: 'top',
+          className: 'custom-tooltip',
+          offset: [0, -20]
+        }).openTooltip()
+      })
+
+      marker.on('mouseout', function(this: L.Marker) {
+        const el = this.getElement()
+        if (el && site.id !== selectedHotspot) {
+          const innerDiv = el.querySelector('.marker-pulse') as HTMLElement
+          if (innerDiv) {
+            innerDiv.style.transform = 'scale(1)'
+            innerDiv.style.zIndex = '600'
+          }
+        }
+        this.closeTooltip()
+      })
+
+      newMarkers.set(site.id, marker)
     })
+
+    setActiveMarkers(newMarkers)
 
     // Fit map to show all markers if there are hotspots
     if (filteredHotspots.length > 0) {
       const group = L.featureGroup(
         filteredHotspots.map(site => L.marker([site.lat, site.lng]))
       )
-      map.fitBounds(group.getBounds().pad(0.1))
+      map.fitBounds(group.getBounds().pad(0.1), {
+        animate: true,
+        duration: 1
+      })
     }
 
-  }, [map, filteredHotspots, loading, isMapReady])
+  }, [map, filteredHotspots, loading, isMapReady, selectedHotspot])
+
+  // Ensure map resizes correctly when the side panel opens/closes
+  useEffect(() => {
+    if (!map) return
+    const id = setTimeout(() => map.invalidateSize(), 250)
+    return () => clearTimeout(id)
+  }, [map, panelOpen])
 
   const filterButtons = [
     { key: 'all' as const, label: 'All Sites', icon: '🌐', count: stats.total },
@@ -254,276 +425,483 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
     { key: 'terrestrial' as const, label: 'Terrestrial', icon: '🏔️', count: stats.terrestrial }
   ]
 
+  const currentSite = useMemo(() => hotspots.find(h => h.id === selectedHotspot) || null, [hotspots, selectedHotspot])
+  const currentSpecies = useMemo(() => currentSite ? species.filter(sp => sp.siteIds.includes(currentSite.id)) : [], [species, currentSite])
+  const selectedSpeciesData = useMemo(() => currentSpecies.find(sp => sp.id === selectedSpeciesId) || null, [currentSpecies, selectedSpeciesId])
+  const closePanel = useCallback(() => { setPanelOpen(false); setSelectedHotspot(null); setSelectedSpeciesId(null); setShowGallery(false) }, [])
+  const toggleGallery = useCallback(() => setShowGallery(g => !g), [])
+  
+  // Admin: Toggle marker placement mode
+  const toggleAdminMode = useCallback(() => {
+    setAdminMode(prev => !prev)
+    if (adminMode && tempMarker && map) {
+      map.removeLayer(tempMarker)
+      setTempMarker(null)
+      setShowMarkerForm(false)
+    }
+  }, [adminMode, tempMarker, map])
+
+  // Admin: Cancel marker placement
+  const cancelMarkerPlacement = useCallback(() => {
+    if (tempMarker && map) {
+      map.removeLayer(tempMarker)
+      setTempMarker(null)
+    }
+    setShowMarkerForm(false)
+    setNewHotspotData({
+      name: '',
+      barangay: '',
+      designation: '',
+      description: '',
+      areaHectares: 0,
+      lat: 0,
+      lng: 0,
+      type: 'marine',
+      features: [],
+      selectedSpeciesIds: []
+    })
+  }, [tempMarker, map])
+
+  // Admin: Save new hotspot
+  const saveNewHotspot = useCallback(async () => {
+    if (!newHotspotData.name || !newHotspotData.description) {
+      alert('Please fill in at least the name and description')
+      return
+    }
+
+    try {
+      // Generate unique ID
+      const siteId = `custom-${Date.now()}`
+      
+      // Prepare site data for database (correct table name is 'sites' not 'hotspots')
+      const siteData = {
+        id: siteId,
+        name: newHotspotData.name,
+        type: newHotspotData.type,
+        barangay: newHotspotData.barangay || null,
+        city: 'Mati City',
+        province: 'Davao Oriental',
+        designation: newHotspotData.designation || null,
+        area_hectares: newHotspotData.areaHectares || null,
+        lat: newHotspotData.lat,
+        lng: newHotspotData.lng,
+        summary: newHotspotData.description.substring(0, 100) + (newHotspotData.description.length > 100 ? '...' : ''),
+        description: newHotspotData.description,
+        features: newHotspotData.features.length > 0 ? newHotspotData.features : [],
+        stewardship: 'To be determined',
+        tags: [],
+        image_url: null,
+        visitor_notes: null
+      }
+
+      // Save site to database (table is called 'sites')
+      const { data: savedSite, error: siteError } = await supabase
+        .from('sites')
+        .insert(siteData)
+        .select()
+        .single()
+
+      if (siteError) {
+        console.error('Error saving site:', siteError)
+        alert(`Error saving site: ${siteError.message}`)
+        return
+      }
+
+      console.log('Site saved successfully:', savedSite)
+
+      // Save species relationships if any species were selected
+      if (newHotspotData.selectedSpeciesIds.length > 0) {
+        const speciesRelations = newHotspotData.selectedSpeciesIds.map(speciesId => ({
+          species_id: speciesId,
+          site_id: siteId,
+          is_highlight: false
+        }))
+
+        // Table is called 'species_sites' not 'species_site_relations'
+        const { error: relationsError } = await supabase
+          .from('species_sites')
+          .insert(speciesRelations)
+
+        if (relationsError) {
+          console.error('Error saving species relations:', relationsError)
+          alert(`Site saved but error linking species: ${relationsError.message}`)
+        } else {
+          console.log('Species relations saved:', speciesRelations.length)
+        }
+      }
+
+      alert(`✅ Site "${newHotspotData.name}" saved successfully!\n\n` +
+            `Location: ${newHotspotData.lat.toFixed(5)}, ${newHotspotData.lng.toFixed(5)}\n` +
+            `Type: ${newHotspotData.type}\n` +
+            `Species linked: ${newHotspotData.selectedSpeciesIds.length}\n\n` +
+            `Refreshing map...`)
+      
+      // Clean up
+      if (tempMarker && map) {
+        map.removeLayer(tempMarker)
+        setTempMarker(null)
+      }
+      setShowMarkerForm(false)
+      setAdminMode(false)
+      setNewHotspotData({
+        name: '',
+        barangay: '',
+        designation: '',
+        description: '',
+        areaHectares: 0,
+        lat: 0,
+        lng: 0,
+        type: 'marine',
+        features: [],
+        selectedSpeciesIds: []
+      })
+
+      // Refresh the page to show the new site
+      setTimeout(() => {
+        window.location.reload()
+      }, 1500)
+
+    } catch (error) {
+      console.error('Unexpected error saving site:', error)
+      alert(`Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }, [newHotspotData, tempMarker, map, species])
+  
+  // Layer switcher function
+  const switchLayer = useCallback((layerType: 'street' | 'satellite' | 'topo') => {
+    if (!map) return
+    const layers = (map as any).layers
+    if (!layers) return
+    
+    // Remove all layers
+    map.eachLayer(layer => {
+      if (layer instanceof L.TileLayer) {
+        map.removeLayer(layer)
+      }
+    })
+    
+    // Add the selected layer
+    switch(layerType) {
+      case 'satellite':
+        layers.satelliteLayer.addTo(map)
+        break
+      case 'topo':
+        layers.topoLayer.addTo(map)
+        break
+      default:
+        layers.streetLayer.addTo(map)
+    }
+    
+    setCurrentLayer(layerType)
+  }, [map])
+
   return (
-    <div className={`space-y-6 ${className}`}>
-      {/* Header Section */}
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
-          Mati City Biodiversity GIS Map
-        </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-          Explore detailed biodiversity hotspots, protected areas, and species data for Mati City, Davao Oriental - 
-          home to UNESCO World Heritage sites and world-renowned marine sanctuaries.
-        </p>
+    <div className={`relative ${className}`}>
+      {/* CSS for marker animations */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); opacity: 0; }
+          50% { transform: scale(1.3); opacity: 0.5; }
+        }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+        .custom-div-icon {
+          background: transparent !important;
+          border: none !important;
+        }
+        .marker-pulse {
+          position: relative;
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .marker-pulse::before {
+          content: '';
+          position: absolute;
+          top: -4px;
+          left: -4px;
+          right: -4px;
+          bottom: -4px;
+          border-radius: 50%;
+          border: 2px solid currentColor;
+          opacity: 0;
+          animation: pulse 2s ease-out infinite;
+          pointer-events: none;
+        }
+        .temp-marker {
+          animation: bounce 1s ease-in-out infinite;
+        }
+        .custom-tooltip {
+          background: rgba(0, 0, 0, 0.85) !important;
+          border: none !important;
+          border-radius: 8px !important;
+          padding: 8px 12px !important;
+          font-size: 13px !important;
+          font-weight: 600 !important;
+          color: white !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        }
+        .custom-tooltip::before {
+          border-top-color: rgba(0, 0, 0, 0.85) !important;
+        }
+      `}</style>
+      {/* Left Sliding Info Panel */}
+      <div className={`fixed inset-y-0 left-0 z-[1100] w-full max-w-md transform transition-transform duration-300 ease-out ${panelOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex flex-col h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200 dark:border-slate-700 shadow-2xl">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+            <div className="min-w-0">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 truncate">{currentSite ? currentSite.name : 'Site Details'}</h2>
+              {currentSite && <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{currentSite.designation}</p>}
+            </div>
+            <button onClick={closePanel} aria-label="Close panel" className="p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div className="overflow-y-auto flex-1 px-5 py-4 space-y-6">
+            {!currentSite && <p className="text-sm text-slate-500 dark:text-slate-400">Click a marker on the map to view details.</p>}
+            {currentSite && (
+              <>
+                {/* Site Hero Image */}
+                {currentSite.image && (
+                  <div className="relative -mx-5 -mt-4 mb-4">
+                    <img 
+                      src={currentSite.image} 
+                      alt={currentSite.name}
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                    <div className="absolute bottom-3 left-5 right-5">
+                      <div className="text-white font-bold text-lg drop-shadow-lg">{currentSite.name}</div>
+                      <div className="text-white/90 text-xs drop-shadow">{currentSite.barangay}</div>
+                    </div>
+                  </div>
+                )}
+                
+                <div>
+                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-3">{currentSite.description}</p>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-slate-100 dark:bg-slate-800 rounded-md p-2">
+                      <div className="font-semibold text-slate-700 dark:text-slate-200">Type</div>
+                      <div className="text-slate-600 dark:text-slate-400 capitalize">{currentSite.type}</div>
+                    </div>
+                    <div className="bg-slate-100 dark:bg-slate-800 rounded-md p-2">
+                      <div className="font-semibold text-slate-700 dark:text-slate-200">Area</div>
+                      <div className="text-slate-600 dark:text-slate-400">{currentSite.areaHectares ? `${currentSite.areaHectares.toLocaleString()} ha` : 'N/A'}</div>
+                    </div>
+                    <div className="bg-slate-100 dark:bg-slate-800 rounded-md p-2 col-span-2">
+                      <div className="font-semibold text-slate-700 dark:text-slate-200">Barangay</div>
+                      <div className="text-slate-600 dark:text-slate-400 text-[11px] leading-snug">{currentSite.barangay || '—'}</div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">Key Features</h3>
+                  <ul className="space-y-1">
+                    {currentSite.features.slice(0, 6).map(f => (
+                      <li key={f} className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300"><span className="text-emerald-500 mt-0.5">•</span><span>{f}</span></li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">Biodiversity ({currentSpecies.length})</h3>
+                  <div className="grid grid-cols-1 gap-2">
+                    {currentSpecies.slice(0, 20).map(sp => (
+                      <button
+                        key={sp.id}
+                        onClick={() => {
+                          setSelectedSpeciesId(sp.id)
+                          setShowGallery(true)
+                        }}
+                        className="text-left rounded-md border border-slate-200 dark:border-slate-700 p-3 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-md transition-all"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{sp.commonName}</div>
+                            <div className="text-[10px] italic text-slate-500 dark:text-slate-400 truncate">{sp.scientificName}</div>
+                          </div>
+                          <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${sp.status === 'CR' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' : sp.status === 'EN' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' : sp.status === 'VU' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'}`}>{sp.status}</span>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${sp.category === 'flora' ? 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400' : 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400'}`}>{sp.category === 'flora' ? 'Flora' : 'Fauna'}</span>
+                          </div>
+                        </div>
+                        {sp.images && sp.images.length > 0 && (
+                          <div className="mt-2 text-[10px] text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            {sp.images.length} photo{sp.images.length > 1 ? 's' : ''} • Click to view
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {showGallery && selectedSpeciesData && (
+                  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[1200] flex items-center justify-center p-4" onClick={() => { setShowGallery(false); setSelectedSpeciesId(null) }}>
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 truncate">{selectedSpeciesData.commonName}</h3>
+                          <p className="text-sm italic text-slate-500 dark:text-slate-400 truncate">{selectedSpeciesData.scientificName}</p>
+                        </div>
+                        <button onClick={() => { setShowGallery(false); setSelectedSpeciesId(null) }} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition flex-shrink-0">
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                      </div>
+                      <div className="overflow-y-auto max-h-[calc(90vh-80px)] p-6">
+                        <div className="mb-6">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${selectedSpeciesData.status === 'CR' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' : selectedSpeciesData.status === 'EN' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' : selectedSpeciesData.status === 'VU' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'}`}>{selectedSpeciesData.status}</span>
+                            <span className={`text-xs px-2 py-1 rounded-full ${selectedSpeciesData.category === 'flora' ? 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400' : 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400'}`}>{selectedSpeciesData.category === 'flora' ? '🌿 Flora' : '🐾 Fauna'}</span>
+                          </div>
+                          <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">{selectedSpeciesData.habitat}</p>
+                          <p className="text-sm text-slate-700 dark:text-slate-200">{selectedSpeciesData.blurb}</p>
+                        </div>
+                        {selectedSpeciesData.images && selectedSpeciesData.images.length > 0 ? (
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {selectedSpeciesData.images.map((url, idx) => (
+                              <div key={idx} className="relative group aspect-square overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800 shadow-md">
+                                <img src={url} alt={`${selectedSpeciesData.commonName} ${idx + 1}`} className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300" />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-12 text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                            <svg className="w-16 h-16 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <p className="font-medium">No images available yet</p>
+                            <p className="text-xs mt-1">Images can be added via admin panel</p>
+                          </div>
+                        )}
+                        {selectedSpeciesData.highlights && selectedSpeciesData.highlights.length > 0 && (
+                          <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">Key Facts</h4>
+                            <ul className="space-y-1">
+                              {selectedSpeciesData.highlights.map((h, i) => (
+                                <li key={i} className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300">
+                                  <span className="text-emerald-500 mt-0.5">•</span>
+                                  <span>{h}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
       </div>
-
-      {/* Statistics Dashboard */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/30 rounded-xl p-4 border border-emerald-200 dark:border-emerald-700">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-              <SpeciesIcon className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Total Sites</span>
-          </div>
-          <div className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">{stats.total}</div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-              <WaveIcon className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Marine</span>
-          </div>
-          <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats.marine}</div>
-        </div>
-
-        <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-xl p-4 border border-green-200 dark:border-green-700">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-              <MountainIcon className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-sm font-medium text-green-700 dark:text-green-300">Terrestrial</span>
-          </div>
-          <div className="text-2xl font-bold text-green-900 dark:text-green-100">{stats.terrestrial}</div>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl p-4 border border-purple-200 dark:border-purple-700">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center text-white text-xs font-bold">
-              SP
-            </div>
-            <span className="text-sm font-medium text-purple-700 dark:text-purple-300">Species</span>
-          </div>
-          <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.totalSpecies}</div>
-        </div>
-
-        <div className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/30 rounded-xl p-4 border border-amber-200 dark:border-amber-700">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center text-white text-xs font-bold">
-              HA
-            </div>
-            <span className="text-sm font-medium text-amber-700 dark:text-amber-300">Protected</span>
-          </div>
-          <div className="text-2xl font-bold text-amber-900 dark:text-amber-100">
-            {(stats.protectedArea / 1000).toFixed(1)}k
-          </div>
-        </div>
-      </div>
-
-      {/* Filter Controls */}
-      <div className="flex justify-center">
-        <div className="inline-flex items-center gap-2 p-2 rounded-2xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/30 dark:border-white/15 shadow-lg">
+      {/* Modern Filter Bar with Layer Switcher */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] pointer-events-none flex flex-col gap-2 items-center">
+        {/* Filter buttons */}
+        <div className="inline-flex items-center gap-2 p-1.5 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-700 shadow-xl pointer-events-auto">
           {filterButtons.map(btn => (
             <button
               key={btn.key}
               onClick={() => setFilter(btn.key)}
-              className={`flex items-center gap-3 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-300 transform ${
                 filter === btn.key
-                  ? 'bg-gradient-to-r from-emerald-500 to-blue-500 text-white shadow-lg scale-105'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-white/40 dark:hover:bg-slate-700/40'
+                  ? 'bg-gradient-to-r from-blue-500 to-emerald-500 text-white shadow-lg scale-105'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105'
               }`}
             >
-              <span className="text-xl">{btn.icon}</span>
-              <span>{btn.label}</span>
-              <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+              <span className="text-base">{btn.icon}</span>
+              <span className="hidden sm:inline">{btn.label}</span>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                 filter === btn.key 
                   ? 'bg-white/25 text-white' 
-                  : 'bg-gray-100 dark:bg-slate-600 text-gray-600 dark:text-gray-300'
+                  : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
               }`}>
                 {btn.count}
               </span>
             </button>
           ))}
         </div>
-      </div>
-
-      {/* Interactive Map */}
-      <div className="relative rounded-2xl overflow-hidden border-2 border-white/30 shadow-2xl">
-        {loading && (
-          <div className="absolute inset-0 z-10 bg-gradient-to-br from-emerald-50/90 to-blue-50/90 dark:from-slate-900/90 dark:to-slate-800/90 backdrop-blur-sm flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4 mx-auto"></div>
-              <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">Loading GIS data...</p>
-            </div>
-          </div>
-        )}
         
-        <div 
-          id="mati-gis-map" 
-          className="h-[60vh] sm:h-[70vh] w-full relative z-0"
-        />
-        
-        {/* Map Legend */}
-        <div className="absolute top-4 left-4 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-white/30 dark:border-slate-700/30">
-          <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-2">Legend</h4>
-          <div className="space-y-2 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full border-2 border-white shadow-sm"></div>
-              <span className="text-gray-700 dark:text-gray-300">Marine Protected Areas</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full border-2 border-white shadow-sm"></div>
-              <span className="text-gray-700 dark:text-gray-300">Terrestrial Sanctuaries</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Data Info Panel */}
-        <div className="absolute bottom-4 left-4 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-white/30 dark:border-slate-700/30">
-          <div className="text-xs text-gray-600 dark:text-gray-400">
-            <div className="flex items-center gap-1 mb-1">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-              <span className="font-semibold">Real-time data from Mati City</span>
-            </div>
-            <div>Showing {filteredHotspots.length} biodiversity hotspot{filteredHotspots.length !== 1 ? 's' : ''}</div>
-            <div className="text-[10px] mt-1 opacity-75">Click markers for detailed information</div>
-          </div>
+        {/* Layer Switcher */}
+        <div className="inline-flex items-center gap-2 p-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-700 shadow-lg pointer-events-auto">
+          <button
+            onClick={() => switchLayer('street')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              currentLayer === 'street'
+                ? 'bg-blue-500 text-white shadow-md'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            🗺️ Street
+          </button>
+          <button
+            onClick={() => switchLayer('satellite')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              currentLayer === 'satellite'
+                ? 'bg-blue-500 text-white shadow-md'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            🛰️ Satellite
+          </button>
+          <button
+            onClick={() => switchLayer('topo')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              currentLayer === 'topo'
+                ? 'bg-blue-500 text-white shadow-md'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            ⛰️ Topo
+          </button>
         </div>
       </div>
 
-      {/* Site Information Cards */}
-      {selectedHotspot && (
-        <div className="mt-8">
-          {hotspots.filter(site => site.id === selectedHotspot).map(site => (
-            <div key={site.id} className="bg-gradient-to-br from-white to-gray-50 dark:from-slate-800 dark:to-slate-700 rounded-2xl p-6 border border-gray-200 dark:border-slate-600 shadow-xl">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{site.name}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{site.designation}</p>
-                </div>
-                <button
-                  onClick={() => setSelectedHotspot(null)}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              
-              <p className="text-gray-700 dark:text-gray-300 mb-6">{site.description}</p>
-              
-              <div className="space-y-6">
-                {/* Species Information */}
-                {(() => {
-                  const siteSpecies = species.filter(sp => sp.siteIds.includes(site.id))
-                  const floraSpecies = siteSpecies.filter(sp => sp.category === 'flora')
-                  const faunaSpecies = siteSpecies.filter(sp => sp.category === 'fauna')
-                  
-                  return siteSpecies.length > 0 ? (
-                    <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Biodiversity ({siteSpecies.length} species)</h4>
-                        <div className="flex gap-2 text-sm">
-                          <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
-                            {floraSpecies.length} Flora
-                          </span>
-                          <span className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-full">
-                            {faunaSpecies.length} Fauna
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="grid sm:grid-cols-2 gap-4">
-                        {siteSpecies.map((sp) => (
-                          <div key={sp.id} className="bg-white dark:bg-slate-700 rounded-lg p-4 border border-gray-200 dark:border-slate-600 hover:shadow-md transition-shadow">
-                            <div className="flex items-start justify-between mb-2">
-                              <div>
-                                <h5 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{sp.commonName}</h5>
-                                <p className="text-xs text-gray-600 dark:text-gray-400 italic">{sp.scientificName}</p>
-                              </div>
-                              <div className="flex flex-col items-end gap-1">
-                                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                                  sp.status === 'CR' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' :
-                                  sp.status === 'EN' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' :
-                                  sp.status === 'VU' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
-                                  'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                                }`}>
-                                  {sp.status}
-                                </span>
-                                <span className={`text-xs px-2 py-1 rounded-full ${
-                                  sp.category === 'flora' ? 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400' :
-                                  'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400'
-                                }`}>
-                                  {sp.category === 'flora' ? '🌿 Flora' : '🐾 Fauna'}
-                                </span>
-                              </div>
-                            </div>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{sp.habitat}</p>
-                            <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">{sp.blurb}</p>
-                            
-                            {sp.highlights && sp.highlights.length > 0 && (
-                              <div className="mt-3">
-                                <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Key Facts:</div>
-                                <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
-                                  {sp.highlights.slice(0, 2).map((highlight, i) => (
-                                    <li key={i} className="flex items-start gap-1">
-                                      <span className="text-emerald-500 mt-0.5">•</span>
-                                      <span>{highlight}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                      <p>No species data available for this location.</p>
-                    </div>
-                  )
-                })()}
-                
-                {/* Key Features & Conservation */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Key Features</h4>
-                    <ul className="space-y-2">
-                      {site.features.map((feature, index) => (
-                        <li key={index} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
-                          <span className="text-emerald-500 mt-0.5">•</span>
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Conservation Status</h4>
-                    <div className="space-y-3">
-                      <div className="bg-emerald-50 dark:bg-emerald-900/30 rounded-lg p-3 border border-emerald-200 dark:border-emerald-700">
-                        <div className="text-sm font-medium text-emerald-800 dark:text-emerald-200">Stewardship</div>
-                        <div className="text-xs text-emerald-600 dark:text-emerald-300 mt-1">{site.stewardship}</div>
-                      </div>
-                      
-                      {site.visitorNotes && (
-                        <div className="bg-amber-50 dark:bg-amber-900/30 rounded-lg p-3 border border-amber-200 dark:border-amber-700">
-                          <div className="text-sm font-medium text-amber-800 dark:text-amber-200">Visitor Information</div>
-                          <div className="text-xs text-amber-600 dark:text-amber-300 mt-1">{site.visitorNotes}</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="absolute inset-0 z-[999] bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-sm flex items-center justify-center">
+          <div className="text-center space-y-3">
+            <div className="relative w-14 h-14 mx-auto">
+              <div className="absolute inset-0 border-4 border-slate-200 dark:border-slate-700 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
-          ))}
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Loading map data...</p>
+          </div>
         </div>
       )}
+      
+      {/* Map Container */}
+      <div 
+        id="mati-gis-map" 
+        className="h-[60vh] sm:h-[70vh] w-full relative z-0 rounded-2xl overflow-hidden"
+      />
+      
+      {/* Modern Legend */}
+      <div className="absolute top-4 left-4 z-[1000] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-xl p-3 shadow-lg border border-slate-200/80 dark:border-slate-700/80">
+        <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 mb-2 uppercase tracking-wider">Legend</h4>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full border-2 border-white dark:border-slate-800 shadow-sm"></div>
+            <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">Marine</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full border-2 border-white dark:border-slate-800 shadow-sm"></div>
+            <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">Terrestrial</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Modern Data Info Panel */}
+      <div className="absolute bottom-4 left-4 z-[1000] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-xl p-3 shadow-lg border border-slate-200/80 dark:border-slate-700/80">
+        <div className="flex items-center gap-2 mb-1.5">
+          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-500/50"></div>
+          <span className="text-xs font-bold text-slate-900 dark:text-slate-100">Live Data</span>
+        </div>
+        <div className="text-[10px] text-slate-600 dark:text-slate-400">
+          <div className="font-semibold">{filteredHotspots.length} hotspot{filteredHotspots.length !== 1 ? 's' : ''} shown</div>
+          <div className="opacity-75">Click markers for details</div>
+        </div>
+      </div>
+
+      {/* Site information now presented in the left sliding panel */}
 
       {/* Attribution */}
       <div className="text-center text-sm text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-700">

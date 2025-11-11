@@ -25,6 +25,21 @@ export default {
       maxWidth: {
         '8xl': '88rem', // 1408px for ultrawide
         '9xl': '96rem', // 1536px for very wide screens
+      },
+      animation: {
+        'gradient-x': 'gradient-x 15s ease infinite',
+      },
+      keyframes: {
+        'gradient-x': {
+          '0%, 100%': {
+            'background-size': '200% 200%',
+            'background-position': 'left center'
+          },
+          '50%': {
+            'background-size': '200% 200%',
+            'background-position': 'right center'
+          }
+        }
       }
     }
   },

@@ -1,27 +1,39 @@
 import { useState } from 'react'
 import { X, MessageCircle } from 'lucide-react'
 import { supabase } from '../supabaseClient'
+import { useAdmin } from '../context/AdminContext'
 
 export default function FeedbackFloating() {
+  const { isAdmin } = useAdmin()
   const [open, setOpen] = useState(false)
-  const [message, setMessage] = useState('')
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [message, setMessage] = useState('')
+  const [rating, setRating] = useState(5)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
+  // Hide feedback button when user is admin
+  if (isAdmin) return null
+
   const sendFeedback = async () => {
-    if (!message.trim()) return
+    if (!message.trim()) {
+      alert('Please enter a message')
+      return
+    }
 
     setIsSubmitting(true)
     setSubmitStatus('idle')
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('feedback')
         .insert([
           {
-            message: message.trim(),
+            name: name.trim() || 'Anonymous',
             email: email.trim() || null,
+            message: message.trim(),
+            rating: rating,
             url: window.location.pathname,
             user_agent: navigator.userAgent,
           }
@@ -30,13 +42,10 @@ export default function FeedbackFloating() {
       if (error) throw error
 
       setSubmitStatus('success')
+      setName('')
       setMessage('')
       setEmail('')
-
-      // Also send email as fallback
-      const subject = encodeURIComponent('Mati Platform Feedback')
-      const body = encodeURIComponent(`From: ${email || 'anonymous'}\n\n${message}`)
-      window.location.href = `mailto:hello@mati.city?subject=${subject}&body=${body}`
+      setRating(5)
 
       // Close after success
       setTimeout(() => {
@@ -47,11 +56,7 @@ export default function FeedbackFloating() {
     } catch (error) {
       console.error('Failed to submit feedback:', error)
       setSubmitStatus('error')
-
-      // Fallback to email only
-      const subject = encodeURIComponent('Mati Platform Feedback')
-      const body = encodeURIComponent(`From: ${email || 'anonymous'}\n\n${message}`)
-      window.location.href = `mailto:hello@mati.city?subject=${subject}&body=${body}`
+      alert('Failed to submit feedback. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -75,15 +80,23 @@ export default function FeedbackFloating() {
           {/* small label removed per request */}
         </div>
 
-        {/* Panel */}
+        {/* Panel with animation */}
         {open && (
-          <div className="mt-3 w-80 sm:w-96 rounded-xl bg-white/95 dark:bg-slate-900/95 shadow-2xl p-4 backdrop-blur-md">
+          <div className="mt-3 w-80 sm:w-96 rounded-xl bg-white/95 dark:bg-slate-900/95 shadow-2xl p-4 backdrop-blur-md animate-slideUp origin-bottom">
             <div className="flex items-start justify-between">
               <div className="text-sm font-bold text-slate-800 dark:text-slate-100">Send feedback</div>
-              <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-500">
+              <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 transition-colors">
                 <X className="w-4 h-4" />
               </button>
             </div>
+
+            <label className="block mt-3 text-xs text-slate-500">Your Name</label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="John Doe"
+              className="mt-1 w-full rounded-md border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-100"
+            />
 
             <label className="block mt-3 text-xs text-slate-500">Email (optional)</label>
             <input
@@ -92,6 +105,25 @@ export default function FeedbackFloating() {
               placeholder="you@domain.com"
               className="mt-1 w-full rounded-md border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-100"
             />
+
+            <label className="block mt-3 text-xs text-slate-500">Rating</label>
+            <div className="mt-1 flex gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  className={`text-2xl transition-all ${
+                    star <= rating ? 'text-yellow-400 scale-110' : 'text-gray-300 dark:text-gray-600'
+                  }`}
+                >
+                  ⭐
+                </button>
+              ))}
+              <span className="ml-2 text-sm text-slate-600 dark:text-slate-400 self-center">
+                {rating}/5
+              </span>
+            </div>
 
             <label className="block mt-3 text-xs text-slate-500">Message</label>
             <textarea
@@ -104,7 +136,14 @@ export default function FeedbackFloating() {
 
             <div className="mt-3 flex items-center justify-end gap-2">
               <button
-                onClick={() => { setOpen(false); setMessage(''); setEmail(''); setSubmitStatus('idle') }}
+                onClick={() => { 
+                  setOpen(false)
+                  setName('')
+                  setMessage('')
+                  setEmail('')
+                  setRating(5)
+                  setSubmitStatus('idle')
+                }}
                 className="px-3 py-2 text-sm rounded-md text-slate-700 dark:text-slate-200 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800"
                 disabled={isSubmitting}
               >
@@ -121,18 +160,35 @@ export default function FeedbackFloating() {
 
             {submitStatus === 'error' && (
               <div className="mt-2 text-xs text-red-600 dark:text-red-400">
-                Failed to send feedback. Email client will open as fallback.
+                Failed to send feedback. Please try again.
               </div>
             )}
 
             {submitStatus === 'success' && (
               <div className="mt-2 text-xs text-green-600 dark:text-green-400">
-                Feedback sent successfully! Thank you.
+                ✅ Feedback sent successfully! Thank you.
               </div>
             )}
           </div>
         )}
       </div>
+
+      {/* Animation styles */}
+      <style>{`
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        .animate-slideUp {
+          animation: slideUp 0.2s ease-out forwards;
+        }
+      `}</style>
     </div>
   )
 }

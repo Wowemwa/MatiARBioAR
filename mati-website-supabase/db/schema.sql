@@ -138,8 +138,10 @@ CREATE TABLE IF NOT EXISTS public.media_assets (
 CREATE TABLE IF NOT EXISTS public.feedback (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  name TEXT DEFAULT 'Anonymous',
   email TEXT,
   message TEXT NOT NULL,
+  rating INTEGER DEFAULT 5 CHECK (rating >= 1 AND rating <= 5),
   user_agent TEXT,
   url TEXT,
   ip_address INET,
@@ -304,13 +306,16 @@ CREATE POLICY "media_assets_update_own" ON public.media_assets FOR UPDATE USING 
   )
 );
 
--- Feedback: Authenticated users can insert, admins can view all
-CREATE POLICY "feedback_insert_authenticated" ON public.feedback FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+-- Feedback: Allow anonymous insert, admins can view all and delete
+CREATE POLICY "feedback_insert_all" ON public.feedback FOR INSERT WITH CHECK (true);
 CREATE POLICY "feedback_select_own" ON public.feedback FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "feedback_select_admin" ON public.feedback FOR SELECT USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
 CREATE POLICY "feedback_update_admin" ON public.feedback FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
+);
+CREATE POLICY "feedback_delete_admin" ON public.feedback FOR DELETE USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
 
