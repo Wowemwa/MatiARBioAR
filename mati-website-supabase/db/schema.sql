@@ -88,6 +88,7 @@ CREATE TABLE IF NOT EXISTS public.species (
   conservation_actions TEXT[],
   legal_protection TEXT[],
   reference_sources TEXT[],
+  image_urls TEXT[],
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
