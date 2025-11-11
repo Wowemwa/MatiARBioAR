@@ -7,6 +7,10 @@ import Atmosphere from './components/Atmosphere'
 import ComingSoon from './components/ComingSoon'
 import ModernHome from './components/ModernHome'
 import { WaveIcon, MountainIcon, SpeciesIcon, ARIcon, InfoIcon, MapIcon, CameraIcon, TargetIcon, StarIcon, MissionIcon, EducationIcon, TechIcon, ConservationIcon, LeafIcon } from './components/Icons'
+import { HiMapPin } from 'react-icons/hi2'
+import { GiButterfly } from 'react-icons/gi'
+import { MdAutoAwesome } from 'react-icons/md'
+import { IoInformationCircle } from 'react-icons/io5'
 import useScrollPosition from './hooks/useScrollPosition'
 import { DataProvider, useData } from './context/DataContext'
 import { AdminProvider, useAdmin } from './context/AdminContext'
@@ -148,21 +152,12 @@ const Navbar = memo(function Navbar() {
   const location = useLocation()
   const { isMobileView, deviceInfo } = useDeviceDetection()
   const navItems = useMemo(() => [
-    { to: '/gis', label: 'GIS Map', badge: '🗺️' },
-    { to: '/biodiversity', label: 'Biodiversity', badge: '🌿' },
-    { to: '/ar', label: 'AR Demo', badge: '✨' },
+    { to: '/gis', label: 'GIS Map', badge: <HiMapPin className="w-5 h-5" /> },
+    { to: '/biodiversity', label: 'Biodiversity', badge: <GiButterfly className="w-5 h-5" /> },
+    { to: '/ar', label: 'AR Demo', badge: <MdAutoAwesome className="w-5 h-5" /> },
     ...(isAdmin ? [{ to: '/mati-secret-admin-2024', label: 'Admin', badge: '👑', adminOnly: true }] : []),
-    { to: '/about', label: 'About', badge: '💡' },
+    { to: '/about', label: 'About', badge: <IoInformationCircle className="w-5 h-5" /> },
   ], [isAdmin])
-  
-  const marineCount = useMemo(
-    () => hotspots.filter((site) => site.type === 'marine').length,
-    [hotspots]
-  )
-  const terrestrialCount = useMemo(
-    () => hotspots.filter((site) => site.type === 'terrestrial').length,
-    [hotspots]
-  )
 
   useEffect(() => {
     setOpen(false)
@@ -225,20 +220,6 @@ const Navbar = memo(function Navbar() {
             </Link>
 
             <div className="hidden md:flex items-center gap-3">
-              <div className="hidden lg:flex items-center gap-2 text-xs font-semibold">
-                <span className="group flex items-center gap-2 rounded-xl border border-blue-200/70 bg-blue-50/90 px-3 py-1.5 text-blue-700 shadow-sm backdrop-blur transition-all duration-300 hover:shadow-md hover:scale-105 hover:border-blue-300/80 dark:border-blue-700/50 dark:bg-blue-900/40 dark:text-blue-300">
-                  <WaveIcon className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
-                  <span>{marineCount} marine</span>
-                </span>
-                <span className="group flex items-center gap-2 rounded-xl border border-emerald-200/70 bg-emerald-50/90 px-3 py-1.5 text-emerald-700 shadow-sm backdrop-blur transition-all duration-300 hover:shadow-md hover:scale-105 hover:border-emerald-300/80 dark:border-emerald-700/50 dark:bg-emerald-900/40 dark:text-emerald-300">
-                  <MountainIcon className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
-                  <span>{terrestrialCount} terrestrial</span>
-                </span>
-                <span className="group flex items-center gap-2 rounded-xl border border-purple-200/70 bg-purple-50/90 px-3 py-1.5 text-purple-700 shadow-sm backdrop-blur transition-all duration-300 hover:shadow-md hover:scale-105 hover:border-purple-300/80 dark:border-purple-700/50 dark:bg-purple-900/40 dark:text-purple-300">
-                  <SpeciesIcon className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
-                  <span>{loading ? '—' : `${species.length}+`} species</span>
-                </span>
-              </div>
               <ThemeToggle />
               {isAdmin && (
                 <button
