@@ -243,7 +243,7 @@ const Navbar = memo(function Navbar() {
               {isAdmin && (
                 <button
                   type="button"
-                  onClick={logout}
+                  onClick={() => logout()}
                   className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/50 bg-emerald-500/15 px-4 py-2 text-xs font-semibold text-emerald-700 shadow-sm transition-all duration-300 hover:bg-emerald-500/20 hover:text-emerald-900 hover:shadow-md hover:scale-105 dark:border-emerald-400/40 dark:bg-emerald-500/20 dark:text-emerald-200"
                 >
                   Exit preview

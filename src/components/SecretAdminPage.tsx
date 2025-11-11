@@ -95,7 +95,7 @@ export default function SecretAdminPage() {
                 </p>
               </div>
               <button
-                onClick={logout}
+                onClick={() => logout()}
                 className="group relative overflow-hidden bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold px-6 py-3 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-110 hover:-rotate-1 active:scale-95"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />

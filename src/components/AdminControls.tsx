@@ -18,7 +18,7 @@ export default function AdminControls() {
             Species Admin
           </button>
           <button
-            onClick={logout}
+            onClick={() => logout()}
             className="px-4 py-2 bg-red-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm hover:bg-red-600"
           >
             Logout
