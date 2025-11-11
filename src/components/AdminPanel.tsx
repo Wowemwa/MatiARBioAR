@@ -97,7 +97,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
     })
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editingSpecies) return
 
     console.log('[AdminPanel] Saving species:', editingSpecies.commonName, 'Creating:', isCreating)
@@ -110,7 +110,14 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
         highlights: editingSpecies.highlights.filter(h => h.trim())
       }
       console.log('[AdminPanel] Creating new species:', newSpeciesData)
-      createSpecies(newSpeciesData)
+      const ok = await createSpecies(newSpeciesData)
+      if (ok) {
+        setEditingSpecies(null)
+        setIsCreating(false)
+        alert('✅ Species saved successfully!')
+      } else {
+        alert('❌ Failed to save species. Check console for details.')
+      }
     } else {
       // Update existing species
       const updates = {
@@ -118,12 +125,15 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
         highlights: editingSpecies.highlights.filter(h => h.trim())
       }
       console.log('[AdminPanel] Updating species:', editingSpecies.id)
-      updateSpecies(editingSpecies.id, updates)
+      const ok = await updateSpecies(editingSpecies.id, updates)
+      if (ok) {
+        setEditingSpecies(null)
+        setIsCreating(false)
+        alert('✅ Species updated successfully!')
+      } else {
+        alert('❌ Failed to update species. Check console for details.')
+      }
     }
-
-    setEditingSpecies(null)
-    setIsCreating(false)
-    alert('✅ Species saved successfully!')
   }
 
   const handleDelete = (species: SpeciesDetail) => {

@@ -20,8 +20,8 @@ type DataContextValue = {
   error?: string
   refresh: () => Promise<void>
   // Admin CRUD operations
-  createSpecies: (species: SpeciesDetail) => void
-  updateSpecies: (id: string, updates: Partial<SpeciesDetail>) => void
+  createSpecies: (species: SpeciesDetail) => Promise<boolean>
+  updateSpecies: (id: string, updates: Partial<SpeciesDetail>) => Promise<boolean>
   deleteSpecies: (id: string) => void
   // Team members CRUD operations
   createTeamMember: (member: TeamMember) => void
@@ -344,9 +344,9 @@ export function DataProvider({ children }: DataProviderProps) {
         if (relError) throw relError
       }
 
-      // Update local state
-      setSpecies(prev => [...prev, newSpecies])
-      console.log('[DataContext] Species created successfully in Supabase')
+  // Update local state
+  setSpecies(prev => [...prev, newSpecies])
+  console.log('[DataContext] Species created successfully in Supabase')
 
       // Log activity
       addActivityLog({
@@ -357,6 +357,16 @@ export function DataProvider({ children }: DataProviderProps) {
         details: `Created ${newSpecies.category} species: ${newSpecies.scientificName}`
       })
 
+      // Log activity
+      addActivityLog({
+        type: 'create',
+        entityType: 'species',
+        entityId: newSpecies.id,
+        entityName: newSpecies.commonName,
+        details: `Created ${newSpecies.category} species: ${newSpecies.scientificName}`
+      })
+
+      return true
     } catch (err) {
       console.error('[DataContext] Failed to create species in Supabase:', err)
       // Fallback to local state only
@@ -370,6 +380,8 @@ export function DataProvider({ children }: DataProviderProps) {
         entityName: newSpecies.commonName,
         details: `Created ${newSpecies.category} species: ${newSpecies.scientificName}`
       })
+
+      return false
     }
   }, [])
 
@@ -388,9 +400,11 @@ export function DataProvider({ children }: DataProviderProps) {
       if (updates.highlights) supabaseUpdates.key_facts = updates.highlights
       if (updates.images !== undefined) supabaseUpdates.image_urls = updates.images // Save images to image_urls column
 
-      // Add other fields if they exist in updates
+      // Add other fields if they exist in updates, but skip client-only keys
+      const skipKeys = ['commonName', 'scientificName', 'status', 'blurb', 'habitat', 'highlights', 'images', 'category', 'siteIds', 'id']
       Object.keys(updates).forEach(key => {
         if (key in supabaseUpdates) return // Already handled
+        if (skipKeys.includes(key)) return // Skip client-only/mapped keys
         supabaseUpdates[key] = (updates as any)[key]
       })
 
@@ -424,6 +438,7 @@ export function DataProvider({ children }: DataProviderProps) {
         })
       }
 
+      return true
     } catch (err) {
       console.error('[DataContext] Failed to update species in Supabase:', err)
       // Fallback to local state only
@@ -442,6 +457,8 @@ export function DataProvider({ children }: DataProviderProps) {
           details: 'Updated species information'
         })
       }
+
+      return false
     }
   }, [species])
 
