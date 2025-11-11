@@ -45,7 +45,9 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
   const [previewImage, setPreviewImage] = useState<string>('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [speciesToDelete, setSpeciesToDelete] = useState<SpeciesDetail | null>(null)
-  const [uploadingImages, setUploadingImages] = useState<Set<number>>(new Set())
+  const [showImageModal, setShowImageModal] = useState(false)
+  const [imageModalUrl, setImageModalUrl] = useState('')
+  const [imageModalFile, setImageModalFile] = useState<File | null>(null)
 
   const filteredSpecies = useMemo(() => {
     return species.filter(s => {
@@ -167,12 +169,51 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
   }
 
   const addImage = () => {
-    if (editingSpecies) {
+    setImageModalUrl('')
+    setImageModalFile(null)
+    setShowImageModal(true)
+  }
+
+  const handleImageModalConfirm = () => {
+    if (!editingSpecies) return
+
+    if (imageModalFile) {
+      // Handle file upload
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const result = e.target?.result as string
+        if (result) {
+          setEditingSpecies({
+            ...editingSpecies,
+            images: [...editingSpecies.images, result]
+          })
+        }
+        setShowImageModal(false)
+        setImageModalUrl('')
+        setImageModalFile(null)
+      }
+      reader.onerror = () => {
+        alert('Failed to read image file.')
+      }
+      reader.readAsDataURL(imageModalFile)
+    } else if (imageModalUrl.trim()) {
+      // Handle URL
       setEditingSpecies({
         ...editingSpecies,
-        images: [...editingSpecies.images, '']
+        images: [...editingSpecies.images, imageModalUrl.trim()]
       })
+      setShowImageModal(false)
+      setImageModalUrl('')
+      setImageModalFile(null)
+    } else {
+      alert('Please provide either a URL or select a file.')
     }
+  }
+
+  const handleImageModalCancel = () => {
+    setShowImageModal(false)
+    setImageModalUrl('')
+    setImageModalFile(null)
   }
 
   const removeImage = (index: number) => {
@@ -181,39 +222,6 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
         ...editingSpecies,
         images: editingSpecies.images.filter((_, i) => i !== index)
       })
-    }
-  }
-
-  const handleImageUpload = (index: number, file: File) => {
-    if (!editingSpecies) return
-    
-    if (file && file.type.startsWith('image/')) {
-      setUploadingImages(prev => new Set(prev).add(index))
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const result = e.target?.result as string
-        if (result) {
-          const newImages = [...editingSpecies.images]
-          newImages[index] = result
-          setEditingSpecies({...editingSpecies, images: newImages})
-        }
-        setUploadingImages(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(index)
-          return newSet
-        })
-      }
-      reader.onerror = () => {
-        alert('Failed to read image file.')
-        setUploadingImages(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(index)
-          return newSet
-        })
-      }
-      reader.readAsDataURL(file)
-    } else {
-      alert('Please select a valid image file.')
     }
   }
 
@@ -623,60 +631,58 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                   <div className="space-y-3">
                     {editingSpecies.images.map((image, index) => (
                       <div key={index} className="border-2 border-gray-200 dark:border-gray-600 rounded-xl p-4 bg-gradient-to-br from-gray-50 to-blue-50/30 dark:from-slate-700/50 dark:to-blue-900/10 hover:shadow-md transition-all">
-                        <div className="flex gap-2 mb-3">
-                          <div className="flex-1 relative">
-                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                              </svg>
-                            </div>
-                            <input
-                              type="url"
-                              value={image.startsWith('data:') ? '' : image}
-                              onChange={(e) => {
-                                const newImages = [...editingSpecies.images]
-                                newImages[index] = e.target.value
-                                setEditingSpecies({...editingSpecies, images: newImages})
-                              }}
-                              className="w-full pl-10 pr-3 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all"
-                              placeholder="https://example.com/image.jpg or upload file below"
-                            />
+                        <div className="flex items-center gap-3">
+                          {/* Image Preview Thumbnail */}
+                          <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600">
+                            {image ? (
+                              <img 
+                                src={image} 
+                                alt={`Preview ${index + 1}`}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%23999"%3E✕%3C/text%3E%3C/svg%3E'
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                              </div>
+                            )}
                           </div>
-                          {image && (
+                          
+                          {/* Image Info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                              {image.startsWith('data:') ? '📁 Uploaded Image' : '🔗 ' + image}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              {image.startsWith('data:') ? 'Base64 encoded' : 'External URL'}
+                            </p>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex gap-2">
+                            {image && (
+                              <button
+                                type="button"
+                                onClick={() => setPreviewImage(image)}
+                                className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-md transition-all hover:scale-105"
+                                title="Preview image"
+                              >
+                                <EyeIcon className="w-4 h-4" />
+                              </button>
+                            )}
                             <button
                               type="button"
-                              onClick={() => setPreviewImage(image)}
-                              className="px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-md transition-all hover:scale-105"
-                              title="Preview image"
+                              onClick={() => removeImage(index)}
+                              className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md transition-all hover:scale-105"
+                              title="Remove image"
                             >
-                              <EyeIcon className="w-4 h-4" />
+                              <DeleteIcon className="w-4 h-4" />
                             </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => removeImage(index)}
-                            className="px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md transition-all hover:scale-105"
-                            title="Remove image"
-                          >
-                            <DeleteIcon className="w-4 h-4" />
-                          </button>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-600">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            disabled={uploadingImages.has(index)}
-                            onChange={(e) => {
-                              const file = e.target.files?.[0]
-                              if (file) {
-                                handleImageUpload(index, file)
-                              }
-                            }}
-                            className="flex-1 text-sm text-gray-600 dark:text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-gradient-to-r file:from-blue-500 file:to-indigo-500 file:text-white hover:file:from-blue-600 hover:file:to-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed file:shadow-md file:transition-all"
-                          />
-                          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                            {uploadingImages.has(index) ? '⏳ Uploading...' : image.startsWith('data:') ? '✅ Uploaded' : '🔗 URL or Upload'}
-                          </span>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -724,6 +730,93 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
               alt="Preview" 
               className="max-w-full max-h-full object-contain rounded-lg"
             />
+          </div>
+        </div>
+      )}
+
+      {/* Add Image Modal */}
+      {showImageModal && (
+        <div className="fixed inset-0 bg-black/80 z-60 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full p-6">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <svg className="w-6 h-6 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Add Image
+            </h3>
+            
+            <div className="space-y-4">
+              {/* URL Input */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                  Paste Image URL
+                </label>
+                <input
+                  type="url"
+                  value={imageModalUrl}
+                  onChange={(e) => {
+                    setImageModalUrl(e.target.value)
+                    setImageModalFile(null) // Clear file if URL is entered
+                  }}
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all"
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-white dark:bg-slate-800 text-gray-500 dark:text-gray-400 font-semibold">OR</span>
+                </div>
+              </div>
+
+              {/* File Upload */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                  Upload Local Image
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        setImageModalFile(file)
+                        setImageModalUrl('') // Clear URL if file is selected
+                      }
+                    }}
+                    className="flex-1 text-sm text-gray-600 dark:text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-gradient-to-r file:from-pink-500 file:to-purple-500 file:text-white hover:file:from-pink-600 hover:file:to-purple-600 file:shadow-md file:transition-all"
+                  />
+                </div>
+                {imageModalFile && (
+                  <p className="mt-2 text-sm text-green-600 dark:text-green-400 font-medium">
+                    ✓ {imageModalFile.name} selected
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 mt-6">
+              <button
+                type="button"
+                onClick={handleImageModalConfirm}
+                className="flex-1 px-5 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                Add Image
+              </button>
+              <button
+                type="button"
+                onClick={handleImageModalCancel}
+                className="flex-1 px-5 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-xl font-bold transition-all duration-300"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

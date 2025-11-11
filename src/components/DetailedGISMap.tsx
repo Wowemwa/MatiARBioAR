@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import { useData } from '../context/DataContext'
 import { useAdmin } from '../context/AdminContext'
 import { supabase } from '../supabaseClient'
+import { addActivityLog } from '../utils/activityLog'
 
 // Fix for Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -536,6 +537,15 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
             `Species linked: ${newHotspotData.selectedSpeciesIds.length}\n\n` +
             `Refreshing map...`)
       
+      // Log activity
+      addActivityLog({
+        type: 'site_add',
+        entityType: 'site',
+        entityId: siteId,
+        entityName: newHotspotData.name,
+        details: `Added ${newHotspotData.type} biodiversity site in ${newHotspotData.barangay}${newHotspotData.selectedSpeciesIds.length > 0 ? ` with ${newHotspotData.selectedSpeciesIds.length} species` : ''}`
+      })
+      
       // Clean up
       if (tempMarker && map) {
         map.removeLayer(tempMarker)
@@ -758,9 +768,17 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
                         {selectedSpeciesData.images && selectedSpeciesData.images.length > 0 ? (
                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             {selectedSpeciesData.images.map((url, idx) => (
-                              <div key={idx} className="relative group aspect-square overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800 shadow-md">
+                              <div 
+                                key={idx} 
+                                className="relative group aspect-square overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800 shadow-md cursor-pointer"
+                                onClick={() => window.open(url, '_blank')}
+                              >
                                 <img src={url} alt={`${selectedSpeciesData.commonName} ${idx + 1}`} className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300" />
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                  <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                  </svg>
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -795,31 +813,6 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
       </div>
       {/* Modern Filter Bar with Layer Switcher */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] pointer-events-none flex flex-col gap-2 items-center">
-        {/* Filter buttons */}
-        <div className="inline-flex items-center gap-2 p-1.5 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-700 shadow-xl pointer-events-auto">
-          {filterButtons.map(btn => (
-            <button
-              key={btn.key}
-              onClick={() => setFilter(btn.key)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-300 transform ${
-                filter === btn.key
-                  ? 'bg-gradient-to-r from-blue-500 to-emerald-500 text-white shadow-lg scale-105'
-                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105'
-              }`}
-            >
-              <span className="text-base">{btn.icon}</span>
-              <span className="hidden sm:inline">{btn.label}</span>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                filter === btn.key 
-                  ? 'bg-white/25 text-white' 
-                  : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
-              }`}>
-                {btn.count}
-              </span>
-            </button>
-          ))}
-        </div>
-        
         {/* Layer Switcher */}
         <div className="inline-flex items-center gap-2 p-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-700 shadow-lg pointer-events-auto">
           <button

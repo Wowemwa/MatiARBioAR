@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState, useCallback } from 'react'
 import { supabase } from '../supabaseClient'
 import { MATI_HOTSPOTS as HOTSPOTS, MATI_SPECIES as SPECIES, Hotspot, SpeciesDetail } from '../data/mati-hotspots'
+import { addActivityLog } from '../utils/activityLog'
 
 export interface TeamMember {
   id: string
@@ -346,10 +347,28 @@ export function DataProvider({ children }: DataProviderProps) {
       setSpecies(prev => [...prev, newSpecies])
       console.log('[DataContext] Species created successfully in Supabase')
 
+      // Log activity
+      addActivityLog({
+        type: 'create',
+        entityType: 'species',
+        entityId: newSpecies.id,
+        entityName: newSpecies.commonName,
+        details: `Created ${newSpecies.category} species: ${newSpecies.scientificName}`
+      })
+
     } catch (err) {
       console.error('[DataContext] Failed to create species in Supabase:', err)
       // Fallback to local state only
       setSpecies(prev => [...prev, newSpecies])
+      
+      // Log activity even on fallback
+      addActivityLog({
+        type: 'create',
+        entityType: 'species',
+        entityId: newSpecies.id,
+        entityName: newSpecies.commonName,
+        details: `Created ${newSpecies.category} species: ${newSpecies.scientificName}`
+      })
     }
   }, [])
 
@@ -386,16 +405,48 @@ export function DataProvider({ children }: DataProviderProps) {
       ))
       console.log('[DataContext] Species updated successfully in Supabase')
 
+      // Log activity
+      const updatedSpecies = species.find(s => s.id === id)
+      if (updatedSpecies) {
+        const changeDetails = []
+        if (updates.commonName) changeDetails.push(`name to "${updates.commonName}"`)
+        if (updates.status) changeDetails.push(`status to ${updates.status}`)
+        if (updates.images) changeDetails.push(`images (${updates.images.length} total)`)
+        
+        addActivityLog({
+          type: 'update',
+          entityType: 'species',
+          entityId: id,
+          entityName: updates.commonName || updatedSpecies.commonName,
+          details: changeDetails.length > 0 ? `Updated ${changeDetails.join(', ')}` : 'Updated species information'
+        })
+      }
+
     } catch (err) {
       console.error('[DataContext] Failed to update species in Supabase:', err)
       // Fallback to local state only
       setSpecies(prev => prev.map(s =>
         s.id === id ? { ...s, ...updates } : s
       ))
+      
+      // Log activity even on fallback
+      const updatedSpecies = species.find(s => s.id === id)
+      if (updatedSpecies) {
+        addActivityLog({
+          type: 'update',
+          entityType: 'species',
+          entityId: id,
+          entityName: updates.commonName || updatedSpecies.commonName,
+          details: 'Updated species information'
+        })
+      }
     }
-  }, [])
+  }, [species])
 
   const deleteSpecies = useCallback(async (id: string) => {
+    // Get species info before deleting for logging
+    const speciesItem = species.find(s => s.id === id)
+    
     try {
       console.log('[DataContext] Deleting species from Supabase:', id)
 
@@ -411,12 +462,34 @@ export function DataProvider({ children }: DataProviderProps) {
       setSpecies(prev => prev.filter(s => s.id !== id))
       console.log('[DataContext] Species deleted successfully from Supabase')
 
+      // Log activity
+      if (speciesItem) {
+        addActivityLog({
+          type: 'delete',
+          entityType: 'species',
+          entityId: id,
+          entityName: speciesItem.commonName,
+          details: `Deleted ${speciesItem.category} species: ${speciesItem.scientificName}`
+        })
+      }
+
     } catch (err) {
       console.error('[DataContext] Failed to delete species from Supabase:', err)
       // Fallback to local state only
       setSpecies(prev => prev.filter(s => s.id !== id))
+      
+      // Log activity even on fallback
+      if (speciesItem) {
+        addActivityLog({
+          type: 'delete',
+          entityType: 'species',
+          entityId: id,
+          entityName: speciesItem.commonName,
+          details: `Deleted ${speciesItem.category} species: ${speciesItem.scientificName}`
+        })
+      }
     }
-  }, [])
+  }, [species])
 
   // Team members CRUD operations - now work with Supabase
   const createTeamMember = useCallback(async (newMember: TeamMember) => {
