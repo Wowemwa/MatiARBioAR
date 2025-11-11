@@ -7,6 +7,7 @@ interface AdminLoginProps {
 }
 
 export default function AdminLogin({ isVisible, onClose }: AdminLoginProps) {
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -18,12 +19,13 @@ export default function AdminLogin({ isVisible, onClose }: AdminLoginProps) {
     setError('')
 
     try {
-      const success = await login({ password })
+      const success = await login({ email, password })
       if (success) {
+        setEmail('')
         setPassword('')
         onClose()
       } else {
-        setError('Invalid password. Please try again.')
+        setError('Invalid email or password. Please try again.')
       }
     } catch (error) {
       setError('Login failed. Please try again.')
@@ -49,11 +51,26 @@ export default function AdminLogin({ isVisible, onClose }: AdminLoginProps) {
               🔐 Admin Access
             </h2>
             <p className="text-gray-600 dark:text-gray-300 text-lg">
-              Enter password to access the biodiversity management system
+              Enter your credentials to access the biodiversity management system
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+                📧 Admin Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-5 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-2xl bg-white/80 dark:bg-slate-700/80 backdrop-blur-xl text-gray-900 dark:text-gray-100 focus:ring-4 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300 text-lg font-medium"
+                placeholder="Enter your admin email"
+                required
+                disabled={isLoading}
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
                 🔑 Admin Password

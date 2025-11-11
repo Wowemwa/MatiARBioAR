@@ -1,28 +1,59 @@
 import { useState } from 'react'
 import { X, MessageCircle } from 'lucide-react'
+import { supabase } from '../supabaseClient'
 
 export default function FeedbackFloating() {
   const [open, setOpen] = useState(false)
   const [message, setMessage] = useState('')
   const [email, setEmail] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
-  const sendFeedback = () => {
-    // Save to local storage so admins can review feedback in-app
+  const sendFeedback = async () => {
+    if (!message.trim()) return
+
+    setIsSubmitting(true)
+    setSubmitStatus('idle')
+
     try {
-      const key = 'mati-feedback:v1'
-      const existing = JSON.parse(localStorage.getItem(key) || '[]') as Array<any>
-      const entry = { id: `fb_${Date.now()}`, email: email || null, message: message.trim(), createdAt: new Date().toISOString() }
-      existing.unshift(entry)
-      localStorage.setItem(key, JSON.stringify(existing))
-      // optionally open mail client too
+      const { data, error } = await supabase
+        .from('feedback')
+        .insert([
+          {
+            message: message.trim(),
+            email: email.trim() || null,
+            url: window.location.pathname,
+            user_agent: navigator.userAgent,
+          }
+        ])
+
+      if (error) throw error
+
+      setSubmitStatus('success')
+      setMessage('')
+      setEmail('')
+
+      // Also send email as fallback
       const subject = encodeURIComponent('Mati Platform Feedback')
       const body = encodeURIComponent(`From: ${email || 'anonymous'}\n\n${message}`)
       window.location.href = `mailto:hello@mati.city?subject=${subject}&body=${body}`
-    } catch (err) {
-      console.warn('[FeedbackFloating] failed to save feedback to localStorage', err)
+
+      // Close after success
+      setTimeout(() => {
+        setOpen(false)
+        setSubmitStatus('idle')
+      }, 2000)
+
+    } catch (error) {
+      console.error('Failed to submit feedback:', error)
+      setSubmitStatus('error')
+
+      // Fallback to email only
       const subject = encodeURIComponent('Mati Platform Feedback')
       const body = encodeURIComponent(`From: ${email || 'anonymous'}\n\n${message}`)
       window.location.href = `mailto:hello@mati.city?subject=${subject}&body=${body}`
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -73,19 +104,32 @@ export default function FeedbackFloating() {
 
             <div className="mt-3 flex items-center justify-end gap-2">
               <button
-                onClick={() => { setOpen(false); setMessage(''); setEmail('') }}
+                onClick={() => { setOpen(false); setMessage(''); setEmail(''); setSubmitStatus('idle') }}
                 className="px-3 py-2 text-sm rounded-md text-slate-700 dark:text-slate-200 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800"
+                disabled={isSubmitting}
               >
                 Cancel
               </button>
               <button
                 onClick={sendFeedback}
-                disabled={!message.trim()}
+                disabled={!message.trim() || isSubmitting}
                 className="px-3 py-2 text-sm rounded-md bg-gradient-to-r from-blue-500 to-emerald-400 text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Send
+                {isSubmitting ? 'Sending...' : submitStatus === 'success' ? 'Sent!' : 'Send'}
               </button>
             </div>
+
+            {submitStatus === 'error' && (
+              <div className="mt-2 text-xs text-red-600 dark:text-red-400">
+                Failed to send feedback. Email client will open as fallback.
+              </div>
+            )}
+
+            {submitStatus === 'success' && (
+              <div className="mt-2 text-xs text-green-600 dark:text-green-400">
+                Feedback sent successfully! Thank you.
+              </div>
+            )}
           </div>
         )}
       </div>

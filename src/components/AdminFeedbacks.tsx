@@ -1,38 +1,95 @@
 import { useEffect, useState } from 'react'
+import { supabase } from '../supabaseClient'
 
 type FeedbackEntry = {
   id: string
   email: string | null
   message: string
-  createdAt: string
+  created_at: string
+  is_read: boolean
 }
-
-const STORAGE_KEY = 'mati-feedback:v1'
 
 export default function AdminFeedbacks() {
   const [items, setItems] = useState<FeedbackEntry[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return
-    try {
-      const parsed = JSON.parse(raw) as FeedbackEntry[]
-      setItems(parsed)
-    } catch (err) {
-      console.warn('[AdminFeedbacks] failed to parse feedback storage', err)
-    }
+    fetchFeedback()
   }, [])
 
-  const remove = (id: string) => {
-    const next = items.filter(i => i.id !== id)
-    setItems(next)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+  const fetchFeedback = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('feedback')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setItems(data || [])
+    } catch (err) {
+      console.warn('[AdminFeedbacks] failed to fetch feedback', err)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const clearAll = () => {
-    if (!confirm('Clear all feedback? This cannot be undone.')) return
-    setItems([])
-    localStorage.removeItem(STORAGE_KEY)
+  const markAsRead = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('feedback')
+        .update({ is_read: true })
+        .eq('id', id)
+
+      if (error) throw error
+
+      setItems(items.map(item =>
+        item.id === id ? { ...item, is_read: true } : item
+      ))
+    } catch (err) {
+      console.warn('[AdminFeedbacks] failed to mark as read', err)
+    }
+  }
+
+  const remove = async (id: string) => {
+    if (!confirm('Delete this feedback? This cannot be undone.')) return
+
+    try {
+      const { error } = await supabase
+        .from('feedback')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+
+      setItems(items.filter(item => item.id !== id))
+    } catch (err) {
+      console.warn('[AdminFeedbacks] failed to delete feedback', err)
+    }
+  }
+
+  const clearAll = async () => {
+    if (!confirm('Delete ALL feedback? This cannot be undone.')) return
+
+    try {
+      const { error } = await supabase
+        .from('feedback')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000') // Delete all
+
+      if (error) throw error
+
+      setItems([])
+    } catch (err) {
+      console.warn('[AdminFeedbacks] failed to clear feedback', err)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="text-sm text-slate-500">Loading feedback...</div>
+      </div>
+    )
   }
 
   if (!items.length) {
@@ -47,20 +104,48 @@ export default function AdminFeedbacks() {
     <div className="p-4 overflow-y-auto max-h-[70vh]">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold">User Feedback</h3>
-        <button onClick={clearAll} className="text-sm text-red-500">Clear all</button>
+        <button onClick={clearAll} className="text-sm text-red-500 hover:text-red-700">
+          Clear all
+        </button>
       </div>
 
-      <div className="space-y-3">
-        {items.map(item => (
-          <div key={item.id} className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="text-xs text-slate-400">{new Date(item.createdAt).toLocaleString()}</div>
-                <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">{item.email ?? 'Anonymous'}</div>
-                <div className="mt-2 text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap">{item.message}</div>
+      <div className="space-y-4">
+        {items.map((item) => (
+          <div key={item.id} className={`p-4 rounded-lg border ${item.is_read ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'}`}>
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {item.email || 'Anonymous'}
+                  </span>
+                  {!item.is_read && (
+                    <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full">
+                      New
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                  {item.message}
+                </p>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {new Date(item.created_at).toLocaleString()}
+                </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <button onClick={() => remove(item.id)} className="text-sm text-red-500">Delete</button>
+              <div className="flex gap-2 ml-4">
+                {!item.is_read && (
+                  <button
+                    onClick={() => markAsRead(item.id)}
+                    className="text-xs px-2 py-1 bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 rounded hover:bg-green-200 dark:hover:bg-green-700"
+                  >
+                    Mark Read
+                  </button>
+                )}
+                <button
+                  onClick={() => remove(item.id)}
+                  className="text-xs px-2 py-1 bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200 rounded hover:bg-red-200 dark:hover:bg-red-700"
+                >
+                  Delete
+                </button>
               </div>
             </div>
           </div>

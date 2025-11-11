@@ -13,6 +13,39 @@ export interface SpeciesDetail {
   siteIds: string[]
   highlights: string[]
   images?: string[]
+  // Additional fields from Supabase
+  kingdom?: string
+  phylum?: string
+  class?: string
+  taxonomic_order?: string
+  family?: string
+  genus?: string
+  species?: string
+  authorship?: string
+  synonyms?: string[]
+  endemic?: boolean
+  invasive?: boolean
+  key_facts?: string[]
+  diet?: string
+  behavior?: string
+  reproduction?: string
+  ecosystem_services?: string[]
+  phenology?: string
+  interactions?: string[]
+  growth_form?: string
+  leaf_type?: string
+  flowering_period?: string
+  ethnobotanical_uses?: string[]
+  mobility?: string
+  activity_pattern?: string
+  size?: string
+  weight?: string
+  lifespan?: string
+  population_trend?: string
+  threats?: string[]
+  conservation_actions?: string[]
+  legal_protection?: string[]
+  reference_sources?: string[]
 }
 
 export interface Hotspot {

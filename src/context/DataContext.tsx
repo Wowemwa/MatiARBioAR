@@ -1,4 +1,5 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState, useCallback } from 'react'
+import { supabase } from '../supabaseClient'
 import { MATI_HOTSPOTS as HOTSPOTS, MATI_SPECIES as SPECIES, Hotspot, SpeciesDetail } from '../data/mati-hotspots'
 
 export interface TeamMember {
@@ -102,46 +103,164 @@ export function DataProvider({ children }: DataProviderProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | undefined>(undefined)
 
-  // Load species from localStorage or use defaults
+  // Load data from Supabase
   const hydrate = useCallback(async () => {
     try {
       setLoading(true)
       setError(undefined)
-      
-      // Load hotspots (not editable for now)
-      setHotspots(HOTSPOTS)
-      
-      // Try to load species from localStorage first
-      const stored = localStorage.getItem(SPECIES_STORAGE_KEY)
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored) as SpeciesDetail[]
-          setSpecies(parsed)
-        } catch (parseErr) {
-          console.warn('[DataProvider] Failed to parse stored species, using defaults', parseErr)
-          setSpecies(SPECIES)
-        }
-      } else {
-        setSpecies(SPECIES)
-      }
 
-      // Load team members from localStorage
-      const storedTeam = localStorage.getItem(TEAM_STORAGE_KEY)
-      if (storedTeam) {
-        try {
-          const parsed = JSON.parse(storedTeam) as TeamMember[]
-          setTeamMembers(parsed)
-        } catch (parseErr) {
-          console.warn('[DataProvider] Failed to parse stored team members, using defaults', parseErr)
-          setTeamMembers(DEFAULT_TEAM_MEMBERS)
+      // Fetch sites from Supabase
+      const { data: sitesData, error: sitesError } = await supabase
+        .from('sites')
+        .select('*')
+        .order('name')
+
+      if (sitesError) throw sitesError
+
+      // Transform sites data to match Hotspot interface
+      const transformedSites: Hotspot[] = (sitesData || []).map(site => ({
+        id: site.id,
+        name: site.name,
+        type: (site.type === 'freshwater' || site.type === 'mixed' ? 'marine' : site.type) as 'marine' | 'terrestrial', // Map unsupported types to marine
+        barangay: site.barangay,
+        city: site.city,
+        province: site.province,
+        designation: site.designation,
+        areaHectares: site.area_hectares,
+        lat: site.lat,
+        lng: site.lng,
+        elevationRangeMeters: site.elevation_range_meters,
+        summary: site.summary,
+        description: site.description,
+        features: site.features || [],
+        stewardship: site.stewardship,
+        image: site.image_url,
+        tags: site.tags || [],
+        visitorNotes: site.visitor_notes,
+        // Map species relationships
+        highlightSpeciesIds: [], // Will be populated below
+        floraIds: [],
+        faunaIds: []
+      }))
+
+      setHotspots(transformedSites)
+
+      // Fetch species from Supabase
+      const { data: speciesData, error: speciesError } = await supabase
+        .from('species')
+        .select('*')
+        .order('common_name')
+
+      if (speciesError) throw speciesError
+
+      // Fetch species-site relationships
+      const { data: speciesSitesData, error: speciesSitesError } = await supabase
+        .from('species_sites')
+        .select('*')
+
+      if (speciesSitesError) throw speciesSitesError
+
+      // Transform species data to match SpeciesDetail interface
+      const transformedSpecies: SpeciesDetail[] = (speciesData || []).map(species => {
+        const speciesSiteRelations = speciesSitesData?.filter(rel => rel.species_id === species.id) || []
+        const siteIds = speciesSiteRelations.map(rel => rel.site_id)
+        const highlightRelations = speciesSiteRelations.filter(rel => rel.is_highlight)
+
+        return {
+          id: species.id,
+          category: species.category as 'flora' | 'fauna',
+          commonName: species.common_name,
+          scientificName: species.scientific_name,
+          status: species.conservation_status as SpeciesDetail['status'] || 'LC',
+          blurb: species.description,
+          habitat: species.habitat,
+          siteIds: siteIds,
+          highlights: species.key_facts || [], // Map key_facts to highlights
+          images: [], // Will be populated from media_assets if needed
+          // Additional fields from Supabase
+          kingdom: species.kingdom,
+          phylum: species.phylum,
+          class: species.class,
+          taxonomic_order: species.taxonomic_order,
+          family: species.family,
+          genus: species.genus,
+          species: species.species,
+          authorship: species.authorship,
+          synonyms: species.synonyms,
+          endemic: species.endemic,
+          invasive: species.invasive,
+          key_facts: species.key_facts,
+          diet: species.diet,
+          behavior: species.behavior,
+          reproduction: species.reproduction,
+          ecosystem_services: species.ecosystem_services,
+          phenology: species.phenology,
+          interactions: species.interactions,
+          growth_form: species.growth_form,
+          leaf_type: species.leaf_type,
+          flowering_period: species.flowering_period,
+          ethnobotanical_uses: species.ethnobotanical_uses,
+          mobility: species.mobility,
+          activity_pattern: species.activity_pattern,
+          size: species.size,
+          weight: species.weight,
+          lifespan: species.lifespan,
+          population_trend: species.population_trend,
+          threats: species.threats,
+          conservation_actions: species.conservation_actions,
+          legal_protection: species.legal_protection,
+          reference_sources: species.reference_sources
         }
-      } else {
-        setTeamMembers(DEFAULT_TEAM_MEMBERS)
-      }
+      })
+
+      setSpecies(transformedSpecies)
+
+      // Update hotspots with species relationships
+      const updatedSites = transformedSites.map(site => {
+        const siteSpeciesRelations = speciesSitesData?.filter(rel => rel.site_id === site.id) || []
+        const highlightSpeciesIds = siteSpeciesRelations
+          .filter(rel => rel.is_highlight)
+          .map(rel => rel.species_id)
+
+        const siteSpecies = transformedSpecies.filter(species =>
+          siteSpeciesRelations.some(rel => rel.species_id === species.id)
+        )
+
+        return {
+          ...site,
+          highlightSpeciesIds,
+          floraIds: siteSpecies.filter(s => s.category === 'flora').map(s => s.id),
+          faunaIds: siteSpecies.filter(s => s.category === 'fauna').map(s => s.id)
+        }
+      })
+
+      setHotspots(updatedSites)
+
+      // Fetch team members from Supabase
+      const { data: teamData, error: teamError } = await supabase
+        .from('team_members')
+        .select('*')
+        .order('sort_order')
+
+      if (teamError) throw teamError
+
+      // Transform team members data
+      const transformedTeam: TeamMember[] = (teamData || []).map(member => ({
+        id: member.id,
+        name: member.name,
+        role: member.role,
+        image: member.avatar_url || '/default-avatar.jpg',
+        description: member.bio || ''
+      }))
+
+      setTeamMembers(transformedTeam)
+
     } catch (err) {
-      console.error('[DataProvider] failed to hydrate data context', err)
-      setError('Unable to load biodiversity data. Please try again later.')
-      setSpecies(SPECIES) // Fallback to default
+      console.error('[DataProvider] failed to load data from Supabase', err)
+      setError('Unable to load biodiversity data from database. Please try again later.')
+      // Fallback to local data
+      setHotspots(HOTSPOTS)
+      setSpecies(SPECIES)
       setTeamMembers(DEFAULT_TEAM_MEMBERS)
     } finally {
       setLoading(false)
@@ -152,79 +271,250 @@ export function DataProvider({ children }: DataProviderProps) {
     void hydrate()
   }, [hydrate])
 
-  // Save species to localStorage whenever it changes
-  useEffect(() => {
-    if (species.length > 0 && !loading) {
-      try {
-        localStorage.setItem(SPECIES_STORAGE_KEY, JSON.stringify(species))
-        console.log('[DataContext] Saved species to localStorage:', species.length)
-      } catch (err) {
-        console.error('[DataContext] Failed to save to localStorage:', err)
-      }
-    }
-  }, [species, loading])
+  // Note: Data is now stored in Supabase, localStorage is no longer used for persistence
 
-  // Save team members to localStorage whenever it changes
-  useEffect(() => {
-    if (teamMembers.length > 0 && !loading) {
-      try {
-        localStorage.setItem(TEAM_STORAGE_KEY, JSON.stringify(teamMembers))
-        console.log('[DataContext] Saved team members to localStorage:', teamMembers.length)
-      } catch (err) {
-        console.error('[DataContext] Failed to save team members to localStorage:', err)
-      }
-    }
-  }, [teamMembers, loading])
+  // Admin CRUD operations - now work with Supabase
+  const createSpecies = useCallback(async (newSpecies: SpeciesDetail) => {
+    try {
+      console.log('[DataContext] Creating species in Supabase:', newSpecies.commonName)
 
-  // Admin CRUD operations
-  const createSpecies = useCallback((newSpecies: SpeciesDetail) => {
-    console.log('[DataContext] Creating species:', newSpecies.commonName)
-    setSpecies(prev => {
-      const updated = [...prev, newSpecies]
-      console.log('[DataContext] New species count:', updated.length)
-      return updated
-    })
+      // Insert into Supabase species table
+      const { data, error } = await supabase
+        .from('species')
+        .insert({
+          id: newSpecies.id,
+          category: newSpecies.category,
+          common_name: newSpecies.commonName,
+          scientific_name: newSpecies.scientificName,
+          conservation_status: newSpecies.status,
+          description: newSpecies.blurb,
+          habitat: newSpecies.habitat,
+          key_facts: newSpecies.highlights,
+          kingdom: newSpecies.kingdom,
+          phylum: newSpecies.phylum,
+          class: newSpecies.class,
+          taxonomic_order: newSpecies.taxonomic_order,
+          family: newSpecies.family,
+          genus: newSpecies.genus,
+          species: newSpecies.species,
+          authorship: newSpecies.authorship,
+          synonyms: newSpecies.synonyms,
+          endemic: newSpecies.endemic,
+          invasive: newSpecies.invasive,
+          diet: newSpecies.diet,
+          behavior: newSpecies.behavior,
+          reproduction: newSpecies.reproduction,
+          ecosystem_services: newSpecies.ecosystem_services,
+          phenology: newSpecies.phenology,
+          interactions: newSpecies.interactions,
+          growth_form: newSpecies.growth_form,
+          leaf_type: newSpecies.leaf_type,
+          flowering_period: newSpecies.flowering_period,
+          ethnobotanical_uses: newSpecies.ethnobotanical_uses,
+          mobility: newSpecies.mobility,
+          activity_pattern: newSpecies.activity_pattern,
+          size: newSpecies.size,
+          weight: newSpecies.weight,
+          lifespan: newSpecies.lifespan,
+          population_trend: newSpecies.population_trend,
+          threats: newSpecies.threats,
+          conservation_actions: newSpecies.conservation_actions,
+          legal_protection: newSpecies.legal_protection,
+          reference_sources: newSpecies.reference_sources
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Insert species-site relationships
+      if (newSpecies.siteIds && newSpecies.siteIds.length > 0) {
+        const relationships = newSpecies.siteIds.map(siteId => ({
+          species_id: newSpecies.id,
+          site_id: siteId,
+          is_highlight: false // Default to not highlighted
+        }))
+
+        const { error: relError } = await supabase
+          .from('species_sites')
+          .insert(relationships)
+
+        if (relError) throw relError
+      }
+
+      // Update local state
+      setSpecies(prev => [...prev, newSpecies])
+      console.log('[DataContext] Species created successfully in Supabase')
+
+    } catch (err) {
+      console.error('[DataContext] Failed to create species in Supabase:', err)
+      // Fallback to local state only
+      setSpecies(prev => [...prev, newSpecies])
+    }
   }, [])
 
-  const updateSpecies = useCallback((id: string, updates: Partial<SpeciesDetail>) => {
-    console.log('[DataContext] Updating species:', id, updates)
-    setSpecies(prev => {
-      const updated = prev.map(s => 
+  const updateSpecies = useCallback(async (id: string, updates: Partial<SpeciesDetail>) => {
+    try {
+      console.log('[DataContext] Updating species in Supabase:', id, updates)
+
+      // Update in Supabase species table
+      const supabaseUpdates: any = {}
+      if (updates.category) supabaseUpdates.category = updates.category
+      if (updates.commonName) supabaseUpdates.common_name = updates.commonName
+      if (updates.scientificName) supabaseUpdates.scientific_name = updates.scientificName
+      if (updates.status) supabaseUpdates.conservation_status = updates.status
+      if (updates.blurb) supabaseUpdates.description = updates.blurb
+      if (updates.habitat) supabaseUpdates.habitat = updates.habitat
+      if (updates.highlights) supabaseUpdates.key_facts = updates.highlights
+
+      // Add other fields if they exist in updates
+      Object.keys(updates).forEach(key => {
+        if (key in supabaseUpdates) return // Already handled
+        supabaseUpdates[key] = (updates as any)[key]
+      })
+
+      const { error } = await supabase
+        .from('species')
+        .update(supabaseUpdates)
+        .eq('id', id)
+
+      if (error) throw error
+
+      // Update local state
+      setSpecies(prev => prev.map(s =>
         s.id === id ? { ...s, ...updates } : s
-      )
-      console.log('[DataContext] Species updated')
-      return updated
-    })
+      ))
+      console.log('[DataContext] Species updated successfully in Supabase')
+
+    } catch (err) {
+      console.error('[DataContext] Failed to update species in Supabase:', err)
+      // Fallback to local state only
+      setSpecies(prev => prev.map(s =>
+        s.id === id ? { ...s, ...updates } : s
+      ))
+    }
   }, [])
 
-  const deleteSpecies = useCallback((id: string) => {
-    setSpecies(prev => prev.filter(s => s.id !== id))
+  const deleteSpecies = useCallback(async (id: string) => {
+    try {
+      console.log('[DataContext] Deleting species from Supabase:', id)
+
+      // Delete from Supabase (this will cascade to species_sites due to foreign key constraints)
+      const { error } = await supabase
+        .from('species')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+
+      // Update local state
+      setSpecies(prev => prev.filter(s => s.id !== id))
+      console.log('[DataContext] Species deleted successfully from Supabase')
+
+    } catch (err) {
+      console.error('[DataContext] Failed to delete species from Supabase:', err)
+      // Fallback to local state only
+      setSpecies(prev => prev.filter(s => s.id !== id))
+    }
   }, [])
 
-  // Team members CRUD operations
-  const createTeamMember = useCallback((newMember: TeamMember) => {
-    console.log('[DataContext] Creating team member:', newMember.name)
-    setTeamMembers(prev => [...prev, newMember])
+  // Team members CRUD operations - now work with Supabase
+  const createTeamMember = useCallback(async (newMember: TeamMember) => {
+    try {
+      console.log('[DataContext] Creating team member in Supabase:', newMember.name)
+
+      const { data, error } = await supabase
+        .from('team_members')
+        .insert({
+          name: newMember.name,
+          role: newMember.role,
+          bio: newMember.description,
+          avatar_url: newMember.image,
+          is_active: true,
+          sort_order: teamMembers.length // Add to end
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Update local state with the returned data (including the generated UUID)
+      const createdMember = {
+        id: data.id,
+        name: data.name,
+        role: data.role,
+        image: data.avatar_url || '/default-avatar.jpg',
+        description: data.bio || ''
+      }
+
+      setTeamMembers(prev => [...prev, createdMember])
+      console.log('[DataContext] Team member created successfully in Supabase')
+
+    } catch (err) {
+      console.error('[DataContext] Failed to create team member in Supabase:', err)
+      // Fallback to local state only
+      setTeamMembers(prev => [...prev, newMember])
+    }
+  }, [teamMembers.length])
+
+  const updateTeamMember = useCallback(async (id: string, updates: Partial<TeamMember>) => {
+    try {
+      console.log('[DataContext] Updating team member in Supabase:', id, updates)
+
+      const supabaseUpdates: any = {}
+      if (updates.name) supabaseUpdates.name = updates.name
+      if (updates.role) supabaseUpdates.role = updates.role
+      if (updates.description) supabaseUpdates.bio = updates.description
+      if (updates.image) supabaseUpdates.avatar_url = updates.image
+
+      const { error } = await supabase
+        .from('team_members')
+        .update(supabaseUpdates)
+        .eq('id', id)
+
+      if (error) throw error
+
+      // Update local state
+      setTeamMembers(prev => prev.map(m =>
+        m.id === id ? { ...m, ...updates } : m
+      ))
+      console.log('[DataContext] Team member updated successfully in Supabase')
+
+    } catch (err) {
+      console.error('[DataContext] Failed to update team member in Supabase:', err)
+      // Fallback to local state only
+      setTeamMembers(prev => prev.map(m =>
+        m.id === id ? { ...m, ...updates } : m
+      ))
+    }
   }, [])
 
-  const updateTeamMember = useCallback((id: string, updates: Partial<TeamMember>) => {
-    console.log('[DataContext] Updating team member:', id, updates)
-    setTeamMembers(prev => prev.map(m => 
-      m.id === id ? { ...m, ...updates } : m
-    ))
+  const deleteTeamMember = useCallback(async (id: string) => {
+    try {
+      console.log('[DataContext] Deleting team member from Supabase:', id)
+
+      const { error } = await supabase
+        .from('team_members')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+
+      // Update local state
+      setTeamMembers(prev => prev.filter(m => m.id !== id))
+      console.log('[DataContext] Team member deleted successfully from Supabase')
+
+    } catch (err) {
+      console.error('[DataContext] Failed to delete team member from Supabase:', err)
+      // Fallback to local state only
+      setTeamMembers(prev => prev.filter(m => m.id !== id))
+    }
   }, [])
 
-  const deleteTeamMember = useCallback((id: string) => {
-    console.log('[DataContext] Deleting team member:', id)
-    setTeamMembers(prev => prev.filter(m => m.id !== id))
-  }, [])
-
-  const resetToDefault = useCallback(() => {
-    localStorage.removeItem(SPECIES_STORAGE_KEY)
-    localStorage.removeItem(TEAM_STORAGE_KEY)
-    setSpecies(SPECIES)
-    setTeamMembers(DEFAULT_TEAM_MEMBERS)
-  }, [])
+  const resetToDefault = useCallback(async () => {
+    console.log('[DataContext] Resetting to Supabase data')
+    await hydrate() // Refresh from Supabase
+  }, [hydrate])
 
   const value = useMemo<DataContextValue>(() => ({
     hotspots,
