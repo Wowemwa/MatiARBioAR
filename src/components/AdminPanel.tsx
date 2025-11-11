@@ -3,6 +3,7 @@ import AdminFeedbacks from './AdminFeedbacks'
 import { PlusIcon, EditIcon, DeleteIcon, SaveIcon, CancelIcon, EyeIcon } from './Icons'
 import { SpeciesDetail } from '../data/mati-hotspots'
 import { useData } from '../context/DataContext'
+import { supabase } from '../supabaseClient'
 
 interface AdminPanelProps {
   isVisible: boolean
@@ -20,6 +21,7 @@ interface SpeciesFormData {
   siteIds: string[]
   highlights: string[]
   images: string[]
+  arModelUrl?: string
 }
 
 const emptySpecies: SpeciesFormData = {
@@ -32,7 +34,8 @@ const emptySpecies: SpeciesFormData = {
   blurb: '',
   siteIds: [],
   highlights: [],
-  images: []
+  images: [],
+  arModelUrl: undefined
 }
 
 export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
@@ -48,6 +51,8 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
   const [showImageModal, setShowImageModal] = useState(false)
   const [imageModalUrl, setImageModalUrl] = useState('')
   const [imageModalFile, setImageModalFile] = useState<File | null>(null)
+  const [arModelFile, setArModelFile] = useState<File | null>(null)
+  const [uploadingArModel, setUploadingArModel] = useState(false)
 
   const filteredSpecies = useMemo(() => {
     return species.filter(s => {
@@ -93,7 +98,8 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
       blurb: speciesItem.blurb,
       siteIds: speciesItem.siteIds || [],
       highlights: speciesItem.highlights || [],
-      images: speciesItem.images || []
+      images: speciesItem.images || [],
+      arModelUrl: speciesItem.arModelUrl
     })
   }
 
@@ -231,6 +237,67 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
       setEditingSpecies({
         ...editingSpecies,
         images: editingSpecies.images.filter((_, i) => i !== index)
+      })
+    }
+  }
+
+  const handleArModelUpload = async (file: File) => {
+    if (!editingSpecies) return
+    
+    setUploadingArModel(true)
+    try {
+      // Validate file type
+      const validExtensions = ['.gltf', '.glb']
+      const fileExtension = file.name.toLowerCase().slice(file.name.lastIndexOf('.'))
+      if (!validExtensions.includes(fileExtension)) {
+        alert('Please upload a glTF (.gltf) or GLB (.glb) file.')
+        setUploadingArModel(false)
+        return
+      }
+
+      // Upload to Supabase Storage
+      const fileName = `ar-models/${editingSpecies.id || 'temp'}-${Date.now()}${fileExtension}`
+      const { data, error } = await supabase.storage
+        .from('species-assets')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        })
+
+      if (error) throw error
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('species-assets')
+        .getPublicUrl(fileName)
+
+      setEditingSpecies({
+        ...editingSpecies,
+        arModelUrl: urlData.publicUrl
+      })
+      alert('✅ AR model uploaded successfully!')
+    } catch (error) {
+      console.error('AR model upload error:', error)
+      alert('❌ Failed to upload AR model. Check console for details.')
+    } finally {
+      setUploadingArModel(false)
+      setArModelFile(null)
+    }
+  }
+
+  const handleArModelFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setArModelFile(file)
+      handleArModelUpload(file)
+    }
+  }
+
+  const removeArModel = () => {
+    if (editingSpecies) {
+      setEditingSpecies({
+        ...editingSpecies,
+        arModelUrl: undefined
       })
     }
   }
@@ -628,6 +695,62 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                       </div>
                     ))}
                   </div>
+                </div>
+
+                {/* AR Model */}
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
+                  <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">
+                    <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                    </svg>
+                    AR 3D Model (.gltf / .glb)
+                  </label>
+                  
+                  {editingSpecies.arModelUrl ? (
+                    <div className="border-2 border-purple-200 dark:border-purple-600 rounded-xl p-4 bg-gradient-to-br from-purple-50 to-pink-50/30 dark:from-purple-900/20 dark:to-pink-900/10">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                          <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                            {editingSpecies.arModelUrl.split('/').pop()}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            AR model uploaded
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={removeArModel}
+                          className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md transition-all hover:scale-105"
+                          title="Remove AR model"
+                        >
+                          <DeleteIcon className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <input
+                        type="file"
+                        accept=".gltf,.glb"
+                        onChange={handleArModelFileChange}
+                        disabled={uploadingArModel}
+                        className="w-full px-4 py-3 bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-300 dark:border-purple-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                      {uploadingArModel && (
+                        <p className="text-sm text-purple-600 dark:text-purple-400 animate-pulse">
+                          ⏳ Uploading AR model...
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Upload a 3D model in glTF or GLB format. This will be used for AR viewing.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Images */}

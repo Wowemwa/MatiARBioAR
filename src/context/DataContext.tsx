@@ -178,6 +178,7 @@ export function DataProvider({ children }: DataProviderProps) {
           siteIds: siteIds,
           highlights: species.key_facts || [], // Map key_facts to highlights
           images: species.image_urls || [], // Load images from image_urls column
+          arModelUrl: species.ar_model_url || undefined, // Load AR model URL
           // Additional fields from Supabase
           kingdom: species.kingdom,
           phylum: species.phylum,
@@ -292,6 +293,7 @@ export function DataProvider({ children }: DataProviderProps) {
           habitat: newSpecies.habitat,
           key_facts: newSpecies.highlights,
           image_urls: newSpecies.images || [], // Save images to image_urls column
+          ar_model_url: newSpecies.arModelUrl || null, // Save AR model URL
           kingdom: newSpecies.kingdom,
           phylum: newSpecies.phylum,
           class: newSpecies.class,
@@ -399,9 +401,10 @@ export function DataProvider({ children }: DataProviderProps) {
       if (updates.habitat) supabaseUpdates.habitat = updates.habitat
       if (updates.highlights) supabaseUpdates.key_facts = updates.highlights
       if (updates.images !== undefined) supabaseUpdates.image_urls = updates.images // Save images to image_urls column
+      if (updates.arModelUrl !== undefined) supabaseUpdates.ar_model_url = updates.arModelUrl // Save AR model URL
 
       // Add other fields if they exist in updates, but skip client-only keys
-      const skipKeys = ['commonName', 'scientificName', 'status', 'blurb', 'habitat', 'highlights', 'images', 'category', 'siteIds', 'id']
+      const skipKeys = ['commonName', 'scientificName', 'status', 'blurb', 'habitat', 'highlights', 'images', 'arModelUrl', 'category', 'siteIds', 'id']
       Object.keys(updates).forEach(key => {
         if (key in supabaseUpdates) return // Already handled
         if (skipKeys.includes(key)) return // Skip client-only/mapped keys

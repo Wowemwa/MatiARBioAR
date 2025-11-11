@@ -89,6 +89,7 @@ CREATE TABLE IF NOT EXISTS public.species (
   legal_protection TEXT[],
   reference_sources TEXT[],
   image_urls TEXT[],
+  ar_model_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

@@ -13,6 +13,7 @@ export interface SpeciesDetail {
   siteIds: string[]
   highlights: string[]
   images?: string[]
+  arModelUrl?: string
   // Additional fields from Supabase
   kingdom?: string
   phylum?: string
