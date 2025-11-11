@@ -218,67 +218,91 @@ ALTER TABLE public.activity_log ENABLE ROW LEVEL SECURITY;
 -- RLS Policies
 
 -- Admins: Only admins can view/modify admin records
+DROP POLICY IF EXISTS "admins_select_own" ON public.admins;
 CREATE POLICY "admins_select_own" ON public.admins FOR SELECT USING (auth.uid() = id);
+DROP POLICY IF EXISTS "admins_insert_super_admin" ON public.admins;
 CREATE POLICY "admins_insert_super_admin" ON public.admins FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid() AND role = 'super_admin')
 );
+DROP POLICY IF EXISTS "admins_update_own" ON public.admins;
 CREATE POLICY "admins_update_own" ON public.admins FOR UPDATE USING (auth.uid() = id);
 
 -- Profiles: Users can view all profiles, modify their own
+DROP POLICY IF EXISTS "profiles_select_all" ON public.profiles;
 CREATE POLICY "profiles_select_all" ON public.profiles FOR SELECT USING (true);
+DROP POLICY IF EXISTS "profiles_insert_own" ON public.profiles;
 CREATE POLICY "profiles_insert_own" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
+DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
 CREATE POLICY "profiles_update_own" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
 -- Sites: Public read, admin write
+DROP POLICY IF EXISTS "sites_select_all" ON public.sites;
 CREATE POLICY "sites_select_all" ON public.sites FOR SELECT USING (true);
+DROP POLICY IF EXISTS "sites_insert_admin" ON public.sites;
 CREATE POLICY "sites_insert_admin" ON public.sites FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
+DROP POLICY IF EXISTS "sites_update_admin" ON public.sites;
 CREATE POLICY "sites_update_admin" ON public.sites FOR UPDATE USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
+DROP POLICY IF EXISTS "sites_delete_admin" ON public.sites;
 CREATE POLICY "sites_delete_admin" ON public.sites FOR DELETE USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
 
 -- Species: Public read, admin write
+DROP POLICY IF EXISTS "species_select_all" ON public.species;
 CREATE POLICY "species_select_all" ON public.species FOR SELECT USING (true);
+DROP POLICY IF EXISTS "species_insert_admin" ON public.species;
 CREATE POLICY "species_insert_admin" ON public.species FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
+DROP POLICY IF EXISTS "species_update_admin" ON public.species;
 CREATE POLICY "species_update_admin" ON public.species FOR UPDATE USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
+DROP POLICY IF EXISTS "species_delete_admin" ON public.species;
 CREATE POLICY "species_delete_admin" ON public.species FOR DELETE USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
 
 -- Species-sites: Public read, admin write
+DROP POLICY IF EXISTS "species_sites_select_all" ON public.species_sites;
 CREATE POLICY "species_sites_select_all" ON public.species_sites FOR SELECT USING (true);
+DROP POLICY IF EXISTS "species_sites_insert_admin" ON public.species_sites;
 CREATE POLICY "species_sites_insert_admin" ON public.species_sites FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
+DROP POLICY IF EXISTS "species_sites_update_admin" ON public.species_sites;
 CREATE POLICY "species_sites_update_admin" ON public.species_sites FOR UPDATE USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
+DROP POLICY IF EXISTS "species_sites_delete_admin" ON public.species_sites;
 CREATE POLICY "species_sites_delete_admin" ON public.species_sites FOR DELETE USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
 
 -- Distribution records: Public read, admin write
+DROP POLICY IF EXISTS "distribution_records_select_all" ON public.distribution_records;
 CREATE POLICY "distribution_records_select_all" ON public.distribution_records FOR SELECT USING (true);
+DROP POLICY IF EXISTS "distribution_records_insert_admin" ON public.distribution_records;
 CREATE POLICY "distribution_records_insert_admin" ON public.distribution_records FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
+DROP POLICY IF EXISTS "distribution_records_update_admin" ON public.distribution_records;
 CREATE POLICY "distribution_records_update_admin" ON public.distribution_records FOR UPDATE USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
+DROP POLICY IF EXISTS "distribution_records_delete_admin" ON public.distribution_records;
 CREATE POLICY "distribution_records_delete_admin" ON public.distribution_records FOR DELETE USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
 
 -- Media assets: Public read for public assets, authenticated upload
+DROP POLICY IF EXISTS "media_assets_select_public" ON public.media_assets;
 CREATE POLICY "media_assets_select_public" ON public.media_assets FOR SELECT USING (public = true);
+DROP POLICY IF EXISTS "media_assets_select_own" ON public.media_assets;
 CREATE POLICY "media_assets_select_own" ON public.media_assets FOR SELECT USING (
   auth.uid() IS NOT NULL AND (
     id IN (SELECT id FROM public.media_assets WHERE species_id IN (
@@ -292,7 +316,9 @@ CREATE POLICY "media_assets_select_own" ON public.media_assets FOR SELECT USING 
     ))
   )
 );
+DROP POLICY IF EXISTS "media_assets_insert_authenticated" ON public.media_assets;
 CREATE POLICY "media_assets_insert_authenticated" ON public.media_assets FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS "media_assets_update_own" ON public.media_assets;
 CREATE POLICY "media_assets_update_own" ON public.media_assets FOR UPDATE USING (
   auth.uid() IS NOT NULL AND (
     id IN (SELECT id FROM public.media_assets WHERE species_id IN (
@@ -308,46 +334,61 @@ CREATE POLICY "media_assets_update_own" ON public.media_assets FOR UPDATE USING 
 );
 
 -- Feedback: Allow anonymous insert, admins can view all and delete
+DROP POLICY IF EXISTS "feedback_insert_all" ON public.feedback;
 CREATE POLICY "feedback_insert_all" ON public.feedback FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "feedback_select_own" ON public.feedback;
 CREATE POLICY "feedback_select_own" ON public.feedback FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "feedback_select_admin" ON public.feedback;
 CREATE POLICY "feedback_select_admin" ON public.feedback FOR SELECT USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
+DROP POLICY IF EXISTS "feedback_update_admin" ON public.feedback;
 CREATE POLICY "feedback_update_admin" ON public.feedback FOR UPDATE USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
+DROP POLICY IF EXISTS "feedback_delete_admin" ON public.feedback;
 CREATE POLICY "feedback_delete_admin" ON public.feedback FOR DELETE USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
 
 -- Analytics events: Insert for all, select for admins
+DROP POLICY IF EXISTS "analytics_events_insert_all" ON public.analytics_events;
 CREATE POLICY "analytics_events_insert_all" ON public.analytics_events FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "analytics_events_select_admin" ON public.analytics_events;
 CREATE POLICY "analytics_events_select_admin" ON public.analytics_events FOR SELECT USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
 
 -- Performance metrics: Insert for all, select for admins
+DROP POLICY IF EXISTS "performance_metrics_insert_all" ON public.performance_metrics;
 CREATE POLICY "performance_metrics_insert_all" ON public.performance_metrics FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "performance_metrics_select_admin" ON public.performance_metrics;
 CREATE POLICY "performance_metrics_select_admin" ON public.performance_metrics FOR SELECT USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
 
 -- Team members: Public read, admin write
+DROP POLICY IF EXISTS "team_members_select_all" ON public.team_members;
 CREATE POLICY "team_members_select_all" ON public.team_members FOR SELECT USING (true);
+DROP POLICY IF EXISTS "team_members_insert_admin" ON public.team_members;
 CREATE POLICY "team_members_insert_admin" ON public.team_members FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
+DROP POLICY IF EXISTS "team_members_update_admin" ON public.team_members;
 CREATE POLICY "team_members_update_admin" ON public.team_members FOR UPDATE USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
+DROP POLICY IF EXISTS "team_members_delete_admin" ON public.team_members;
 CREATE POLICY "team_members_delete_admin" ON public.team_members FOR DELETE USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
 
 -- Activity log: Only admins can view
+DROP POLICY IF EXISTS "activity_log_select_admin" ON public.activity_log;
 CREATE POLICY "activity_log_select_admin" ON public.activity_log FOR SELECT USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
+DROP POLICY IF EXISTS "activity_log_insert_admin" ON public.activity_log;
 CREATE POLICY "activity_log_insert_admin" ON public.activity_log FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
@@ -371,10 +412,12 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Triggers
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
+DROP TRIGGER IF EXISTS on_admin_login ON public.admins;
 CREATE TRIGGER on_admin_login
   AFTER UPDATE OF last_login_at ON public.admins
   FOR EACH ROW EXECUTE FUNCTION public.handle_admin_login();
