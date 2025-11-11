@@ -177,7 +177,7 @@ export function DataProvider({ children }: DataProviderProps) {
           habitat: species.habitat,
           siteIds: siteIds,
           highlights: species.key_facts || [], // Map key_facts to highlights
-          images: [], // Will be populated from media_assets if needed
+          images: species.image_urls || [], // Load images from image_urls column
           // Additional fields from Supabase
           kingdom: species.kingdom,
           phylum: species.phylum,
@@ -291,6 +291,7 @@ export function DataProvider({ children }: DataProviderProps) {
           description: newSpecies.blurb,
           habitat: newSpecies.habitat,
           key_facts: newSpecies.highlights,
+          image_urls: newSpecies.images || [], // Save images to image_urls column
           kingdom: newSpecies.kingdom,
           phylum: newSpecies.phylum,
           class: newSpecies.class,
@@ -385,6 +386,7 @@ export function DataProvider({ children }: DataProviderProps) {
       if (updates.blurb) supabaseUpdates.description = updates.blurb
       if (updates.habitat) supabaseUpdates.habitat = updates.habitat
       if (updates.highlights) supabaseUpdates.key_facts = updates.highlights
+      if (updates.images !== undefined) supabaseUpdates.image_urls = updates.images // Save images to image_urls column
 
       // Add other fields if they exist in updates
       Object.keys(updates).forEach(key => {
