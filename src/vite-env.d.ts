@@ -1,6 +1,5 @@
 /// <reference types="vite/client" />
 /// <reference types="aframe" />
-import './types/firebase'
 
 declare global {
   namespace JSX {

@@ -14,6 +14,8 @@ export interface SpeciesDetail {
   highlights: string[]
   images?: string[]
   arModelUrl?: string
+  arModelScale?: number
+  arModelRotation?: { x: number; y: number; z: number }
   // Additional fields from Supabase
   kingdom?: string
   phylum?: string

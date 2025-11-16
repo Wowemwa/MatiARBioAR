@@ -1,6 +1,6 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState, useCallback } from 'react'
 import { supabase } from '../supabaseClient'
-import { MATI_HOTSPOTS as HOTSPOTS, MATI_SPECIES as SPECIES, Hotspot, SpeciesDetail } from '../data/mati-hotspots'
+import { Hotspot, SpeciesDetail } from '../data/mati-hotspots'
 import { addActivityLog } from '../utils/activityLog'
 
 export interface TeamMember {
@@ -103,23 +103,52 @@ export function DataProvider({ children }: DataProviderProps) {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | undefined>(undefined)
+  const [dataLoaded, setDataLoaded] = useState(false)
 
   // Load data from Supabase
-  const hydrate = useCallback(async () => {
+  const hydrate = useCallback(async (force = false) => {
+    // Skip loading if data is already loaded and not forced
+    if (dataLoaded && !force) {
+      return
+    }
+
     try {
       setLoading(true)
       setError(undefined)
 
-      // Fetch sites from Supabase
-      const { data: sitesData, error: sitesError } = await supabase
-        .from('sites')
-        .select('*')
-        .order('name')
+      // Load all data in parallel for better performance with timeout
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database connection timeout after 10 seconds')), 10000)
+      )
 
-      if (sitesError) throw sitesError
+      const dataPromise = Promise.all([
+        supabase.from('sites').select('*').order('name'),
+        supabase.from('species').select('*').order('common_name'),
+        supabase.from('species_sites').select('*'),
+        supabase.from('team_members').select('*').order('sort_order')
+      ])
+
+      const results = await Promise.race([dataPromise, timeout])
+      
+      if (!Array.isArray(results)) {
+        throw new Error('Database query timeout')
+      }
+
+      const [sitesResult, speciesResult, speciesSitesResult, teamResult] = results
+
+      // Check for errors
+      if (sitesResult.error) throw sitesResult.error
+      if (speciesResult.error) throw speciesResult.error
+      if (speciesSitesResult.error) throw speciesSitesResult.error
+      if (teamResult.error) throw teamResult.error
+
+      const sitesData = sitesResult.data || []
+      const speciesData = speciesResult.data || []
+      const speciesSitesData = speciesSitesResult.data || []
+      const teamData = teamResult.data || []
 
       // Transform sites data to match Hotspot interface
-      const transformedSites: Hotspot[] = (sitesData || []).map(site => ({
+      const transformedSites: Hotspot[] = sitesData.map(site => ({
         id: site.id,
         name: site.name,
         type: (site.type === 'freshwater' || site.type === 'mixed' ? 'marine' : site.type) as 'marine' | 'terrestrial', // Map unsupported types to marine
@@ -144,28 +173,10 @@ export function DataProvider({ children }: DataProviderProps) {
         faunaIds: []
       }))
 
-      setHotspots(transformedSites)
-
-      // Fetch species from Supabase
-      const { data: speciesData, error: speciesError } = await supabase
-        .from('species')
-        .select('*')
-        .order('common_name')
-
-      if (speciesError) throw speciesError
-
-      // Fetch species-site relationships
-      const { data: speciesSitesData, error: speciesSitesError } = await supabase
-        .from('species_sites')
-        .select('*')
-
-      if (speciesSitesError) throw speciesSitesError
-
       // Transform species data to match SpeciesDetail interface
-      const transformedSpecies: SpeciesDetail[] = (speciesData || []).map(species => {
+      const transformedSpecies: SpeciesDetail[] = speciesData.map(species => {
         const speciesSiteRelations = speciesSitesData?.filter(rel => rel.species_id === species.id) || []
         const siteIds = speciesSiteRelations.map(rel => rel.site_id)
-        const highlightRelations = speciesSiteRelations.filter(rel => rel.is_highlight)
 
         return {
           id: species.id,
@@ -215,8 +226,6 @@ export function DataProvider({ children }: DataProviderProps) {
         }
       })
 
-      setSpecies(transformedSpecies)
-
       // Update hotspots with species relationships
       const updatedSites = transformedSites.map(site => {
         const siteSpeciesRelations = speciesSitesData?.filter(rel => rel.site_id === site.id) || []
@@ -236,18 +245,8 @@ export function DataProvider({ children }: DataProviderProps) {
         }
       })
 
-      setHotspots(updatedSites)
-
-      // Fetch team members from Supabase
-      const { data: teamData, error: teamError } = await supabase
-        .from('team_members')
-        .select('*')
-        .order('sort_order')
-
-      if (teamError) throw teamError
-
       // Transform team members data
-      const transformedTeam: TeamMember[] = (teamData || []).map(member => ({
+      const transformedTeam: TeamMember[] = teamData.map(member => ({
         id: member.id,
         name: member.name,
         role: member.role,
@@ -255,19 +254,23 @@ export function DataProvider({ children }: DataProviderProps) {
         description: member.bio || ''
       }))
 
+      // Update state
+      setHotspots(updatedSites)
+      setSpecies(transformedSpecies)
       setTeamMembers(transformedTeam)
+      setDataLoaded(true)
 
     } catch (err) {
       console.error('[DataProvider] failed to load data from Supabase', err)
       setError('Unable to load biodiversity data from database. Please try again later.')
-      // Fallback to local data
-      setHotspots(HOTSPOTS)
-      setSpecies(SPECIES)
-      setTeamMembers(DEFAULT_TEAM_MEMBERS)
+      // Note: No longer falling back to local sample data - database is the source of truth
+      setHotspots([])
+      setSpecies([])
+      setTeamMembers([])
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [dataLoaded])
 
   useEffect(() => {
     void hydrate()
@@ -608,7 +611,8 @@ export function DataProvider({ children }: DataProviderProps) {
 
   const resetToDefault = useCallback(async () => {
     console.log('[DataContext] Resetting to Supabase data')
-    await hydrate() // Refresh from Supabase
+    setDataLoaded(false) // Force reload
+    await hydrate(true) // Force refresh
   }, [hydrate])
 
   const value = useMemo<DataContextValue>(() => ({
@@ -618,7 +622,10 @@ export function DataProvider({ children }: DataProviderProps) {
     teamMembers,
     loading,
     error,
-    refresh: async () => hydrate(),
+    refresh: async () => {
+      setDataLoaded(false)
+      await hydrate(true)
+    },
     createSpecies,
     updateSpecies,
     deleteSpecies,

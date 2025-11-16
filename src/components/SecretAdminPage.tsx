@@ -21,7 +21,7 @@ import {
 
 export default function SecretAdminPage() {
   const { isAdmin, logout } = useAdmin()
-  const { species, resetToDefault } = useData()
+  const { species, resetToDefault, loading } = useData()
   const [showAdminPanel, setShowAdminPanel] = useState(false)
   const [showUserManagement, setShowUserManagement] = useState(false)
   const [showAnalytics, setShowAnalytics] = useState(false)
@@ -108,6 +108,12 @@ export default function SecretAdminPage() {
                 <p className="text-gray-600 dark:text-gray-300 text-lg">
                   Secure biodiversity management system for Mati City
                 </p>
+                {loading && (
+                  <div className="mt-4 flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                    <span className="text-sm font-medium">Loading biodiversity data...</span>
+                  </div>
+                )}
               </div>
               <button
                 onClick={() => logout()}
@@ -127,24 +133,42 @@ export default function SecretAdminPage() {
           <div className="grid gap-6 md:grid-cols-4">
             <div className="relative rounded-2xl backdrop-blur-xl bg-gradient-to-br from-emerald-500/20 to-green-500/20 border border-emerald-500/30 shadow-xl p-6">
               <div className="text-emerald-600 dark:text-emerald-300 text-sm font-semibold mb-2">Total Species</div>
-              <div className="text-4xl font-black text-gray-900 dark:text-white">{species.length}</div>
+              <div className="text-4xl font-black text-gray-900 dark:text-white">
+                {loading ? (
+                  <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-16 rounded"></div>
+                ) : (
+                  species.length
+                )}
+              </div>
             </div>
             <div className="relative rounded-2xl backdrop-blur-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 shadow-xl p-6">
               <div className="text-blue-600 dark:text-blue-300 text-sm font-semibold mb-2">Fauna</div>
               <div className="text-4xl font-black text-gray-900 dark:text-white">
-                {species.filter(s => s.category === 'fauna').length}
+                {loading ? (
+                  <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
+                ) : (
+                  species.filter(s => s.category === 'fauna').length
+                )}
               </div>
             </div>
             <div className="relative rounded-2xl backdrop-blur-xl bg-gradient-to-br from-green-500/20 to-teal-500/20 border border-green-500/30 shadow-xl p-6">
               <div className="text-green-600 dark:text-green-300 text-sm font-semibold mb-2">Flora</div>
               <div className="text-4xl font-black text-gray-900 dark:text-white">
-                {species.filter(s => s.category === 'flora').length}
+                {loading ? (
+                  <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
+                ) : (
+                  species.filter(s => s.category === 'flora').length
+                )}
               </div>
             </div>
             <div className="relative rounded-2xl backdrop-blur-xl bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-red-500/30 shadow-xl p-6">
               <div className="text-red-600 dark:text-red-300 text-sm font-semibold mb-2">At Risk</div>
               <div className="text-4xl font-black text-gray-900 dark:text-white">
-                {species.filter(s => ['EN', 'CR', 'VU'].includes(s.status)).length}
+                {loading ? (
+                  <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
+                ) : (
+                  species.filter(s => ['EN', 'CR', 'VU'].includes(s.status)).length
+                )}
               </div>
             </div>
           </div>

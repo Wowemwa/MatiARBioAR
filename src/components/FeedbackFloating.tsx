@@ -67,16 +67,8 @@ export default function FeedbackFloating() {
     <div aria-live="polite">
       {/* Floating button */}
       <div className="fixed right-6 bottom-6 z-50 flex flex-col items-end gap-3">
-        {/* Test AR button - positioned above feedback */}
         <div>
-          <button
-            aria-label="Open AR test view"
-            title="Open AR test view"
-            onClick={() => window.open('/ar-viewer.html', '_blank')}
-            className="flex items-center justify-center w-12 h-12 rounded-full bg-indigo-600 text-white shadow-lg hover:scale-105 transform-gpu transition-transform focus:outline-none focus:ring-4 focus:ring-indigo-300/50"
-          >
-            <Camera className="w-5 h-5" />
-          </button>
+
         </div>
 
         <div className="relative">

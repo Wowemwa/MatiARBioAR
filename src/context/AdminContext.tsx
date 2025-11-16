@@ -34,20 +34,18 @@ export function AdminProvider({ children }: AdminProviderProps) {
     }
 
     try {
+      // Use optimized admin check function
       const { data: adminData, error } = await supabase
-        .from('admins')
-        .select('last_login_at')
-        .eq('id', user.id)
-        .single()
+        .rpc('get_admin_info', { user_uuid: user.id })
 
-      if (error || !adminData) {
+      if (error || !adminData || adminData.length === 0) {
         setIsAdmin(false)
         setLastLoginAt(undefined)
         return
       }
 
       setIsAdmin(true)
-      setLastLoginAt(adminData.last_login_at)
+      setLastLoginAt(adminData[0].last_login_at)
     } catch (error) {
       console.warn('[AdminProvider] Failed to check admin status', error)
       setIsAdmin(false)
@@ -86,29 +84,26 @@ export function AdminProvider({ children }: AdminProviderProps) {
       }
 
       if (data.user) {
-        // Check if user is admin
+        // Use optimized admin authentication function
         const { data: adminData, error: adminError } = await supabase
-          .from('admins')
-          .select('id')
-          .eq('id', data.user.id)
-          .single()
+          .rpc('authenticate_admin', { user_uuid: data.user.id })
 
-        if (adminError || !adminData) {
+        if (adminError) {
+          console.error('Admin check error:', adminError)
           // Not an admin, sign out
           await supabase.auth.signOut()
           return false
         }
 
-        const timestamp = new Date().toISOString()
-        setLastLoginAt(timestamp)
-
-        // Update last login
-        await supabase
-          .from('admins')
-          .update({ last_login_at: timestamp })
-          .eq('id', data.user.id)
-
-        return true
+        if (adminData && adminData.length > 0 && adminData[0].is_admin) {
+          // User is admin - login time already updated by the function
+          setLastLoginAt(new Date().toISOString())
+          return true
+        } else {
+          // Not an admin, sign out
+          await supabase.auth.signOut()
+          return false
+        }
       }
 
       return false

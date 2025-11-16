@@ -255,30 +255,47 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
         return
       }
 
-      // Upload to Supabase Storage
-      const fileName = `ar-models/${editingSpecies.id || 'temp'}-${Date.now()}${fileExtension}`
-      const { error } = await supabase.storage
-        .from('species-assets')
+      // Generate organized path: species-models/{species-id}/{species-id}.glb
+      const speciesId = editingSpecies.id || `temp-${Date.now()}`
+      const fileName = `${speciesId}/${speciesId}.glb`
+      
+      console.log('[AdminPanel] Uploading AR model to:', fileName)
+
+      // Delete old model if exists
+      if (editingSpecies.arModelUrl) {
+        const oldPath = editingSpecies.arModelUrl.split('/species-models/')[1]
+        if (oldPath) {
+          await supabase.storage.from('species-models').remove([oldPath])
+          console.log('[AdminPanel] Deleted old model:', oldPath)
+        }
+      }
+
+      // Upload to Supabase Storage with organized structure
+      const { error: uploadError } = await supabase.storage
+        .from('species-models')
         .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: true, // Overwrite if exists
+          contentType: 'model/gltf-binary'
         })
 
-      if (error) throw error
+      if (uploadError) throw uploadError
 
       // Get public URL
       const { data: urlData } = supabase.storage
-        .from('species-assets')
+        .from('species-models')
         .getPublicUrl(fileName)
+
+      console.log('[AdminPanel] Model uploaded successfully:', urlData.publicUrl)
 
       setEditingSpecies({
         ...editingSpecies,
         arModelUrl: urlData.publicUrl
       })
-      alert('✅ AR model uploaded successfully!')
+      alert('✅ AR model uploaded successfully! Save the species to persist changes.')
     } catch (error) {
-      console.error('AR model upload error:', error)
-      alert('❌ Failed to upload AR model. Check console for details.')
+      console.error('[AdminPanel] AR model upload error:', error)
+      alert(`❌ Failed to upload AR model: ${error.message || 'Unknown error'}`)
     } finally {
       setUploadingArModel(false)
       setArModelFile(null)

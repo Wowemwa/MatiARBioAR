@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AR Test • Mati Biodiversity</title>
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: white;
+      overflow-x: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 1rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .instructions {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 40px;
+    }
+
+    .instructions h2 {
+      color: #667eea;
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+    }
+
+    .instructions ol {
+      margin-left: 20px;
+      line-height: 1.8;
+    }
+
+    .instructions li {
+      margin-bottom: 10px;
+    }
+
+    .test-section {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+
+    .test-section h3 {
+      color: #764ba2;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    .ar-button {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 15px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+      transition: all 0.3s ease;
+      margin: 20px 0;
+      display: inline-block;
+    }
+
+    .ar-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(102, 126, 234, 0.6);
+    }
+
+    .marker-display {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .marker-display img {
+      max-width: 300px;
+      border: 3px dashed #667eea;
+      border-radius: 10px;
+    }
+
+    .marker-display p {
+      color: #333;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+
+    .qr-display {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      display: inline-block;
+      margin: 20px 0;
+    }
+
+    .qr-display canvas {
+      border: 3px solid #667eea;
+      border-radius: 10px;
+    }
+
+    .status {
+      background: rgba(76, 175, 80, 0.2);
+      border-left: 4px solid #4caf50;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+
+    .warning {
+      background: rgba(255, 152, 0, 0.2);
+      border-left: 4px solid #ff9800;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+
+    .error {
+      background: rgba(244, 67, 54, 0.2);
+      border-left: 4px solid #f44336;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+
+    code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-family: 'Courier New', monospace;
+      color: #4caf50;
+    }
+
+    a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .marker-display img {
+        max-width: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🎯 AR System Test Page</h1>
+    <p>Mati Biodiversity Marker-Based AR Testing</p>
+  </div>
+
+  <div class="container">
+    <!-- System Status -->
+    <div class="test-section">
+      <h3>📊 System Status</h3>
+      <div id="system-status">
+        <p>⏳ Checking AR capabilities...</p>
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="instructions">
+      <h2>🚀 How to Test AR</h2>
+      <ol>
+        <li><strong>Check System Status</strong> above - ensure all checks are green ✅</li>
+        <li><strong>Print the AR Marker</strong> below (or display on another screen)</li>
+        <li><strong>Click "Start AR Test"</strong> button</li>
+        <li><strong>Allow camera access</strong> when prompted</li>
+        <li><strong>Point camera at the marker</strong></li>
+        <li><strong>Watch the 3D model appear</strong> anchored to the marker</li>
+        <li><strong>Move the marker</strong> - the model should move with it</li>
+      </ol>
+    </div>
+
+    <!-- AR Test Section -->
+    <div class="test-section">
+      <h3>🎮 AR Test <span class="badge">Interactive</span></h3>
+      <p>This test uses a simple cube model to verify marker tracking works correctly.</p>
+      
+      <button class="ar-button" onclick="startARTest()">
+        📱 Start AR Test
+      </button>
+
+      <div id="ar-container" style="display: none;">
+        <a-scene
+          mindar-image="imageTargetSrc: /ar-demo/targets/pitcher-target.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no;"
+          color-space="sRGB"
+          renderer="colorManagement: true; physicallyCorrectLights: true;"
+          vr-mode-ui="enabled: false"
+          device-orientation-permission-ui="enabled: false"
+        >
+          <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+          <a-entity mindar-image-target="targetIndex: 0">
+            <!-- Test cube -->
+            <a-box
+              color="#667eea"
+              scale="0.5 0.5 0.5"
+              position="0 0.25 0"
+              animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear"
+            ></a-box>
+
+            <!-- Info text -->
+            <a-text
+              value="AR Test Cube"
+              align="center"
+              width="2"
+              color="#ffffff"
+              position="0 0.8 0"
+            ></a-text>
+          </a-entity>
+        </a-scene>
+      </div>
+    </div>
+
+    <!-- Test Marker -->
+    <div class="test-section">
+      <h3>🎯 AR Test Marker <span class="badge">Print This</span></h3>
+      <div class="warning">
+        <strong>⚠️ Important:</strong> Print this marker on white paper (A4 size recommended) or display it on another screen. 
+        Hold it steady and ensure good lighting for best tracking.
+      </div>
+
+      <div class="marker-display">
+        <img src="/ar-demo/images/pitcher.jpg" alt="AR Test Marker" />
+        <p>🖨️ Print this image for AR testing</p>
+      </div>
+    </div>
+
+    <!-- QR Code Generator -->
+    <div class="test-section">
+      <h3>🔍 QR Code Generator <span class="badge">Tool</span></h3>
+      <p>Generate QR codes for your species:</p>
+      
+      <div style="margin: 20px 0;">
+        <label for="species-id" style="display: block; margin-bottom: 10px;">Species ID:</label>
+        <input 
+          type="text" 
+          id="species-id" 
+          placeholder="philippine-eagle"
+          style="padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; width: 300px;"
+        />
+        <button 
+          class="ar-button" 
+          onclick="generateQR()" 
+          style="margin-left: 10px; padding: 10px 20px; font-size: 1rem;"
+        >
+          Generate QR
+        </button>
+      </div>
+
+      <div id="qr-output"></div>
+    </div>
+
+    <!-- Storage Test -->
+    <div class="test-section">
+      <h3>💾 Storage Structure Test <span class="badge">Reference</span></h3>
+      <p>Your Supabase storage should be organized like this:</p>
+      
+      <pre style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 10px; overflow-x: auto; margin-top: 15px;"><code>species-models/
+├── philippine-eagle/
+│   └── philippine-eagle.glb
+├── philippine-tarsier/
+│   └── philippine-tarsier.glb
+└── mati-butterfly/
+    └── mati-butterfly.glb
+
+species-images/
+├── philippine-eagle/
+│   ├── philippine-eagle-main.jpg
+│   └── philippine-eagle-1.jpg
+└── philippine-tarsier/
+    └── philippine-tarsier-main.jpg</code></pre>
+    </div>
+
+    <!-- Troubleshooting -->
+    <div class="test-section">
+      <h3>🔧 Troubleshooting</h3>
+      
+      <h4 style="color: #ff9800; margin-top: 20px;">Marker Not Detecting?</h4>
+      <ul style="line-height: 1.8;">
+        <li>✅ Ensure marker is printed clearly (not blurry)</li>
+        <li>✅ Use good lighting (avoid shadows)</li>
+        <li>✅ Hold device 20-40cm from marker</li>
+        <li>✅ Keep marker flat and steady</li>
+        <li>✅ Try printing larger (A4 full page)</li>
+      </ul>
+
+      <h4 style="color: #ff9800; margin-top: 20px;">Model Not Appearing?</h4>
+      <ul style="line-height: 1.8;">
+        <li>✅ Check browser console for errors (F12)</li>
+        <li>✅ Verify GLB file exists in Supabase Storage</li>
+        <li>✅ Ensure storage bucket is public</li>
+        <li>✅ Test GLB file in <a href="https://gltf-viewer.donmccurdy.com/" target="_blank">glTF Viewer</a></li>
+      </ul>
+
+      <h4 style="color: #ff9800; margin-top: 20px;">Camera Not Working?</h4>
+      <ul style="line-height: 1.8;">
+        <li>✅ Check browser permissions (allow camera)</li>
+        <li>✅ Use HTTPS (camera blocked on HTTP)</li>
+        <li>✅ Try different browser (Chrome recommended)</li>
+        <li>✅ Restart browser and try again</li>
+      </ul>
+    </div>
+
+    <!-- Resources -->
+    <div class="test-section">
+      <h3>📚 Resources</h3>
+      <ul style="line-height: 2;">
+        <li><a href="https://hiukim.github.io/mind-ar-js-doc/" target="_blank">MindAR Documentation</a></li>
+        <li><a href="https://aframe.io/docs/" target="_blank">A-Frame Documentation</a></li>
+        <li><a href="https://supabase.com/docs/guides/storage" target="_blank">Supabase Storage Guide</a></li>
+        <li><a href="https://gltf-viewer.donmccurdy.com/" target="_blank">glTF Model Viewer</a></li>
+        <li><a href="/AR_SYSTEM_COMPLETE_GUIDE.md" target="_blank">Complete AR Setup Guide</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <script>
+    // Check AR capabilities
+    function checkARCapabilities() {
+      const statusDiv = document.getElementById('system-status');
+      let html = '';
+
+      // Check A-Frame
+      if (typeof AFRAME !== 'undefined') {
+        html += '<div class="status">✅ A-Frame loaded (v' + AFRAME.version + ')</div>';
+      } else {
+        html += '<div class="error">❌ A-Frame not loaded</div>';
+      }
+
+      // Check MindAR
+      if (typeof window.MINDAR !== 'undefined') {
+        html += '<div class="status">✅ MindAR loaded</div>';
+      } else {
+        html += '<div class="error">❌ MindAR not loaded</div>';
+      }
+
+      // Check camera API
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        html += '<div class="status">✅ Camera API available</div>';
+      } else {
+        html += '<div class="error">❌ Camera API not available</div>';
+      }
+
+      // Check HTTPS
+      if (window.location.protocol === 'https:' || window.location.hostname === 'localhost') {
+        html += '<div class="status">✅ HTTPS or localhost</div>';
+      } else {
+        html += '<div class="warning">⚠️ Not using HTTPS (camera may not work)</div>';
+      }
+
+      // Check device
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      if (isMobile) {
+        html += '<div class="status">✅ Mobile device detected (recommended for AR)</div>';
+      } else {
+        html += '<div class="warning">⚠️ Desktop detected (mobile recommended for best AR experience)</div>';
+      }
+
+      statusDiv.innerHTML = html;
+    }
+
+    // Start AR test
+    function startARTest() {
+      const container = document.getElementById('ar-container');
+      container.style.display = 'block';
+      container.style.position = 'fixed';
+      container.style.top = '0';
+      container.style.left = '0';
+      container.style.width = '100vw';
+      container.style.height = '100vh';
+      container.style.zIndex = '9999';
+
+      // Add close button
+      const closeBtn = document.createElement('button');
+      closeBtn.textContent = '✕ Close AR';
+      closeBtn.style.cssText = 'position: absolute; top: 20px; right: 20px; z-index: 10000; padding: 10px 20px; background: rgba(255,255,255,0.9); border: none; border-radius: 10px; font-weight: bold; cursor: pointer;';
+      closeBtn.onclick = () => {
+        container.style.display = 'none';
+        closeBtn.remove();
+      };
+      container.appendChild(closeBtn);
+
+      // Start MindAR
+      const scene = container.querySelector('a-scene');
+      if (scene && scene.systems['mindar-image-system']) {
+        scene.systems['mindar-image-system'].start();
+      }
+    }
+
+    // Generate QR code
+    function generateQR() {
+      const speciesId = document.getElementById('species-id').value.trim();
+      if (!speciesId) {
+        alert('Please enter a species ID');
+        return;
+      }
+
+      const outputDiv = document.getElementById('qr-output');
+      outputDiv.innerHTML = '<div class="qr-display"><canvas id="qr-canvas"></canvas><p style="color: #333; margin-top: 10px;">QR Code for: <code>' + speciesId + '</code></p></div>';
+
+      QRCode.toCanvas(
+        document.getElementById('qr-canvas'),
+        speciesId,
+        {
+          width: 300,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#ffffff'
+          }
+        },
+        function (error) {
+          if (error) console.error(error);
+        }
+      );
+    }
+
+    // Run checks on load
+    window.addEventListener('load', () => {
+      setTimeout(checkARCapabilities, 500);
+    });
+  </script>
+</body>
+</html>
