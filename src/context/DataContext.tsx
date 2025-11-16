@@ -234,7 +234,7 @@ export function DataProvider({ children }: DataProviderProps) {
           .map((rel: any) => rel.species_id)
 
         const siteSpecies = transformedSpecies.filter(species =>
-          siteSpeciesRelations.some(rel => rel.species_id === species.id)
+          siteSpeciesRelations.some((rel: any) => rel.species_id === species.id)
         )
 
         return {
