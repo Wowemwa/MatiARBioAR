@@ -4,9 +4,8 @@ import useTheme from './useTheme'
 import { Card, SoftCard, Badge, Button, SectionTitle, MediaThumb } from './components/UI'
 import AnimatedText from './components/AnimatedText'
 import Atmosphere from './components/Atmosphere'
-import ComingSoon from './components/ComingSoon'
 import ModernHome from './components/ModernHome'
-import { WaveIcon, MountainIcon, SpeciesIcon, ARIcon, InfoIcon, MapIcon, CameraIcon, TargetIcon, StarIcon, MissionIcon, EducationIcon, TechIcon, ConservationIcon, LeafIcon } from './components/Icons'
+import { WaveIcon, MountainIcon, SpeciesIcon, ARIcon, InfoIcon, MapIcon, EducationIcon, TechIcon, ConservationIcon, LeafIcon } from './components/Icons'
 import { HiMapPin } from 'react-icons/hi2'
 import { GiButterfly } from 'react-icons/gi'
 import { MdAutoAwesome } from 'react-icons/md'
@@ -25,9 +24,6 @@ import SecretAdminPage from './components/SecretAdminPage'
 import ARQRViewer from './components/ARQRViewer'
 import type { Hotspot, SpeciesDetail } from './data/hotspots'
 
-type AdminTab = 'login' | 'dashboard' | 'data' | 'system'
-type DataViewMode = 'hotspots' | 'species'
-
 type HotspotFormValues = Omit<Hotspot, 'lat' | 'lng' | 'areaHectares' | 'image'> & {
   lat: number | ''
   lng: number | ''
@@ -38,9 +34,6 @@ type HotspotFormValues = Omit<Hotspot, 'lat' | 'lng' | 'areaHectares' | 'image'>
 type SpeciesFormValues = Omit<SpeciesDetail, 'images'> & {
   images: string[]
 }
-
-const isHotspotRecord = (item: Hotspot | SpeciesDetail | null): item is Hotspot => Boolean(item && 'type' in item)
-const isSpeciesRecord = (item: Hotspot | SpeciesDetail | null): item is SpeciesDetail => Boolean(item && 'category' in item)
 
 const createHotspotFormValues = (initialData?: Hotspot): HotspotFormValues => {
   if (!initialData) {

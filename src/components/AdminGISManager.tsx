@@ -220,7 +220,7 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
         visitor_notes: null
       }
 
-      const { data: savedSite, error: siteError } = await supabase
+      const { error: siteError } = await supabase
         .from('sites')
         .insert(siteData)
         .select()

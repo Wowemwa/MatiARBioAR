@@ -23,7 +23,7 @@ export default function AdminLogin({ isVisible, onClose }: AdminLoginProps) {
       if (success) {
         setEmail('')
         setPassword('')
-        onClose()
+        // onClose() // Removed to prevent navigation away on successful login
       } else {
         setError('Invalid email or password. Please try again.')
       }

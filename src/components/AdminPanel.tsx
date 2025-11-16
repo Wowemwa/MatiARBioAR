@@ -51,7 +51,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
   const [showImageModal, setShowImageModal] = useState(false)
   const [imageModalUrl, setImageModalUrl] = useState('')
   const [imageModalFile, setImageModalFile] = useState<File | null>(null)
-  const [arModelFile, setArModelFile] = useState<File | null>(null)
+  const [, setArModelFile] = useState<File | null>(null)
   const [uploadingArModel, setUploadingArModel] = useState(false)
 
   const filteredSpecies = useMemo(() => {
@@ -257,7 +257,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
 
       // Upload to Supabase Storage
       const fileName = `ar-models/${editingSpecies.id || 'temp'}-${Date.now()}${fileExtension}`
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('species-assets')
         .upload(fileName, file, {
           cacheControl: '3600',
@@ -840,7 +840,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                       No Species Selected
                     </h3>
                     <p className="text-gray-600 dark:text-gray-400 mb-6">
-                      Select a species from the list to edit, or click the "Add New Species" button to create one
+                      Select a species from the list to edit, or click the &quot;Add New Species&quot; button to create one
                     </p>
                     <div className="flex gap-2 text-xs text-gray-500 dark:text-gray-500 justify-center">
                       <span>💡</span>
@@ -966,7 +966,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                 Delete Species
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Are you sure you want to delete <strong>"{speciesToDelete.commonName}"</strong>?
+                Are you sure you want to delete the species <strong>{speciesToDelete.commonName}</strong>?
                 <br />
                 <span className="text-sm text-red-600 dark:text-red-400">
                   This action cannot be undone.

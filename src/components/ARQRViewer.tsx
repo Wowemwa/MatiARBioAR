@@ -44,7 +44,7 @@ export default function ARQRViewer({ onClose }: ARQRViewerProps) {
             console.log('[ARQRViewer] QR Code detected:', decodedText)
             handleQRCodeDetected(decodedText)
           },
-          (errorMessage) => {
+          (_errorMessage) => {
             // Scanning errors are expected and frequent, don't log them
           }
         )

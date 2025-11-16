@@ -3,7 +3,6 @@ import { useData } from '../context/DataContext'
 import { getActivityLog, filterActivityLog, type ActivityLogEntry } from '../utils/activityLog'
 
 export default function AdminAnalytics() {
-  const { species } = useData()
   const [selectedTimeframe, setSelectedTimeframe] = useState<'7d' | '30d' | '90d' | 'all'>('30d')
 
   // Get real activity log from localStorage

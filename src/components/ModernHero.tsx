@@ -89,7 +89,7 @@ const ModernHero = memo(function ModernHero() {
           <p className={`mt-6 sm:mt-8 text-base sm:text-lg md:text-xl lg:text-2xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto font-medium leading-relaxed transition-all duration-1000 delay-200 bg-transparent backdrop-blur-none ${
             isVisible ? 'mt-0 opacity-100' : 'mt-3 opacity-0'
           }`}>
-            Explore Mati's rich biodiversity through interactive maps, AR experiences,
+            Explore Mati&apos;s rich biodiversity through interactive maps, AR experiences,
             and comprehensive species data. Conservation meets innovation.
           </p>
 
