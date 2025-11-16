@@ -295,7 +295,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
       alert('✅ AR model uploaded successfully! Save the species to persist changes.')
     } catch (error) {
       console.error('[AdminPanel] AR model upload error:', error)
-      alert(`❌ Failed to upload AR model: ${error.message || 'Unknown error'}`)
+      alert(`❌ Failed to upload AR model: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setUploadingArModel(false)
       setArModelFile(null)

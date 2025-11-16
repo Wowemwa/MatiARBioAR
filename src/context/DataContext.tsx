@@ -148,7 +148,7 @@ export function DataProvider({ children }: DataProviderProps) {
       const teamData = teamResult.data || []
 
       // Transform sites data to match Hotspot interface
-      const transformedSites: Hotspot[] = sitesData.map(site => ({
+      const transformedSites: Hotspot[] = sitesData.map((site: any) => ({
         id: site.id,
         name: site.name,
         type: (site.type === 'freshwater' || site.type === 'mixed' ? 'marine' : site.type) as 'marine' | 'terrestrial', // Map unsupported types to marine
@@ -174,9 +174,9 @@ export function DataProvider({ children }: DataProviderProps) {
       }))
 
       // Transform species data to match SpeciesDetail interface
-      const transformedSpecies: SpeciesDetail[] = speciesData.map(species => {
-        const speciesSiteRelations = speciesSitesData?.filter(rel => rel.species_id === species.id) || []
-        const siteIds = speciesSiteRelations.map(rel => rel.site_id)
+      const transformedSpecies: SpeciesDetail[] = speciesData.map((species: any) => {
+        const speciesSiteRelations = speciesSitesData?.filter((rel: any) => rel.species_id === species.id) || []
+        const siteIds = speciesSiteRelations.map((rel: any) => rel.site_id)
 
         return {
           id: species.id,
@@ -228,10 +228,10 @@ export function DataProvider({ children }: DataProviderProps) {
 
       // Update hotspots with species relationships
       const updatedSites = transformedSites.map(site => {
-        const siteSpeciesRelations = speciesSitesData?.filter(rel => rel.site_id === site.id) || []
+        const siteSpeciesRelations = speciesSitesData?.filter((rel: any) => rel.site_id === site.id) || []
         const highlightSpeciesIds = siteSpeciesRelations
-          .filter(rel => rel.is_highlight)
-          .map(rel => rel.species_id)
+          .filter((rel: any) => rel.is_highlight)
+          .map((rel: any) => rel.species_id)
 
         const siteSpecies = transformedSpecies.filter(species =>
           siteSpeciesRelations.some(rel => rel.species_id === species.id)
@@ -246,7 +246,7 @@ export function DataProvider({ children }: DataProviderProps) {
       })
 
       // Transform team members data
-      const transformedTeam: TeamMember[] = teamData.map(member => ({
+      const transformedTeam: TeamMember[] = teamData.map((member: any) => ({
         id: member.id,
         name: member.name,
         role: member.role,
