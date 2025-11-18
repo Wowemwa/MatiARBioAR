@@ -243,6 +243,50 @@ ALTER TABLE public.activity_log ENABLE ROW LEVEL SECURITY;
 -- STEP 4: Create Row Level Security Policies
 -- ============================================
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "admins_select_own" ON public.admins;
+DROP POLICY IF EXISTS "admins_insert_super_admin" ON public.admins;
+DROP POLICY IF EXISTS "admins_update_own" ON public.admins;
+DROP POLICY IF EXISTS "profiles_select_all" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_insert_own" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
+DROP POLICY IF EXISTS "sites_select_all" ON public.sites;
+DROP POLICY IF EXISTS "sites_insert_admin" ON public.sites;
+DROP POLICY IF EXISTS "sites_update_admin" ON public.sites;
+DROP POLICY IF EXISTS "sites_delete_admin" ON public.sites;
+DROP POLICY IF EXISTS "species_select_all" ON public.species;
+DROP POLICY IF EXISTS "species_insert_admin" ON public.species;
+DROP POLICY IF EXISTS "species_update_admin" ON public.species;
+DROP POLICY IF EXISTS "species_delete_admin" ON public.species;
+DROP POLICY IF EXISTS "species_sites_select_all" ON public.species_sites;
+DROP POLICY IF EXISTS "species_sites_insert_admin" ON public.species_sites;
+DROP POLICY IF EXISTS "species_sites_update_admin" ON public.species_sites;
+DROP POLICY IF EXISTS "species_sites_delete_admin" ON public.species_sites;
+DROP POLICY IF EXISTS "distribution_records_select_all" ON public.distribution_records;
+DROP POLICY IF EXISTS "distribution_records_insert_admin" ON public.distribution_records;
+DROP POLICY IF EXISTS "distribution_records_update_admin" ON public.distribution_records;
+DROP POLICY IF EXISTS "distribution_records_delete_admin" ON public.distribution_records;
+DROP POLICY IF EXISTS "media_assets_select_public" ON public.media_assets;
+DROP POLICY IF EXISTS "media_assets_select_own" ON public.media_assets;
+DROP POLICY IF EXISTS "media_assets_insert_authenticated" ON public.media_assets;
+DROP POLICY IF EXISTS "media_assets_update_admin" ON public.media_assets;
+DROP POLICY IF EXISTS "media_assets_delete_admin" ON public.media_assets;
+DROP POLICY IF EXISTS "feedback_insert_all" ON public.feedback;
+DROP POLICY IF EXISTS "feedback_select_own" ON public.feedback;
+DROP POLICY IF EXISTS "feedback_select_admin" ON public.feedback;
+DROP POLICY IF EXISTS "feedback_update_admin" ON public.feedback;
+DROP POLICY IF EXISTS "feedback_delete_admin" ON public.feedback;
+DROP POLICY IF EXISTS "analytics_events_insert_all" ON public.analytics_events;
+DROP POLICY IF EXISTS "analytics_events_select_admin" ON public.analytics_events;
+DROP POLICY IF EXISTS "performance_metrics_insert_all" ON public.performance_metrics;
+DROP POLICY IF EXISTS "performance_metrics_select_admin" ON public.performance_metrics;
+DROP POLICY IF EXISTS "team_members_select_all" ON public.team_members;
+DROP POLICY IF EXISTS "team_members_insert_admin" ON public.team_members;
+DROP POLICY IF EXISTS "team_members_update_admin" ON public.team_members;
+DROP POLICY IF EXISTS "team_members_delete_admin" ON public.team_members;
+DROP POLICY IF EXISTS "activity_log_select_admin" ON public.activity_log;
+DROP POLICY IF EXISTS "activity_log_insert_admin" ON public.activity_log;
+
 -- Admins: Only admins can view/modify admin records
 CREATE POLICY "admins_select_own" ON public.admins 
   FOR SELECT USING (auth.uid() = id);
@@ -463,6 +507,39 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Function to get admin info
+CREATE OR REPLACE FUNCTION public.get_admin_info(user_uuid UUID)
+RETURNS TABLE(id UUID, email TEXT, role TEXT, last_login_at TIMESTAMPTZ) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT a.id, a.email, a.role, a.last_login_at
+  FROM public.admins a
+  WHERE a.id = user_uuid;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to authenticate admin
+CREATE OR REPLACE FUNCTION public.authenticate_admin(user_uuid UUID)
+RETURNS TABLE(is_admin BOOLEAN, role TEXT) AS $$
+DECLARE
+  admin_exists BOOLEAN := false;
+  admin_role TEXT := '';
+BEGIN
+  -- Check if user is admin
+  SELECT EXISTS(SELECT 1 FROM public.admins WHERE id = user_uuid) INTO admin_exists;
+  
+  IF admin_exists THEN
+    -- Update last login time
+    UPDATE public.admins SET last_login_at = NOW() WHERE id = user_uuid;
+    
+    -- Get role
+    SELECT a.role INTO admin_role FROM public.admins a WHERE a.id = user_uuid;
+  END IF;
+  
+  RETURN QUERY SELECT admin_exists, admin_role;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Trigger for new user creation
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
@@ -470,22 +547,27 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Triggers for updated_at columns
+DROP TRIGGER IF EXISTS handle_updated_at_admins ON public.admins;
 CREATE TRIGGER handle_updated_at_admins
   BEFORE UPDATE ON public.admins
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
+DROP TRIGGER IF EXISTS handle_updated_at_profiles ON public.profiles;
 CREATE TRIGGER handle_updated_at_profiles
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
+DROP TRIGGER IF EXISTS handle_updated_at_sites ON public.sites;
 CREATE TRIGGER handle_updated_at_sites
   BEFORE UPDATE ON public.sites
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
+DROP TRIGGER IF EXISTS handle_updated_at_species ON public.species;
 CREATE TRIGGER handle_updated_at_species
   BEFORE UPDATE ON public.species
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
+DROP TRIGGER IF EXISTS handle_updated_at_team_members ON public.team_members;
 CREATE TRIGGER handle_updated_at_team_members
   BEFORE UPDATE ON public.team_members
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -552,8 +634,8 @@ CREATE INDEX IF NOT EXISTS idx_species_qr_code ON public.species(qr_code_data) W
 -- Replace this UUID with the actual User ID from Supabase Authentication > Users
 INSERT INTO public.admins (id, email, role, created_at, updated_at)
 VALUES (
-  '07a3cfb7-a762-40f1-9ae4-cbbb8666abe3',  -- Get this from Supabase Dashboard
-  'rey.loremia@dorsu.edu.ph',
+  '36740711-dce5-4219-84f0-ada3543b54de',  -- Updated with your provided admin UID
+  'rey@gmail.com',
   'super_admin',
   NOW(),
   NOW()
@@ -566,7 +648,7 @@ ON CONFLICT (id) DO UPDATE SET
 -- Verify admin was created
 SELECT id, email, role, created_at 
 FROM public.admins 
-WHERE email = 'rey.loremia@dorsu.edu.ph';
+WHERE email = 'rey@gmail.com';
 
 -- ============================================
 -- DATABASE SETUP COMPLETE
@@ -576,7 +658,7 @@ WHERE email = 'rey.loremia@dorsu.edu.ph';
 -- 1. Go to Supabase Dashboard > Authentication > Users
 -- 2. Click "Add User" (or "Invite User")
 -- 3. Create user with:
---    Email: rey.loremia@dorsu.edu.ph
+--    Email: rey@gmail.com
 --    Password: Rey21 (or your preferred password)
 --    Check "Auto Confirm User"
 -- 4. Copy the generated User UUID
