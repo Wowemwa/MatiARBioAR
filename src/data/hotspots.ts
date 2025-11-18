@@ -13,6 +13,12 @@ export interface SpeciesDetail {
   siteIds: string[]
   highlights: string[]
   images?: string[]
+  arModelUrl?: string
+  arPatternUrl?: string
+  arMarkerImageUrl?: string
+  arModelScale?: number
+  arModelRotation?: { x: number; y: number; z: number }
+  arViewerHtml?: string
 }
 
 export interface Hotspot {

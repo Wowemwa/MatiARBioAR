@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>AR.js Viewer - Mati Biodiversity</title>
+  <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe-master.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.5/aframe/build/aframe-ar.min.js"></script>
+  
+  <!-- Gesture Controls Component for Rotation and Zoom -->
+  <script>
+    AFRAME.registerComponent('gesture-handler', {
+      schema: {
+        enabled: { default: true },
+        rotationFactor: { default: 5 },
+        minScale: { default: 0.3 },
+        maxScale: { default: 8 }
+      },
+
+      init: function () {
+        this.handleScale = this.handleScale.bind(this);
+        this.handleRotation = this.handleRotation.bind(this);
+        this.handleMouseDown = this.handleMouseDown.bind(this);
+        this.handleMouseMove = this.handleMouseMove.bind(this);
+        this.handleMouseUp = this.handleMouseUp.bind(this);
+        this.handleWheel = this.handleWheel.bind(this);
+
+        this.isVisible = false;
+        this.initialScale = this.el.object3D.scale.clone();
+        this.scaleFactor = 1;
+        this.isDragging = false;
+        this.previousMousePosition = { x: 0, y: 0 };
+
+        this.el.sceneEl.addEventListener('markerFound', (e) => {
+          this.isVisible = true;
+        });
+
+        this.el.sceneEl.addEventListener('markerLost', (e) => {
+          this.isVisible = false;
+        });
+      },
+
+      play: function () {
+        const sceneEl = this.el.sceneEl;
+        // Touch events
+        sceneEl.addEventListener('onefingermove', this.handleRotation);
+        sceneEl.addEventListener('twofingermove', this.handleScale);
+        
+        // Mouse events
+        window.addEventListener('mousedown', this.handleMouseDown);
+        window.addEventListener('mousemove', this.handleMouseMove);
+        window.addEventListener('mouseup', this.handleMouseUp);
+        window.addEventListener('wheel', this.handleWheel, { passive: false });
+      },
+
+      pause: function () {
+        const sceneEl = this.el.sceneEl;
+        // Touch events
+        sceneEl.removeEventListener('onefingermove', this.handleRotation);
+        sceneEl.removeEventListener('twofingermove', this.handleScale);
+        
+        // Mouse events
+        window.removeEventListener('mousedown', this.handleMouseDown);
+        window.removeEventListener('mousemove', this.handleMouseMove);
+        window.removeEventListener('mouseup', this.handleMouseUp);
+        window.removeEventListener('wheel', this.handleWheel);
+      },
+
+      handleMouseDown: function (event) {
+        if (this.isVisible) {
+          this.isDragging = true;
+          this.previousMousePosition = { x: event.clientX, y: event.clientY };
+        }
+      },
+
+      handleMouseMove: function (event) {
+        if (this.isDragging && this.isVisible) {
+          const deltaX = event.clientX - this.previousMousePosition.x;
+          const deltaY = event.clientY - this.previousMousePosition.y;
+          
+          this.el.object3D.rotation.y += deltaX * 0.01;
+          this.el.object3D.rotation.x += deltaY * 0.01;
+          
+          this.previousMousePosition = { x: event.clientX, y: event.clientY };
+        }
+      },
+
+      handleMouseUp: function (event) {
+        this.isDragging = false;
+      },
+
+      handleWheel: function (event) {
+        if (this.isVisible) {
+          event.preventDefault();
+          const delta = event.deltaY > 0 ? 0.9 : 1.1;
+          this.scaleFactor *= delta;
+          this.scaleFactor = Math.min(Math.max(this.scaleFactor, this.data.minScale), this.data.maxScale);
+
+          this.el.object3D.scale.x = this.scaleFactor * this.initialScale.x;
+          this.el.object3D.scale.y = this.scaleFactor * this.initialScale.y;
+          this.el.object3D.scale.z = this.scaleFactor * this.initialScale.z;
+        }
+      },
+
+      handleRotation: function (event) {
+        if (this.isVisible) {
+          this.el.object3D.rotation.y += event.detail.positionChange.x * this.data.rotationFactor;
+          this.el.object3D.rotation.x += event.detail.positionChange.y * this.data.rotationFactor;
+        }
+      },
+
+      handleScale: function (event) {
+        if (this.isVisible) {
+          this.scaleFactor *= 1 + event.detail.spreadChange / event.detail.startSpread;
+          this.scaleFactor = Math.min(Math.max(this.scaleFactor, this.data.minScale), this.data.maxScale);
+
+          this.el.object3D.scale.x = this.scaleFactor * this.initialScale.x;
+          this.el.object3D.scale.y = this.scaleFactor * this.initialScale.y;
+          this.el.object3D.scale.z = this.scaleFactor * this.initialScale.z;
+        }
+      }
+    });
+  </script>
+
+  <!-- Gesture Detector Component -->
+  <script>
+    AFRAME.registerComponent('gesture-detector', {
+      schema: {
+        element: { default: '' }
+      },
+
+      init: function () {
+        this.targetElement = this.data.element && document.querySelector(this.data.element);
+
+        if (!this.targetElement) {
+          this.targetElement = this.el;
+        }
+
+        this.internalState = {
+          previousState: null
+        };
+
+        this.emitGestureEvent = this.emitGestureEvent.bind(this);
+        this.targetElement.addEventListener('touchstart', this.emitGestureEvent);
+        this.targetElement.addEventListener('touchend', this.emitGestureEvent);
+        this.targetElement.addEventListener('touchmove', this.emitGestureEvent);
+      },
+
+      remove: function () {
+        this.targetElement.removeEventListener('touchstart', this.emitGestureEvent);
+        this.targetElement.removeEventListener('touchend', this.emitGestureEvent);
+        this.targetElement.removeEventListener('touchmove', this.emitGestureEvent);
+      },
+
+      emitGestureEvent(event) {
+        const currentState = this.getTouchState(event);
+        const previousState = this.internalState.previousState;
+
+        const gestureContinues = previousState &&
+          currentState &&
+          currentState.touchCount == previousState.touchCount;
+
+        const gestureEnded = previousState && !gestureContinues;
+        const gestureStarted = currentState && !gestureContinues;
+
+        if (gestureEnded) {
+          const eventName = this.getEventPrefix(previousState.touchCount) + 'fingerend';
+          this.el.emit(eventName, previousState);
+          this.internalState.previousState = null;
+        }
+
+        if (gestureStarted) {
+          currentState.startTime = performance.now();
+          currentState.startPosition = currentState.position;
+          currentState.startSpread = currentState.spread;
+          const eventName = this.getEventPrefix(currentState.touchCount) + 'fingerstart';
+          this.el.emit(eventName, currentState);
+          this.internalState.previousState = currentState;
+        }
+
+        if (gestureContinues) {
+          const eventDetail = {
+            positionChange: {
+              x: currentState.position.x - previousState.position.x,
+              y: currentState.position.y - previousState.position.y
+            }
+          };
+
+          if (currentState.spread) {
+            eventDetail.spreadChange = currentState.spread - previousState.spread;
+          }
+
+          eventDetail.startPosition = previousState.startPosition;
+          eventDetail.startSpread = previousState.startSpread;
+          eventDetail.position = currentState.position;
+          eventDetail.spread = currentState.spread;
+
+          const eventName = this.getEventPrefix(currentState.touchCount) + 'fingermove';
+          this.el.emit(eventName, eventDetail);
+          this.internalState.previousState = currentState;
+        }
+      },
+
+      getTouchState: function (event) {
+        if (event.touches.length === 0) {
+          return null;
+        }
+
+        const touchList = [];
+        for (let i = 0; i < event.touches.length; i++) {
+          touchList.push(event.touches[i]);
+        }
+
+        const touchState = {
+          touchCount: touchList.length
+        };
+
+        const centerPositionRawX = touchList.reduce((sum, touch) => sum + touch.clientX, 0) / touchList.length;
+        const centerPositionRawY = touchList.reduce((sum, touch) => sum + touch.clientY, 0) / touchList.length;
+
+        touchState.position = { x: centerPositionRawX, y: centerPositionRawY };
+
+        if (touchList.length >= 2) {
+          const spread = Math.sqrt(
+            Math.pow(touchList[0].clientX - touchList[1].clientX, 2) +
+            Math.pow(touchList[0].clientY - touchList[1].clientY, 2)
+          );
+          touchState.spread = spread;
+        }
+
+        return touchState;
+      },
+
+      getEventPrefix(touchCount) {
+        const numberNames = ['zero', 'one', 'two', 'three', 'many'];
+        return numberNames[Math.min(touchCount, 4)];
+      }
+    });
+  </script>
+
+  <style>
+    a-scene {
+      width: 100vw !important;
+      height: 100vh !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+    }
+
+    .a-canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    video {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      object-fit: cover !important;
+      z-index: 0 !important;
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      touch-action: none;
+      background: #000;
+    }
+    
+    #loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      transition: opacity 0.5s;
+    }
+    
+    #loading-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      color: white;
+      font-size: 18px;
+      margin-top: 20px;
+      font-weight: 600;
+    }
+
+    .loading-step {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    
+    #header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+      color: white;
+      padding: 15px 20px;
+      z-index: 9999;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    #species-info h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    
+    #species-info p {
+      margin: 5px 0 0 0;
+      font-size: 14px;
+      font-style: italic;
+      opacity: 0.9;
+    }
+    
+    #close-btn {
+      background: #ef4444;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    
+    #close-btn:hover {
+      background: #dc2626;
+    }
+    
+    #instructions {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+      color: white;
+      padding: 20px;
+      z-index: 9999;
+      text-align: center;
+    }
+    
+    #instructions p {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+    }
+    
+    #instructions .tips {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      font-size: 12px;
+      opacity: 0.9;
+      margin-top: 10px;
+    }
+
+    #instructions .tip-item {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 8px 12px;
+      border-radius: 8px;
+    }
+    
+    #no-content, #camera-error {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #1a1a1a;
+      color: white;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      z-index: 9998;
+    }
+    
+    #no-content.show, #camera-error.show {
+      display: flex;
+    }
+    
+    #no-content h2, #camera-error h2 {
+      font-size: 24px;
+      margin: 20px 0 10px 0;
+    }
+    
+    #no-content p, #camera-error p {
+      font-size: 16px;
+      opacity: 0.8;
+      max-width: 400px;
+      line-height: 1.6;
+    }
+    
+    #no-content ul, #camera-error ul {
+      text-align: left;
+      margin: 20px 0;
+      padding: 0;
+      list-style: none;
+    }
+    
+    #no-content li, #camera-error li {
+      padding: 5px 0;
+      opacity: 0.7;
+    }
+
+    .retry-btn {
+      background: #667eea;
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.3s;
+    }
+
+    .retry-btn:hover {
+      background: #5568d3;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div id="loading-screen">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading AR Experience...</div>
+    <div class="loading-step">Requesting camera access...</div>
+  </div>
+
+  <!-- Camera Error Screen -->
+  <div id="camera-error">
+    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="1" y1="1" x2="23" y2="23" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <h2>Camera Access Denied</h2>
+    <p id="camera-error-message">We need camera access to display AR content.</p>
+    <ul>
+      <li>• Allow camera permissions in your browser</li>
+      <li>• Check if another app is using the camera</li>
+      <li>• Try refreshing the page</li>
+      <li>• Make sure you're using HTTPS</li>
+    </ul>
+    <button class="retry-btn" onclick="retryCamera()">🔄 Retry Camera Access</button>
+  </div>
+
+  <!-- Header -->
+  <div id="header">
+    <div id="species-info">
+      <h1 id="species-name">AR Viewer</h1>
+      <p id="species-scientific"></p>
+    </div>
+    <button id="close-btn" onclick="closeViewer()">✕ Close</button>
+  </div>
+
+  <!-- AR Scene -->
+  <a-scene
+    id="ar-scene"
+    embedded
+    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+    vr-mode-ui="enabled: false"
+    renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true;"
+    gesture-detector
+  >
+    <!-- Camera -->
+    <a-entity camera look-controls="enabled: false" arjs-look-controls="smoothingFactor: 0.1"></a-entity>
+
+    <!-- AR Marker (will be configured via JavaScript) -->
+    <a-marker
+      id="marker"
+      type="pattern"
+      smooth="true"
+      smoothCount="10"
+      smoothTolerance="0.01"
+      smoothThreshold="5"
+      raycaster="objects: .clickable"
+      emitevents="true"
+      cursor="fuse: false; rayOrigin: mouse;"
+    >
+      <!-- 3D Model Container with Gesture Controls -->
+      <a-entity 
+        id="model-entity"
+        gesture-handler="minScale: 0.25; maxScale: 10"
+      ></a-entity>
+
+      <!-- Enhanced Lighting for better visibility -->
+      <a-light type="ambient" color="#FFF" intensity="1"></a-light>
+      <a-light type="directional" color="#FFF" intensity="0.8" position="-2 4 2"></a-light>
+      <a-light type="directional" color="#FFF" intensity="0.5" position="2 4 -2"></a-light>
+      <a-light type="point" color="#FFF" intensity="0.5" position="0 3 0"></a-light>
+    </a-marker>
+  </a-scene>
+
+  <!-- Instructions -->
+  <div id="instructions">
+    <p><strong>📱 Point camera at the marker</strong></p>
+    <div class="tips">
+      <div class="tip-item">🖱️ Drag/Click to rotate</div>
+      <div class="tip-item">🎡 Scroll/Pinch to zoom</div>
+      <div class="tip-item">💡 Good lighting</div>
+      <div class="tip-item">📐 Keep marker flat</div>
+    </div>
+  </div>
+
+  <!-- No Content Message -->
+  <div id="no-content">
+    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <h2>AR Content Not Available</h2>
+    <p>This species doesn't have AR content configured yet. Please upload:</p>
+    <ul>
+      <li>• 3D Model (.glb file)</li>
+      <li>• AR Pattern (.patt file)</li>
+      <li>• Marker Image (for scanning)</li>
+    </ul>
+  </div>
+
+  <script>
+    // Update loading step message
+    function updateLoadingStep(message) {
+      const stepEl = document.querySelector('.loading-step');
+      if (stepEl) stepEl.textContent = message;
+    }
+
+    // Show camera error screen
+    function showCameraError(message) {
+      console.error('Camera error:', message);
+      updateLoadingStep('Camera error - please allow camera access');
+      setTimeout(() => {
+        document.getElementById('loading-screen').classList.add('hidden');
+      }, 3000);
+    }
+
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const speciesId = urlParams.get('species');
+    const modelUrl = urlParams.get('model');
+    const patternUrl = urlParams.get('pattern');
+    const scale = parseFloat(urlParams.get('scale')) || 1.0;
+    const rotationX = parseFloat(urlParams.get('rx')) || 0;
+    const rotationY = parseFloat(urlParams.get('ry')) || 0;
+    const rotationZ = parseFloat(urlParams.get('rz')) || 0;
+    const commonName = urlParams.get('name') || 'AR Viewer';
+    const scientificName = urlParams.get('scientific') || '';
+
+    // Update species info
+    document.getElementById('species-name').textContent = decodeURIComponent(commonName);
+    if (scientificName) {
+      document.getElementById('species-scientific').textContent = decodeURIComponent(scientificName);
+    }
+
+    // Initialize AR
+    async function initAR() {
+      console.log('🚀 Initializing AR...');
+      console.log('Model URL:', modelUrl);
+      console.log('Pattern URL:', patternUrl);
+      
+      // Check if AR content is available
+      if (!modelUrl || !patternUrl) {
+        console.error('❌ Missing AR content');
+        document.getElementById('loading-screen').classList.add('hidden');
+        document.getElementById('no-content').classList.add('show');
+        document.getElementById('ar-scene').style.display = 'none';
+        document.getElementById('instructions').style.display = 'none';
+        return;
+      }
+
+      updateLoadingStep('Initializing camera...');
+
+      // Request camera permission explicitly
+      try {
+        console.log('📹 Requesting camera permission...');
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 960 }
+          } 
+        });
+        console.log('✅ Camera permission granted');
+        console.log('Camera stream active:', stream.active);
+        
+        // Store stream reference - DON'T stop it!
+        window.arCameraStream = stream;
+        
+      } catch (error) {
+        console.error('❌ Camera permission denied:', error);
+        showCameraError(error.message);
+        return;
+      }
+
+      updateLoadingStep('Loading AR libraries...');
+
+      // Wait for A-Frame to be fully loaded
+      if (typeof AFRAME === 'undefined') {
+        console.log('⏳ Waiting for A-Frame to load...');
+        await new Promise(resolve => {
+          const checkAFrame = setInterval(() => {
+            if (typeof AFRAME !== 'undefined') {
+              clearInterval(checkAFrame);
+              resolve();
+            }
+          }, 100);
+        });
+      }
+
+      console.log('✅ A-Frame loaded');
+
+      // Small delay to ensure DOM is ready
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      updateLoadingStep('Configuring AR marker...');
+
+      // Configure AR marker
+      const marker = document.getElementById('marker');
+      if (!marker) {
+        console.error('❌ Marker element not found');
+        showCameraError('Marker element not found');
+        return;
+      }
+      
+      console.log('⚙️ Setting pattern URL:', patternUrl);
+      marker.setAttribute('url', patternUrl);
+
+      // Configure 3D model
+      const modelEntity = document.getElementById('model-entity');
+      if (!modelEntity) {
+        console.error('❌ Model entity not found');
+        showCameraError('Model entity not found');
+        return;
+      }
+
+      console.log('⚙️ Configuring 3D model');
+      modelEntity.setAttribute('gltf-model', modelUrl);
+      modelEntity.setAttribute('scale', `${scale} ${scale} ${scale}`);
+      modelEntity.setAttribute('rotation', `${rotationX} ${rotationY} ${rotationZ}`);
+      modelEntity.setAttribute('position', '0 0 0');
+
+      updateLoadingStep('Starting AR...');
+
+      // Get scene
+      const scene = document.querySelector('a-scene');
+      if (!scene) {
+        console.error('❌ Scene not found');
+        showCameraError('Scene not found');
+        return;
+      }
+
+      console.log('📹 AR.js initializing...');
+
+      // Track loading state
+      let loadingHidden = false;
+
+      const hideLoading = () => {
+        if (!loadingHidden) {
+          console.log('✅ AR Ready - hiding loading screen');
+          loadingHidden = true;
+          updateLoadingStep('Ready! Point camera at marker');
+          setTimeout(() => {
+            document.getElementById('loading-screen').classList.add('hidden');
+          }, 800);
+        }
+      };
+
+      // Listen for scene loaded
+      scene.addEventListener('loaded', () => {
+        console.log('✅ Scene loaded');
+        
+        // Check if video element is created and visible
+        setTimeout(() => {
+          const video = document.querySelector('video');
+          if (video) {
+            console.log('✅ Video element found');
+            console.log('Video dimensions:', video.videoWidth, 'x', video.videoHeight);
+            console.log('Video playing:', !video.paused);
+            console.log('Video readyState:', video.readyState);
+          } else {
+            console.warn('⚠️ No video element found - AR.js may not have initialized camera');
+          }
+          hideLoading();
+        }, 1500);
+      });
+
+      // Listen for render start (camera is working)
+      scene.addEventListener('renderstart', () => {
+        console.log('✅ Rendering started - camera should be active');
+        
+        // Double-check video element
+        const video = document.querySelector('video');
+        if (video) {
+          console.log('Video in renderstart:', video.videoWidth, 'x', video.videoHeight);
+          // Force video to play if paused
+          if (video.paused) {
+            video.play().catch(e => console.error('Error playing video:', e));
+          }
+        }
+        hideLoading();
+      });
+
+      // Marker events
+      marker.addEventListener('markerFound', () => {
+        console.log('🎯 Marker detected!');
+      });
+
+      marker.addEventListener('markerLost', () => {
+        console.log('❌ Marker lost');
+      });
+
+      // Model events
+      modelEntity.addEventListener('model-loaded', () => {
+        console.log('✅ 3D Model loaded');
+      });
+
+      modelEntity.addEventListener('model-error', (e) => {
+        console.error('❌ Model error:', e);
+      });
+
+      // Fallback: If AR.js does not show video, attach stream manually
+      function attachFallbackVideo() {
+        if (!window.arCameraStream) return;
+        let video = document.getElementById('fallback-camera-video');
+        if (!video) {
+          video = document.createElement('video');
+          video.id = 'fallback-camera-video';
+          video.autoplay = true;
+          video.playsInline = true;
+          video.muted = true;
+          video.style.position = 'fixed';
+          video.style.top = '0';
+          video.style.left = '0';
+          video.style.width = '100vw';
+          video.style.height = '100vh';
+          video.style.objectFit = 'cover';
+          video.style.zIndex = '1';
+          document.body.appendChild(video);
+        }
+        video.srcObject = window.arCameraStream;
+        video.play().catch(e => console.error('Fallback video play error:', e));
+      }
+
+      // After AR.js tries to show video, check and fallback if needed
+      function checkAndFallbackVideo() {
+        const arjsVideo = document.querySelector('video');
+        if (!arjsVideo || arjsVideo.videoWidth === 0) {
+          console.warn('AR.js did not show camera video, using fallback.');
+          attachFallbackVideo();
+        } else {
+          // Remove fallback if AR.js video is working
+          const fallback = document.getElementById('fallback-camera-video');
+          if (fallback) fallback.remove();
+        }
+      }
+
+      // Add fallback check after scene loaded and after timeout
+      scene.addEventListener('loaded', () => {
+        setTimeout(checkAndFallbackVideo, 2000);
+      });
+      setTimeout(checkAndFallbackVideo, 7000);
+
+      // Force hide loading after timeout
+      setTimeout(() => {
+        console.log('⏱️ Timeout reached - forcing AR display');
+        
+        // Final check for video
+        const video = document.querySelector('video');
+        if (video) {
+          console.log('Final video check:', {
+            exists: true,
+            dimensions: `${video.videoWidth}x${video.videoHeight}`,
+            playing: !video.paused,
+            visible: video.style.display !== 'none',
+            readyState: video.readyState
+          });
+          
+          // Ensure video is playing
+          if (video.paused) {
+            console.log('Attempting to play video...');
+            video.play().catch(e => console.error('Error playing video:', e));
+          }
+        } else {
+          console.error('❌ No video element found after timeout - camera may not be working');
+        }
+        
+        hideLoading();
+      }, 6000);
+    }
+
+    // Start AR when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initAR);
+    } else {
+      initAR();
+    }
+
+    // Close viewer function
+    function closeViewer() {
+      console.log('Closing AR viewer and stopping camera');
+      
+      // Stop camera stream
+      if (window.arCameraStream) {
+        window.arCameraStream.getTracks().forEach(track => {
+          track.stop();
+          console.log('Stopped camera track');
+        });
+      }
+      
+      // Stop AR.js camera if it exists
+      const scene = document.querySelector('a-scene');
+      if (scene && scene.components['arjs']) {
+        const arjsComponent = scene.components['arjs'];
+        if (arjsComponent.stopVideoStream) {
+          arjsComponent.stopVideoStream();
+        }
+      }
+
+      // Close window
+      if (window.opener) {
+        window.close();
+      } else if (window.parent !== window) {
+        window.parent.postMessage({ action: 'closeARViewer' }, '*');
+      } else {
+        if (document.referrer) {
+          window.history.back();
+        } else {
+          window.location.href = '/';
+        }
+      }
+    }
+  </script>
+</body>
+</html>

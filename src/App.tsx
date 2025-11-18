@@ -1503,7 +1503,6 @@ const SpeciesPage = memo(function SpeciesPage() {
 const ARDemo = memo(function ARDemo() {
   const { isAdmin } = useAdmin()
   const [isVisible, setIsVisible] = useState(false)
-  const [showARViewer, setShowARViewer] = useState(false)
   
   useEffect(() => {
     setIsVisible(true)
@@ -1598,6 +1597,29 @@ const ARDemo = memo(function ARDemo() {
   const selectedSpeciesData = selectedSpecies 
     ? allMatiSpecies.find(s => s.id === selectedSpecies)
     : null
+
+  // Check if species has AR content (model, pattern, and marker)
+  const hasARContent = selectedSpeciesData?.arModelUrl && 
+                       selectedSpeciesData?.arPatternUrl && 
+                       selectedSpeciesData?.arMarkerImageUrl
+
+  // Generate AR viewer URL
+  const getARViewerUrl = () => {
+    if (!selectedSpeciesData || !hasARContent) return ''
+    
+    const params = new URLSearchParams({
+      model: selectedSpeciesData.arModelUrl || '',
+      pattern: selectedSpeciesData.arPatternUrl || '',
+      scale: selectedSpeciesData.arModelScale?.toString() || '1.0',
+      rx: selectedSpeciesData.arModelRotation?.x?.toString() || '0',
+      ry: selectedSpeciesData.arModelRotation?.y?.toString() || '0',
+      rz: selectedSpeciesData.arModelRotation?.z?.toString() || '0',
+      name: encodeURIComponent(selectedSpeciesData.commonName),
+      scientific: encodeURIComponent(selectedSpeciesData.scientificName)
+    })
+    
+    return `/ar-viewer-arjs.html?${params.toString()}`
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
@@ -1777,53 +1799,94 @@ const ARDemo = memo(function ARDemo() {
                     </p>
                   </div>
 
-                  {/* Right: QR Code */}
+                  {/* Right: AR Marker or QR Code */}
                   <div className="flex flex-col items-center justify-center">
-                    <div className="bg-gradient-to-br from-purple-600 to-blue-600 p-6 rounded-3xl mb-4 shadow-xl">
-                      <div className="bg-white p-4 rounded-2xl">
-                        <img 
-                          src={generateQRCode(selectedSpeciesData.id, selectedSpeciesData.commonName)} 
-                          alt={`QR Code for ${selectedSpeciesData.commonName}`}
-                          className="w-48 h-48"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="text-center">
-                      <p className="font-bold text-gray-900 dark:text-white mb-1 flex items-center justify-center gap-2">
-                        <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                        </svg>
-                        Scan QR Code
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        Open your camera to experience in AR
-                      </p>
-                      
-                      {/* AR Action Buttons */}
-                      <div className="flex flex-col gap-2 mt-4">
-                        <a
-                          href={generateQRCode(selectedSpeciesData.id, selectedSpeciesData.commonName)}
-                          download={`${selectedSpeciesData.commonName}-QR.svg`}
-                          className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                          </svg>
-                          Download QR Code
-                        </a>
-                        <button
-                          onClick={() => setShowARViewer(true)}
-                          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          Open AR Experience
-                        </button>
-                      </div>
-                    </div>
+                    {hasARContent ? (
+                      /* Show AR Marker Image */
+                      <>
+                        <div className="bg-gradient-to-br from-purple-600 to-blue-600 p-6 rounded-3xl mb-4 shadow-xl">
+                          <div className="bg-white p-4 rounded-2xl">
+                            <img 
+                              src={selectedSpeciesData.arMarkerImageUrl} 
+                              alt={`AR Marker for ${selectedSpeciesData.commonName}`}
+                              className="w-48 h-48 object-contain"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="text-center">
+                          <p className="font-bold text-gray-900 dark:text-white mb-1 flex items-center justify-center gap-2">
+                            <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Scan AR Marker
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            Point your camera at this marker to see the 3D model
+                          </p>
+                          
+                          {/* AR Action Buttons */}
+                          <div className="flex flex-col gap-2 mt-4">
+                            <a
+                              href={selectedSpeciesData.arMarkerImageUrl}
+                              download={`${selectedSpeciesData.commonName}-AR-Marker.png`}
+                              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                              </svg>
+                              Download Marker
+                            </a>
+                            <button
+                              onClick={() => {
+                                console.log('Opening AR viewer for:', selectedSpeciesData.commonName);
+                                console.log('Has AR content:', hasARContent);
+                                console.log('AR URLs:', {
+                                  model: selectedSpeciesData.arModelUrl,
+                                  pattern: selectedSpeciesData.arPatternUrl,
+                                  marker: selectedSpeciesData.arMarkerImageUrl
+                                });
+                                // Open in new window for proper camera permissions
+                                const arUrl = getARViewerUrl();
+                                window.open(arUrl, '_blank', 'width=1024,height=768');
+                              }}
+                              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                              </svg>
+                              Open AR Experience
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      /* Fallback: Show QR Code if no AR content */
+                      <>
+                        <div className="bg-gradient-to-br from-purple-600 to-blue-600 p-6 rounded-3xl mb-4 shadow-xl">
+                          <div className="bg-white p-4 rounded-2xl">
+                            <img 
+                              src={generateQRCode(selectedSpeciesData.id, selectedSpeciesData.commonName)} 
+                              alt={`QR Code for ${selectedSpeciesData.commonName}`}
+                              className="w-48 h-48"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="text-center">
+                          <p className="font-bold text-gray-900 dark:text-white mb-1 flex items-center justify-center gap-2">
+                            <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            AR Content Not Available
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            This species doesn't have AR content yet. Upload model, pattern, and marker in Admin Panel.
+                          </p>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1842,11 +1905,6 @@ const ARDemo = memo(function ARDemo() {
           </div>
         </div>
       </div>
-
-      {/* AR Viewer */}
-      {showARViewer && (
-        <ARQRViewer onClose={() => setShowARViewer(false)} />
-      )}
     </div>
   )
 })

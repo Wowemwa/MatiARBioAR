@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AR Marker Template - Mati Biodiversity</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 1cm;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: white;
+    }
+    
+    .header {
+      text-align: center;
+      padding: 30px 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+    
+    .section {
+      margin-bottom: 40px;
+      page-break-inside: avoid;
+    }
+    
+    .section h2 {
+      color: #667eea;
+      font-size: 1.8rem;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 3px solid #667eea;
+    }
+    
+    .marker-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      margin-top: 30px;
+    }
+    
+    .marker-card {
+      border: 3px solid #667eea;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      background: white;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      page-break-inside: avoid;
+    }
+    
+    .marker-placeholder {
+      width: 200px;
+      height: 200px;
+      margin: 0 auto 15px;
+      border: 3px dashed #667eea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f9fafb;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #667eea;
+      font-weight: 600;
+    }
+    
+    .marker-card h3 {
+      font-size: 1.3rem;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .marker-card p {
+      font-size: 0.9rem;
+      color: #666;
+      font-style: italic;
+    }
+    
+    .instructions {
+      background: #f0f9ff;
+      border-left: 5px solid #667eea;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 5px;
+    }
+    
+    .instructions h3 {
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+    
+    .instructions ol {
+      margin-left: 20px;
+    }
+    
+    .instructions li {
+      margin-bottom: 8px;
+    }
+    
+    .tips {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .tip {
+      background: #f0fdf4;
+      border: 2px solid #86efac;
+      border-radius: 8px;
+      padding: 15px;
+    }
+    
+    .tip h4 {
+      color: #16a34a;
+      margin-bottom: 8px;
+      font-size: 1.1rem;
+    }
+    
+    .tip p {
+      font-size: 0.9rem;
+      color: #333;
+    }
+    
+    .warning {
+      background: #fef2f2;
+      border: 2px solid #fca5a5;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
+    }
+    
+    .warning h4 {
+      color: #dc2626;
+      margin-bottom: 8px;
+    }
+    
+    .print-button {
+      display: block;
+      width: 200px;
+      margin: 30px auto;
+      padding: 15px 30px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .print-button:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    @media print {
+      body {
+        background: white;
+      }
+      
+      .container {
+        max-width: 100%;
+        padding: 0;
+      }
+      
+      .print-button {
+        display: none;
+      }
+      
+      .section {
+        page-break-after: always;
+      }
+      
+      .section:last-child {
+        page-break-after: auto;
+      }
+    }
+    
+    .qr-example {
+      text-align: center;
+      margin: 30px 0;
+      padding: 30px;
+      background: #f9fafb;
+      border-radius: 10px;
+    }
+    
+    .qr-example svg {
+      width: 150px;
+      height: 150px;
+      margin-bottom: 15px;
+    }
+    
+    .footer {
+      text-align: center;
+      padding: 30px 0;
+      color: #666;
+      border-top: 2px solid #e5e7eb;
+      margin-top: 50px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🌿 AR Marker Template</h1>
+      <p>Mati Biodiversity AR Experience</p>
+    </div>
+
+    <button class="print-button" onclick="window.print()">🖨️ Print This Page</button>
+
+    <!-- Introduction -->
+    <div class="section">
+      <h2>📖 About AR Markers</h2>
+      <p>AR markers are special images that your camera recognizes to display 3D models. Each species in our biodiversity database has a unique marker that, when scanned, reveals an augmented reality representation of that species.</p>
+      
+      <div class="instructions">
+        <h3>How to Use These Markers</h3>
+        <ol>
+          <li><strong>Print</strong> this page on white paper (color recommended)</li>
+          <li><strong>Cut out</strong> each marker along the borders</li>
+          <li><strong>Laminate</strong> for durability (optional but recommended)</li>
+          <li><strong>Open</strong> the species AR viewer on your phone</li>
+          <li><strong>Point</strong> your camera at the marker</li>
+          <li><strong>Watch</strong> the 3D model appear!</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Marker Templates -->
+    <div class="section">
+      <h2>🎯 Marker Templates</h2>
+      <p>These are placeholder templates. Replace with actual generated markers for each species.</p>
+      
+      <div class="marker-grid">
+        <div class="marker-card">
+          <div class="marker-placeholder">
+            [Philippine Eagle Marker]<br>
+            Generate at AR.js Generator
+          </div>
+          <h3>Philippine Eagle</h3>
+          <p>Pithecophaga jefferyi</p>
+        </div>
+
+        <div class="marker-card">
+          <div class="marker-placeholder">
+            [Tarsier Marker]<br>
+            Generate at AR.js Generator
+          </div>
+          <h3>Philippine Tarsier</h3>
+          <p>Carlito syrichta</p>
+        </div>
+
+        <div class="marker-card">
+          <div class="marker-placeholder">
+            [Dugong Marker]<br>
+            Generate at AR.js Generator
+          </div>
+          <h3>Dugong</h3>
+          <p>Dugong dugon</p>
+        </div>
+
+        <div class="marker-card">
+          <div class="marker-placeholder">
+            [Sea Turtle Marker]<br>
+            Generate at AR.js Generator
+          </div>
+          <h3>Green Sea Turtle</h3>
+          <p>Chelonia mydas</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="section">
+      <h2>✨ Best Practices</h2>
+      
+      <div class="tips">
+        <div class="tip">
+          <h4>🖨️ Printing</h4>
+          <p>Use high-quality color printing on white paper. Minimum A4 size recommended.</p>
+        </div>
+
+        <div class="tip">
+          <h4>📏 Size</h4>
+          <p>Print markers at least 15cm x 15cm. Larger markers are easier to detect.</p>
+        </div>
+
+        <div class="tip">
+          <h4>🎨 Contrast</h4>
+          <p>Ensure high contrast between marker and background. Use dark markers on light surfaces.</p>
+        </div>
+
+        <div class="tip">
+          <h4>💡 Lighting</h4>
+          <p>Good lighting is essential. Avoid glare and shadows on the marker.</p>
+        </div>
+
+        <div class="tip">
+          <h4>📱 Distance</h4>
+          <p>Hold phone 20-50cm from marker. Not too close, not too far.</p>
+        </div>
+
+        <div class="tip">
+          <h4>🔄 Angle</h4>
+          <p>Keep marker flat and parallel to camera. Avoid extreme angles.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Warnings -->
+    <div class="section">
+      <h2>⚠️ Important Notes</h2>
+      
+      <div class="warning">
+        <h4>Marker Quality Matters</h4>
+        <p>Damaged, wrinkled, or low-quality printed markers may not work properly. For best results, laminate printed markers to protect them from wear and tear.</p>
+      </div>
+
+      <div class="warning">
+        <h4>Unique Patterns Required</h4>
+        <p>Each species must have a unique marker pattern. Using duplicate markers will cause confusion in AR detection.</p>
+      </div>
+
+      <div class="warning">
+        <h4>Camera Permissions</h4>
+        <p>The AR viewer requires camera access. Make sure to allow camera permissions when prompted by your browser.</p>
+      </div>
+    </div>
+
+    <!-- Troubleshooting -->
+    <div class="section">
+      <h2>🔧 Troubleshooting</h2>
+      
+      <div class="instructions">
+        <h3>If marker isn't detecting:</h3>
+        <ol>
+          <li>Improve lighting - use natural or bright indoor light</li>
+          <li>Flatten the marker - remove wrinkles or curves</li>
+          <li>Clean your camera lens</li>
+          <li>Move to appropriate distance (20-50cm)</li>
+          <li>Ensure marker is not partially covered</li>
+          <li>Try printing a new copy if marker is damaged</li>
+        </ol>
+      </div>
+
+      <div class="instructions">
+        <h3>If 3D model doesn't appear:</h3>
+        <ol>
+          <li>Ensure marker is detected (check for tracking indicators)</li>
+          <li>Wait a few seconds for model to load</li>
+          <li>Check internet connection (needed to load 3D model)</li>
+          <li>Try refreshing the AR viewer page</li>
+          <li>Verify the species has AR content uploaded</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- QR Code Example -->
+    <div class="section">
+      <h2>📱 Accessing AR Experience</h2>
+      
+      <div class="qr-example">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="100" fill="white"/>
+          <rect x="10" y="10" width="80" height="80" fill="none" stroke="#333" stroke-width="2"/>
+          <rect x="15" y="15" width="20" height="20" fill="#333"/>
+          <rect x="65" y="15" width="20" height="20" fill="#333"/>
+          <rect x="15" y="65" width="20" height="20" fill="#333"/>
+          <rect x="45" y="45" width="10" height="10" fill="#333"/>
+          <circle cx="50" cy="50" r="3" fill="#333"/>
+        </svg>
+        <p><strong>Scan to visit AR viewer</strong></p>
+        <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">
+          This is a placeholder. Replace with actual QR code<br>
+          linking to your AR viewer page.
+        </p>
+      </div>
+    </div>
+
+    <!-- Generation Guide -->
+    <div class="section">
+      <h2>🎨 Generating Custom Markers</h2>
+      
+      <div class="instructions">
+        <h3>Using AR.js Pattern Generator:</h3>
+        <ol>
+          <li>Visit: <a href="https://jeromeetienne.github.io/AR.js/three.js/examples/marker-training/examples/generator.html" target="_blank">AR.js Pattern Generator</a></li>
+          <li>Upload your species image or create a custom design</li>
+          <li>Adjust contrast and borders as needed</li>
+          <li>Download the .patt file (pattern file)</li>
+          <li>Download the marker image (PNG)</li>
+          <li>Upload both files in the admin panel</li>
+          <li>Print this template with your new marker</li>
+        </ol>
+      </div>
+
+      <p style="margin-top: 20px;"><strong>Design Tips:</strong></p>
+      <ul style="margin-left: 20px; margin-top: 10px;">
+        <li>Use high contrast colors (black/white works best)</li>
+        <li>Add a border around the marker</li>
+        <li>Keep designs simple and recognizable</li>
+        <li>Test different lighting conditions</li>
+        <li>Make each species marker visually distinct</li>
+      </ul>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p><strong>Mati Biodiversity AR Experience</strong></p>
+      <p>For more information, visit: <a href="https://mati-biodiversity.org">mati-biodiversity.org</a></p>
+      <p style="margin-top: 10px; font-size: 0.9rem;">
+        Last Updated: November 18, 2025 | Version 1.0
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Auto-print functionality (optional)
+    // Uncomment to auto-print on page load
+    // window.addEventListener('load', () => {
+    //   setTimeout(() => window.print(), 1000);
+    // });
+  </script>
+</body>
+</html>

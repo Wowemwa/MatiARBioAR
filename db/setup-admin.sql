@@ -24,7 +24,7 @@ ORDER BY a.created_at DESC;
 
 DO $$
 DECLARE
-    v_user_id UUID := '07a3cfb7-a762-40f1-9ae4-cbbb8666abe3'; -- REPLACE THIS
+    v_user_id UUID := '99485cec-feff-4fe3-ba24-df72e729ea42'; -- REPLACE THIS
     v_email TEXT := 'rey.loremia@dorsu.edu.ph';
     v_exists BOOLEAN;
 BEGIN

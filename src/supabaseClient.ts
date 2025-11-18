@@ -203,6 +203,13 @@ export interface Database {
           conservation_actions: string[] | null
           legal_protection: string[] | null
           reference_sources: string[] | null
+          image_urls: string[]
+          ar_model_url: string | null
+          ar_model_scale: number
+          ar_model_rotation: { x: number; y: number; z: number }
+          ar_pattern_url: string | null
+          ar_marker_image_url: string | null
+          ar_viewer_html: string | null
           created_at: string
           updated_at: string
         }
@@ -246,6 +253,13 @@ export interface Database {
           conservation_actions?: string[] | null
           legal_protection?: string[] | null
           reference_sources?: string[] | null
+          image_urls?: string[]
+          ar_model_url?: string | null
+          ar_model_scale?: number
+          ar_model_rotation?: { x: number; y: number; z: number }
+          ar_pattern_url?: string | null
+          ar_marker_image_url?: string | null
+          ar_viewer_html?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -285,10 +299,17 @@ export interface Database {
           weight?: string | null
           lifespan?: string | null
           population_trend?: string | null
-          threats?: string | null
+          threats?: string[] | null
           conservation_actions?: string[] | null
           legal_protection?: string[] | null
           reference_sources?: string[] | null
+          image_urls?: string[]
+          ar_model_url?: string | null
+          ar_model_scale?: number
+          ar_model_rotation?: { x: number; y: number; z: number }
+          ar_pattern_url?: string | null
+          ar_marker_image_url?: string | null
+          ar_viewer_html?: string | null
           created_at?: string
           updated_at?: string
         }

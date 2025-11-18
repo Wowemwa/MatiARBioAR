@@ -109,7 +109,9 @@ CREATE TABLE IF NOT EXISTS public.species (
   ar_model_url TEXT DEFAULT NULL,
   ar_model_scale DECIMAL DEFAULT 1.0,
   ar_model_rotation JSONB DEFAULT '{"x": 0, "y": 0, "z": 0}',
-  qr_code_data TEXT DEFAULT NULL,
+  ar_pattern_url TEXT DEFAULT NULL,
+  ar_marker_image_url TEXT DEFAULT NULL,
+  ar_viewer_html TEXT DEFAULT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -606,7 +608,8 @@ CREATE INDEX IF NOT EXISTS idx_sites_tags ON public.sites USING GIN(tags);
 
 -- Indexes for AR features
 CREATE INDEX IF NOT EXISTS idx_species_ar_model_url ON public.species(ar_model_url) WHERE ar_model_url IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_species_qr_code ON public.species(qr_code_data) WHERE qr_code_data IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_species_ar_pattern ON public.species(ar_pattern_url) WHERE ar_pattern_url IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_species_ar_marker ON public.species(ar_marker_image_url) WHERE ar_marker_image_url IS NOT NULL;
 
 -- ============================================
 -- STEP 7: Create Storage Buckets (Run separately in Supabase Dashboard)
@@ -634,8 +637,8 @@ CREATE INDEX IF NOT EXISTS idx_species_qr_code ON public.species(qr_code_data) W
 -- Replace this UUID with the actual User ID from Supabase Authentication > Users
 INSERT INTO public.admins (id, email, role, created_at, updated_at)
 VALUES (
-  '36740711-dce5-4219-84f0-ada3543b54de',  -- Updated with your provided admin UID
-  'rey@gmail.com',
+  '99485cec-feff-4fe3-ba24-df72e729ea42',  -- Updated with your provided admin UID
+  'rey.loremia@dorsu.edu.ph',
   'super_admin',
   NOW(),
   NOW()
@@ -648,7 +651,7 @@ ON CONFLICT (id) DO UPDATE SET
 -- Verify admin was created
 SELECT id, email, role, created_at 
 FROM public.admins 
-WHERE email = 'rey@gmail.com';
+WHERE email = 'rey.loremia@dorsu.edu.ph';
 
 -- ============================================
 -- DATABASE SETUP COMPLETE

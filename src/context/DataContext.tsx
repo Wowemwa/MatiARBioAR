@@ -190,6 +190,11 @@ export function DataProvider({ children }: DataProviderProps) {
           highlights: species.key_facts || [], // Map key_facts to highlights
           images: species.image_urls || [], // Load images from image_urls column
           arModelUrl: species.ar_model_url || undefined, // Load AR model URL
+          arPatternUrl: species.ar_pattern_url || undefined, // Load AR pattern URL
+          arMarkerImageUrl: species.ar_marker_image_url || undefined, // Load AR marker image URL
+          arModelScale: species.ar_model_scale || 1.0, // Load AR model scale
+          arModelRotation: species.ar_model_rotation || { x: 0, y: 0, z: 0 }, // Load AR model rotation
+          arViewerHtml: species.ar_viewer_html || undefined, // Load AR viewer HTML
           // Additional fields from Supabase
           kingdom: species.kingdom,
           phylum: species.phylum,
@@ -297,6 +302,11 @@ export function DataProvider({ children }: DataProviderProps) {
           key_facts: newSpecies.highlights,
           image_urls: newSpecies.images || [], // Save images to image_urls column
           ar_model_url: newSpecies.arModelUrl || null, // Save AR model URL
+          ar_pattern_url: newSpecies.arPatternUrl || null, // Save AR pattern URL
+          ar_marker_image_url: newSpecies.arMarkerImageUrl || null, // Save AR marker image URL
+          ar_model_scale: newSpecies.arModelScale || 1.0, // Save AR model scale
+          ar_model_rotation: newSpecies.arModelRotation || { x: 0, y: 0, z: 0 }, // Save AR model rotation
+          ar_viewer_html: newSpecies.arViewerHtml || null, // Save AR viewer HTML
           kingdom: newSpecies.kingdom,
           phylum: newSpecies.phylum,
           class: newSpecies.class,
@@ -344,9 +354,14 @@ export function DataProvider({ children }: DataProviderProps) {
 
         const { error: relError } = await supabase
           .from('species_sites')
-          .insert(relationships)
+          .upsert(relationships, { 
+            onConflict: 'species_id,site_id' 
+          })
 
-        if (relError) throw relError
+        if (relError) {
+          console.error('[DataContext] Failed to create species-site relationships:', relError)
+          // Don't throw - species was created successfully, just log the error
+        }
       }
 
   // Update local state
@@ -405,9 +420,14 @@ export function DataProvider({ children }: DataProviderProps) {
       if (updates.highlights) supabaseUpdates.key_facts = updates.highlights
       if (updates.images !== undefined) supabaseUpdates.image_urls = updates.images // Save images to image_urls column
       if (updates.arModelUrl !== undefined) supabaseUpdates.ar_model_url = updates.arModelUrl // Save AR model URL
+      if (updates.arPatternUrl !== undefined) supabaseUpdates.ar_pattern_url = updates.arPatternUrl // Save AR pattern URL
+      if (updates.arMarkerImageUrl !== undefined) supabaseUpdates.ar_marker_image_url = updates.arMarkerImageUrl // Save AR marker image URL
+      if (updates.arModelScale !== undefined) supabaseUpdates.ar_model_scale = updates.arModelScale // Save AR model scale
+      if (updates.arModelRotation !== undefined) supabaseUpdates.ar_model_rotation = updates.arModelRotation // Save AR model rotation
+      if (updates.arViewerHtml !== undefined) supabaseUpdates.ar_viewer_html = updates.arViewerHtml // Save AR viewer HTML
 
       // Add other fields if they exist in updates, but skip client-only keys
-      const skipKeys = ['commonName', 'scientificName', 'status', 'blurb', 'habitat', 'highlights', 'images', 'arModelUrl', 'category', 'siteIds', 'id']
+      const skipKeys = ['commonName', 'scientificName', 'status', 'blurb', 'habitat', 'highlights', 'images', 'arModelUrl', 'arPatternUrl', 'arMarkerImageUrl', 'arModelScale', 'arModelRotation', 'arViewerHtml', 'category', 'siteIds', 'id']
       Object.keys(updates).forEach(key => {
         if (key in supabaseUpdates) return // Already handled
         if (skipKeys.includes(key)) return // Skip client-only/mapped keys

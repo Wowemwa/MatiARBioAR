@@ -25,7 +25,19 @@
 --    File Size Limit: 50MB
 --    Allowed MIME types: model/gltf-binary, application/octet-stream
 
--- 3. Bucket Name: site-media
+-- 3. Bucket Name: ar-patterns
+--    Description: AR.js pattern files (.patt)
+--    Public: YES
+--    File Size Limit: 1MB
+--    Allowed MIME types: text/plain, application/octet-stream
+
+-- 4. Bucket Name: ar-markers
+--    Description: AR marker images to display for scanning
+--    Public: YES
+--    File Size Limit: 2MB
+--    Allowed MIME types: image/png, image/jpeg, image/jpg
+
+-- 5. Bucket Name: site-media
 --    Description: Conservation site photos and media
 --    Public: YES
 --    File Size Limit: 10MB
@@ -99,6 +111,70 @@ USING (
   EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
 
+-- === AR PATTERNS BUCKET ===
+
+-- Allow public to view all AR patterns
+CREATE POLICY "Public can view ar patterns"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'ar-patterns');
+
+-- Allow authenticated users to upload patterns
+CREATE POLICY "Authenticated users can upload ar patterns"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'ar-patterns');
+
+-- Allow admins to update patterns
+CREATE POLICY "Admins can update ar patterns"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (
+  bucket_id = 'ar-patterns' AND
+  EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
+);
+
+-- Allow admins to delete patterns
+CREATE POLICY "Admins can delete ar patterns"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'ar-patterns' AND
+  EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
+);
+
+-- === AR MARKERS BUCKET ===
+
+-- Allow public to view all AR markers
+CREATE POLICY "Public can view ar markers"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'ar-markers');
+
+-- Allow authenticated users to upload markers
+CREATE POLICY "Authenticated users can upload ar markers"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'ar-markers');
+
+-- Allow admins to update markers
+CREATE POLICY "Admins can update ar markers"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (
+  bucket_id = 'ar-markers' AND
+  EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
+);
+
+-- Allow admins to delete markers
+CREATE POLICY "Admins can delete ar markers"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'ar-markers' AND
+  EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
+);
+
 -- === SITE MEDIA BUCKET ===
 
 -- Allow public to view all site media
@@ -141,11 +217,14 @@ ADD COLUMN IF NOT EXISTS image_urls TEXT[] DEFAULT '{}',
 ADD COLUMN IF NOT EXISTS ar_model_url TEXT DEFAULT NULL,
 ADD COLUMN IF NOT EXISTS ar_model_scale DECIMAL DEFAULT 1.0,
 ADD COLUMN IF NOT EXISTS ar_model_rotation JSONB DEFAULT '{"x": 0, "y": 0, "z": 0}',
-ADD COLUMN IF NOT EXISTS qr_code_data TEXT DEFAULT NULL;
+ADD COLUMN IF NOT EXISTS ar_pattern_url TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS ar_marker_image_url TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS ar_viewer_html TEXT DEFAULT NULL;
 
--- Create index for AR model lookups
+-- Create indexes for AR model lookups
 CREATE INDEX IF NOT EXISTS idx_species_ar_model_url ON public.species(ar_model_url) WHERE ar_model_url IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_species_qr_code ON public.species(qr_code_data) WHERE qr_code_data IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_species_ar_pattern ON public.species(ar_pattern_url) WHERE ar_pattern_url IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_species_ar_marker ON public.species(ar_marker_image_url) WHERE ar_marker_image_url IS NOT NULL;
 
 -- ============================================
 -- STEP 4: Create Helper Function for Asset URLs
@@ -192,8 +271,12 @@ $$ LANGUAGE plpgsql;
 -- species-images/{species-id}/{species-id}-1.jpg         (Additional images)
 -- species-images/{species-id}/{species-id}-2.jpg         (Additional images)
 -- species-models/{species-id}/{species-id}.glb           (3D AR model)
+-- ar-patterns/{species-id}/{species-id}.patt             (AR.js pattern file)
+-- ar-markers/{species-id}/{species-id}-marker.png        (AR marker image)
 
 -- Example:
 -- species-images/philippine-eagle/philippine-eagle-main.jpg
 -- species-images/philippine-eagle/philippine-eagle-1.jpg
 -- species-models/philippine-eagle/philippine-eagle.glb
+-- ar-patterns/philippine-eagle/philippine-eagle.patt
+-- ar-markers/philippine-eagle/philippine-eagle-marker.png
