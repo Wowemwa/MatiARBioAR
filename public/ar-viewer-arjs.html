@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>AR.js Viewer - Mati Biodiversity</title>
-  <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe-master.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.5/aframe/build/aframe-ar.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
+  <script src="vendor/aframe-ar.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
   
   <!-- Gesture Controls Component for Rotation and Zoom -->
   <script>
@@ -504,6 +505,7 @@
     <a-marker
       id="marker"
       type="pattern"
+      preset="hiro"
       smooth="true"
       smoothCount="10"
       smoothTolerance="0.01"
@@ -519,21 +521,45 @@
       ></a-entity>
 
       <!-- Enhanced Lighting for better visibility -->
-      <a-light type="ambient" color="#FFF" intensity="1"></a-light>
-      <a-light type="directional" color="#FFF" intensity="0.8" position="-2 4 2"></a-light>
-      <a-light type="directional" color="#FFF" intensity="0.5" position="2 4 -2"></a-light>
-      <a-light type="point" color="#FFF" intensity="0.5" position="0 3 0"></a-light>
+      <a-light type="ambient" color="#FFF" intensity="1.5"></a-light>
+      <a-light type="directional" color="#FFF" intensity="1.2" position="-2 4 2"></a-light>
+      <a-light type="directional" color="#FFF" intensity="0.8" position="2 4 -2"></a-light>
+      <a-light type="point" color="#FFF" intensity="0.8" position="0 3 0"></a-light>
+      <a-light type="hemisphere" skyColor="#FFF" groundColor="#444" intensity="0.6"></a-light>
     </a-marker>
   </a-scene>
 
   <!-- Instructions -->
   <div id="instructions">
-    <p><strong>📱 Point camera at the marker</strong></p>
+    <p><strong>📱 Point camera at the HIRO marker</strong></p>
+    <div id="detection-status" style="background: rgba(255,0,0,0.8); color: white; padding: 8px; border-radius: 8px; margin-bottom: 10px; font-weight: bold;">
+      🔴 Marker Not Detected
+    </div>
+    <div style="background: rgba(0,0,0,0.7); padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+      <p style="margin: 0; font-size: 12px; color: #fbbf24;">⚠️ <strong>Important:</strong> You must use the standard HIRO marker pattern (not a custom pattern)</p>
+      <p style="margin: 5px 0 0 0; font-size: 11px; color: #ccc;">Debug UI is enabled - look for the AR.js debug panel</p>
+      <p style="margin: 5px 0 0 0; font-size: 11px; color: #ccc;">
+        <strong>Get HIRO marker:</strong>
+        <a href="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/HIRO.jpg" target="_blank" style="color: #60a5fa; text-decoration: underline;">Download HIRO marker</a> |
+        Search "HIRO marker pattern" online
+      </p>
+    </div>
     <div class="tips">
       <div class="tip-item">🖱️ Drag/Click to rotate</div>
       <div class="tip-item">🎡 Scroll/Pinch to zoom</div>
       <div class="tip-item">💡 Good lighting</div>
       <div class="tip-item">📐 Keep marker flat</div>
+      <div class="tip-item">📏 Distance: 20-50cm</div>
+      <div class="tip-item">
+        <button onclick="testMarkerDetection()" style="background: #3b82f6; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer;">
+          🧪 Test Detection
+        </button>
+      </div>
+      <div class="tip-item">
+        <button onclick="loadTestModel()" style="background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer;">
+          🧩 Test Model
+        </button>
+      </div>
     </div>
   </div>
 
@@ -543,10 +569,9 @@
       <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
     <h2>AR Content Not Available</h2>
-    <p>This species doesn't have AR content configured yet. Please upload:</p>
+    <p>This species doesn't have AR content configured yet. Please provide:</p>
     <ul>
-      <li>• 3D Model (.glb file)</li>
-      <li>• AR Pattern (.patt file)</li>
+      <li>• 3D Model URL (direct link to .glb file)</li>
       <li>• Marker Image (for scanning)</li>
     </ul>
   </div>
@@ -570,8 +595,7 @@
     // Get URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const speciesId = urlParams.get('species');
-    const modelUrl = urlParams.get('model');
-    const patternUrl = urlParams.get('pattern');
+    const experienceUrl = urlParams.get('experience');
     const scale = parseFloat(urlParams.get('scale')) || 1.0;
     const rotationX = parseFloat(urlParams.get('rx')) || 0;
     const rotationY = parseFloat(urlParams.get('ry')) || 0;
@@ -588,12 +612,12 @@
     // Initialize AR
     async function initAR() {
       console.log('🚀 Initializing AR...');
-      console.log('Model URL:', modelUrl);
-      console.log('Pattern URL:', patternUrl);
-      
-      // Check if AR content is available
-      if (!modelUrl || !patternUrl) {
-        console.error('❌ Missing AR content');
+      console.log('Experience URL:', experienceUrl);
+      console.log('Using HIRO marker for AR tracking');
+
+      // Check if AR content is available (only need experience URL for HIRO)
+      if (!experienceUrl) {
+        console.error('❌ Missing AR content - experience URL required');
         document.getElementById('loading-screen').classList.add('hidden');
         document.getElementById('no-content').classList.add('show');
         document.getElementById('ar-scene').style.display = 'none';
@@ -647,16 +671,20 @@
 
       updateLoadingStep('Configuring AR marker...');
 
-      // Configure AR marker
+      // Configure AR marker (using HIRO preset - no custom pattern needed)
       const marker = document.getElementById('marker');
       if (!marker) {
         console.error('❌ Marker element not found');
         showCameraError('Marker element not found');
         return;
       }
-      
-      console.log('⚙️ Setting pattern URL:', patternUrl);
-      marker.setAttribute('url', patternUrl);
+
+      console.log('Marker configured for HIRO pattern detection');
+      console.log('Marker attributes:', {
+        type: marker.getAttribute('type'),
+        url: marker.getAttribute('url'),
+        preset: marker.getAttribute('preset')
+      });
 
       // Configure 3D model
       const modelEntity = document.getElementById('model-entity');
@@ -667,10 +695,19 @@
       }
 
       console.log('⚙️ Configuring 3D model');
-      modelEntity.setAttribute('gltf-model', modelUrl);
+      modelEntity.setAttribute('gltf-model', experienceUrl);
+      modelEntity.setAttribute('crossorigin', 'anonymous');
       modelEntity.setAttribute('scale', `${scale} ${scale} ${scale}`);
       modelEntity.setAttribute('rotation', `${rotationX} ${rotationY} ${rotationZ}`);
-      modelEntity.setAttribute('position', '0 0 0');
+      // Position model slightly above the marker for better visibility
+      modelEntity.setAttribute('position', '0 0.1 0');
+      console.log('Model configuration:', {
+        url: experienceUrl,
+        crossorigin: 'anonymous',
+        scale: `${scale} ${scale} ${scale}`,
+        rotation: `${rotationX} ${rotationY} ${rotationZ}`,
+        position: '0 0.1 0'
+      });
 
       updateLoadingStep('Starting AR...');
 
@@ -736,19 +773,92 @@
       // Marker events
       marker.addEventListener('markerFound', () => {
         console.log('🎯 Marker detected!');
+        const statusDiv = document.getElementById('detection-status');
+        if (statusDiv) {
+          statusDiv.innerHTML = '🟢 Marker Detected!';
+          statusDiv.style.background = 'rgba(34, 197, 94, 0.8)';
+        }
+        
+        // Debug: Check model entity visibility
+        setTimeout(() => {
+          console.log('🔍 Marker found - checking model visibility:');
+          console.log('Model entity visible:', modelEntity.object3D.visible);
+          console.log('Model entity position:', modelEntity.object3D.position);
+          console.log('Model entity scale:', modelEntity.object3D.scale);
+          
+          // Force show model if hidden
+          if (!modelEntity.object3D.visible) {
+            console.log('⚠️ Model not visible, forcing visibility');
+            modelEntity.object3D.visible = true;
+            modelEntity.setAttribute('visible', 'true');
+          }
+          
+          // Check children
+          modelEntity.object3D.children.forEach((child, index) => {
+            console.log(`Child ${index}:`, {
+              type: child.type,
+              visible: child.visible,
+              position: child.position,
+              scale: child.scale
+            });
+          });
+        }, 1000);
       });
 
       marker.addEventListener('markerLost', () => {
         console.log('❌ Marker lost');
+        const statusDiv = document.getElementById('detection-status');
+        if (statusDiv) {
+          statusDiv.innerHTML = '🔴 Marker Not Detected';
+          statusDiv.style.background = 'rgba(255, 0, 0, 0.8)';
+        }
       });
 
       // Model events
-      modelEntity.addEventListener('model-loaded', () => {
-        console.log('✅ 3D Model loaded');
+      modelEntity.addEventListener('model-loaded', (e) => {
+        console.log('✅ 3D Model loaded successfully');
+        console.log('Model details:', {
+          model: e.detail.model,
+          boundingBox: e.detail.model ? 'Available' : 'Not available'
+        });
+        
+        // Check if model has geometry
+        if (e.detail.model) {
+          e.detail.model.traverse((child) => {
+            if (child.isMesh) {
+              console.log('Mesh found:', {
+                name: child.name,
+                geometry: child.geometry ? 'Present' : 'Missing',
+                material: child.material ? 'Present' : 'Missing',
+                visible: child.visible
+              });
+            }
+          });
+        }
+        
+        // Add a test cube to ensure AR is working
+        const testCube = document.createElement('a-box');
+        testCube.setAttribute('position', '0.2 0.1 0');
+        testCube.setAttribute('scale', '0.05 0.05 0.05');
+        testCube.setAttribute('color', '#ff0000');
+        testCube.setAttribute('material', 'transparent: false; opacity: 1');
+        modelEntity.appendChild(testCube);
+        console.log('🧊 Added test cube for debugging');
       });
 
       modelEntity.addEventListener('model-error', (e) => {
-        console.error('❌ Model error:', e);
+        console.error('❌ Model loading error:', e);
+        console.error('Error details:', e.detail);
+        
+        // If model fails, show a fallback cube
+        console.log('🔄 Loading fallback cube instead');
+        const fallbackCube = document.createElement('a-box');
+        fallbackCube.setAttribute('position', '0 0.1 0');
+        fallbackCube.setAttribute('scale', '0.1 0.1 0.1');
+        fallbackCube.setAttribute('color', '#00ff00');
+        fallbackCube.setAttribute('material', 'transparent: false; opacity: 1');
+        modelEntity.appendChild(fallbackCube);
+        console.log('🟢 Fallback cube added');
       });
 
       // Fallback: If AR.js does not show video, attach stream manually
@@ -828,6 +938,25 @@
       initAR();
     }
 
+    // Try to enter fullscreen mode to hide browser UI
+    function tryFullscreen() {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(err => {
+          console.log('Fullscreen request failed:', err);
+        });
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+      }
+    }
+
+    // Try fullscreen when page loads
+    window.addEventListener('load', () => {
+      setTimeout(tryFullscreen, 1000); // Delay to ensure AR is initializing
+    });
+
     // Close viewer function
     function closeViewer() {
       console.log('Closing AR viewer and stopping camera');
@@ -861,6 +990,209 @@
           window.location.href = '/';
         }
       }
+    }
+
+    // Test marker detection function
+    function testMarkerDetection() {
+      console.log('🧪 Testing marker detection and model visibility...');
+      
+      const marker = document.getElementById('marker');
+      const modelEntity = document.getElementById('model-entity');
+      const statusDiv = document.getElementById('detection-status');
+      
+      if (!marker) {
+        console.error('❌ Marker element not found');
+        if (statusDiv) {
+          statusDiv.innerHTML = '🔴 Error: Marker not found';
+          statusDiv.style.background = 'rgba(239, 68, 68, 0.8)';
+        }
+        return;
+      }
+      
+      if (!modelEntity) {
+        console.error('❌ Model entity not found');
+        if (statusDiv) {
+          statusDiv.innerHTML = '🔴 Error: Model entity not found';
+          statusDiv.style.background = 'rgba(239, 68, 68, 0.8)';
+        }
+        return;
+      }
+      
+      // Check marker attributes
+      console.log('Marker configuration:', {
+        type: marker.getAttribute('type'),
+        preset: marker.getAttribute('preset'),
+        url: marker.getAttribute('url'),
+        visible: marker.object3D.visible
+      });
+      
+      // Check model attributes
+      console.log('Model configuration:', {
+        'gltf-model': modelEntity.getAttribute('gltf-model'),
+        position: modelEntity.getAttribute('position'),
+        scale: modelEntity.getAttribute('scale'),
+        visible: modelEntity.object3D.visible,
+        children: modelEntity.object3D.children.length
+      });
+      
+      // Check if AR.js is loaded
+      if (typeof ARJS === 'undefined' && typeof artoolkit === 'undefined') {
+        console.warn('⚠️ AR.js may not be fully loaded yet');
+      }
+      
+      // Check video element
+      const video = document.querySelector('video');
+      if (video) {
+        console.log('Video status:', {
+          dimensions: `${video.videoWidth}x${video.videoHeight}`,
+          playing: !video.paused,
+          readyState: video.readyState
+        });
+      } else {
+        console.error('❌ No video element found');
+        if (statusDiv) {
+          statusDiv.innerHTML = '🔴 Error: No camera video';
+          statusDiv.style.background = 'rgba(239, 68, 68, 0.8)';
+        }
+        return;
+      }
+      
+      // Force model visibility for testing
+      console.log('🔧 Forcing model visibility for testing...');
+      modelEntity.object3D.visible = true;
+      modelEntity.setAttribute('visible', 'true');
+      
+      // Add a bright test sphere if no children
+      if (modelEntity.object3D.children.length === 0) {
+        console.log('⚠️ No model children found, adding test sphere');
+        const testSphere = document.createElement('a-sphere');
+        testSphere.setAttribute('position', '0 0.1 0');
+        testSphere.setAttribute('radius', '0.05');
+        testSphere.setAttribute('color', '#ffff00');
+        testSphere.setAttribute('material', 'transparent: false; opacity: 1; emissive: #ffff00; emissiveIntensity: 0.5');
+        modelEntity.appendChild(testSphere);
+      }
+      
+      // Update status
+      if (statusDiv) {
+        statusDiv.innerHTML = '🔵 Testing... Check console for details';
+        statusDiv.style.background = 'rgba(59, 130, 246, 0.8)';
+      }
+      
+      // Force marker detection check
+      setTimeout(() => {
+        if (statusDiv) {
+          statusDiv.innerHTML = '🔴 Test complete - Check console logs';
+          statusDiv.style.background = 'rgba(255, 0, 0, 0.8)';
+        }
+      }, 2000);
+    }
+
+    // Toggle debug mode
+    let debugMode = false;
+    function toggleDebugMode() {
+      debugMode = !debugMode;
+      const debugBtn = document.getElementById('debug-btn');
+      const modelEntity = document.getElementById('model-entity');
+      
+      if (debugMode) {
+        console.log('🔧 Debug mode enabled');
+        debugBtn.style.background = '#dc2626';
+        debugBtn.textContent = '🔴 Debug ON';
+        
+        // Add debug visual aids
+        if (modelEntity) {
+          // Add coordinate axes
+          const axes = document.createElement('a-entity');
+          axes.setAttribute('position', '0 0 0');
+          axes.setAttribute('data-debug-axes', 'true');
+          
+          // X axis (red)
+          const xAxis = document.createElement('a-cylinder');
+          xAxis.setAttribute('position', '0.1 0 0');
+          xAxis.setAttribute('rotation', '0 0 90');
+          xAxis.setAttribute('radius', '0.005');
+          xAxis.setAttribute('height', '0.2');
+          xAxis.setAttribute('color', '#ff0000');
+          axes.appendChild(xAxis);
+          
+          // Y axis (green)
+          const yAxis = document.createElement('a-cylinder');
+          yAxis.setAttribute('position', '0 0.1 0');
+          yAxis.setAttribute('radius', '0.005');
+          yAxis.setAttribute('height', '0.2');
+          yAxis.setAttribute('color', '#00ff00');
+          axes.appendChild(yAxis);
+          
+          // Z axis (blue)
+          const zAxis = document.createElement('a-cylinder');
+          zAxis.setAttribute('position', '0 0 0.1');
+          zAxis.setAttribute('rotation', '90 0 0');
+          zAxis.setAttribute('radius', '0.005');
+          zAxis.setAttribute('height', '0.2');
+          zAxis.setAttribute('color', '#0000ff');
+          axes.appendChild(zAxis);
+          
+          modelEntity.appendChild(axes);
+          console.log('📐 Added coordinate axes for debugging');
+        }
+      } else {
+        console.log('🔧 Debug mode disabled');
+        debugBtn.style.background = '#f59e0b';
+        debugBtn.textContent = '🔧 Debug Mode';
+        
+        // Remove debug visual aids
+        if (modelEntity) {
+          const axes = modelEntity.querySelector('[data-debug-axes]');
+          if (axes) {
+            modelEntity.removeChild(axes);
+          }
+        }
+      }
+    }
+
+    // Load test model from CORS-friendly source
+    function loadTestModel() {
+      console.log('🧩 Loading test model...');
+      const modelEntity = document.getElementById('model-entity');
+      
+      if (!modelEntity) {
+        console.error('❌ Model entity not found');
+        return;
+      }
+      
+      // Clear existing children
+      while (modelEntity.firstChild) {
+        modelEntity.removeChild(modelEntity.firstChild);
+      }
+      
+      // Load a simple test model from a CORS-friendly source
+      // Using a basic GLTF model that should work
+      const testModelUrl = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Box/glTF/Box.gltf';
+      
+      console.log('Loading test model from:', testModelUrl);
+      modelEntity.setAttribute('gltf-model', testModelUrl);
+      modelEntity.setAttribute('crossorigin', 'anonymous');
+      modelEntity.setAttribute('position', '0 0.1 0');
+      modelEntity.setAttribute('scale', '0.1 0.1 0.1');
+      
+      // Add event listeners for test model
+      modelEntity.addEventListener('model-loaded', () => {
+        console.log('✅ Test model loaded successfully!');
+      });
+      
+      modelEntity.addEventListener('model-error', (e) => {
+        console.error('❌ Test model failed to load:', e);
+        // Fallback to a simple geometric shape
+        console.log('🔄 Creating fallback geometric shape');
+        const fallbackBox = document.createElement('a-box');
+        fallbackBox.setAttribute('position', '0 0.1 0');
+        fallbackBox.setAttribute('scale', '0.1 0.1 0.1');
+        fallbackBox.setAttribute('color', '#ff6b6b');
+        fallbackBox.setAttribute('material', 'transparent: false; opacity: 1');
+        modelEntity.appendChild(fallbackBox);
+        console.log('📦 Fallback box created');
+      });
     }
   </script>
 </body>

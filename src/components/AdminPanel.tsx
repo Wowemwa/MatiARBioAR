@@ -21,9 +21,7 @@ interface SpeciesFormData {
   siteIds: string[]
   highlights: string[]
   images: string[]
-  arModelUrl?: string
-  arPatternUrl?: string
-  arMarkerImageUrl?: string
+  arExperienceUrl?: string
   arViewerHtml?: string
 }
 
@@ -38,9 +36,7 @@ const emptySpecies: SpeciesFormData = {
   siteIds: [],
   highlights: [],
   images: [],
-  arModelUrl: undefined,
-  arPatternUrl: undefined,
-  arMarkerImageUrl: undefined,
+  arExperienceUrl: undefined,
   arViewerHtml: undefined
 }
 
@@ -57,10 +53,6 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
   const [showImageModal, setShowImageModal] = useState(false)
   const [imageModalUrl, setImageModalUrl] = useState('')
   const [imageModalFile, setImageModalFile] = useState<File | null>(null)
-  const [, setArModelFile] = useState<File | null>(null)
-  const [uploadingArModel, setUploadingArModel] = useState(false)
-  const [uploadingArPattern, setUploadingArPattern] = useState(false)
-  const [uploadingArMarker, setUploadingArMarker] = useState(false)
 
   const filteredSpecies = useMemo(() => {
     return species.filter(s => {
@@ -109,7 +101,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
       siteIds: speciesItem.siteIds || [],
       highlights: speciesItem.highlights || [],
       images: speciesItem.images || [],
-      arModelUrl: speciesItem.arModelUrl
+      arExperienceUrl: speciesItem.arExperienceUrl
     })
   }
 
@@ -121,8 +113,17 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
     if (isCreating) {
       // Add new species - ID already generated in handleCreate
       const newSpeciesData: SpeciesDetail = {
-        ...editingSpecies,
-        highlights: editingSpecies.highlights.filter(h => h.trim())
+        id: editingSpecies.id,
+        category: editingSpecies.category,
+        commonName: editingSpecies.commonName,
+        scientificName: editingSpecies.scientificName,
+        status: editingSpecies.status,
+        habitat: editingSpecies.habitat,
+        blurb: editingSpecies.blurb,
+        siteIds: editingSpecies.siteIds,
+        highlights: editingSpecies.highlights.filter(h => h.trim()),
+        images: editingSpecies.images,
+        arExperienceUrl: editingSpecies.arExperienceUrl
       }
       console.log('[AdminPanel] Creating new species:', newSpeciesData)
       const ok = await createSpecies(newSpeciesData)
@@ -250,246 +251,11 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
     }
   }
 
-  const handleArModelUpload = async (file: File) => {
-    if (!editingSpecies) return
-    
-    setUploadingArModel(true)
-    try {
-      // Validate file type
-      const validExtensions = ['.gltf', '.glb']
-      const fileExtension = file.name.toLowerCase().slice(file.name.lastIndexOf('.'))
-      if (!validExtensions.includes(fileExtension)) {
-        alert('Please upload a glTF (.gltf) or GLB (.glb) file.')
-        setUploadingArModel(false)
-        return
-      }
 
-      // Generate organized path: species-models/{species-id}/{species-id}.glb
-      // Ensure we have a proper species ID before uploading
-      if (!editingSpecies.id) {
-        alert('Please enter a species name before uploading files.')
-        setUploadingArModel(false)
-        return
-      }
-      const speciesId = editingSpecies.id
-      const fileName = `${speciesId}/${speciesId}.glb`
-      
-      console.log('[AdminPanel] Uploading AR model to:', fileName)
 
-      // Delete old model if exists
-      if (editingSpecies.arModelUrl) {
-        const oldPath = editingSpecies.arModelUrl.split('/species-models/')[1]
-        if (oldPath) {
-          await supabase.storage.from('species-models').remove([oldPath])
-          console.log('[AdminPanel] Deleted old model:', oldPath)
-        }
-      }
 
-      // Upload to Supabase Storage with organized structure
-      const { error: uploadError } = await supabase.storage
-        .from('species-models')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: true, // Overwrite if exists
-          contentType: 'model/gltf-binary'
-        })
 
-      if (uploadError) throw uploadError
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('species-models')
-        .getPublicUrl(fileName)
-
-      console.log('[AdminPanel] Model uploaded successfully:', urlData.publicUrl)
-
-      setEditingSpecies({
-        ...editingSpecies,
-        arModelUrl: urlData.publicUrl
-      })
-      alert('✅ AR model uploaded successfully! Save the species to persist changes.')
-    } catch (error) {
-      console.error('[AdminPanel] AR model upload error:', error)
-      alert(`❌ Failed to upload AR model: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    } finally {
-      setUploadingArModel(false)
-      setArModelFile(null)
-    }
-  }
-
-  const handleArModelFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setArModelFile(file)
-      handleArModelUpload(file)
-    }
-  }
-
-  const removeArModel = () => {
-    if (editingSpecies) {
-      setEditingSpecies({
-        ...editingSpecies,
-        arModelUrl: undefined
-      })
-    }
-  }
-
-  const handleArPatternUpload = async (file: File) => {
-    if (!editingSpecies) return
-    
-    setUploadingArPattern(true)
-    try {
-      // Validate file type
-      if (!file.name.toLowerCase().endsWith('.patt')) {
-        alert('Please upload a .patt file for AR.js pattern recognition.')
-        setUploadingArPattern(false)
-        return
-      }
-
-      // Ensure we have a proper species ID before uploading
-      if (!editingSpecies.id) {
-        alert('Please enter a species name before uploading files.')
-        setUploadingArPattern(false)
-        return
-      }
-      const speciesId = editingSpecies.id
-      const fileName = `${speciesId}/${speciesId}.patt`
-      
-      console.log('[AdminPanel] Uploading AR pattern to:', fileName)
-
-      // Delete old pattern if exists
-      if (editingSpecies.arPatternUrl) {
-        const oldPath = editingSpecies.arPatternUrl.split('/ar-patterns/')[1]
-        if (oldPath) {
-          await supabase.storage.from('ar-patterns').remove([oldPath])
-        }
-      }
-
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('ar-patterns')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: true,
-          contentType: 'text/plain'
-        })
-
-      if (uploadError) throw uploadError
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('ar-patterns')
-        .getPublicUrl(fileName)
-
-      console.log('[AdminPanel] Pattern uploaded successfully:', urlData.publicUrl)
-
-      setEditingSpecies({
-        ...editingSpecies,
-        arPatternUrl: urlData.publicUrl
-      })
-      alert('✅ AR pattern uploaded successfully! Save the species to persist changes.')
-    } catch (error) {
-      console.error('[AdminPanel] AR pattern upload error:', error)
-      alert(`❌ Failed to upload AR pattern: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    } finally {
-      setUploadingArPattern(false)
-    }
-  }
-
-  const handleArMarkerUpload = async (file: File) => {
-    if (!editingSpecies) return
-    
-    setUploadingArMarker(true)
-    try {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        alert('Please upload an image file (PNG, JPG, etc.) for the AR marker.')
-        setUploadingArMarker(false)
-        return
-      }
-
-      // Ensure we have a proper species ID before uploading
-      if (!editingSpecies.id) {
-        alert('Please enter a species name before uploading files.')
-        setUploadingArMarker(false)
-        return
-      }
-      const speciesId = editingSpecies.id
-      const fileExtension = file.name.split('.').pop()
-      const fileName = `${speciesId}/${speciesId}-marker.${fileExtension}`
-      
-      console.log('[AdminPanel] Uploading AR marker to:', fileName)
-
-      // Delete old marker if exists
-      if (editingSpecies.arMarkerImageUrl) {
-        const oldPath = editingSpecies.arMarkerImageUrl.split('/ar-markers/')[1]
-        if (oldPath) {
-          await supabase.storage.from('ar-markers').remove([oldPath])
-        }
-      }
-
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('ar-markers')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: true,
-          contentType: file.type
-        })
-
-      if (uploadError) throw uploadError
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('ar-markers')
-        .getPublicUrl(fileName)
-
-      console.log('[AdminPanel] Marker uploaded successfully:', urlData.publicUrl)
-
-      setEditingSpecies({
-        ...editingSpecies,
-        arMarkerImageUrl: urlData.publicUrl
-      })
-      alert('✅ AR marker image uploaded successfully! Save the species to persist changes.')
-    } catch (error) {
-      console.error('[AdminPanel] AR marker upload error:', error)
-      alert(`❌ Failed to upload AR marker: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    } finally {
-      setUploadingArMarker(false)
-    }
-  }
-
-  const handleArPatternFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      handleArPatternUpload(file)
-    }
-  }
-
-  const handleArMarkerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      handleArMarkerUpload(file)
-    }
-  }
-
-  const removeArPattern = () => {
-    if (editingSpecies) {
-      setEditingSpecies({
-        ...editingSpecies,
-        arPatternUrl: undefined
-      })
-    }
-  }
-
-  const removeArMarker = () => {
-    if (editingSpecies) {
-      setEditingSpecies({
-        ...editingSpecies,
-        arMarkerImageUrl: undefined
-      })
-    }
-  }
 
   if (!isVisible) return null
 
@@ -886,177 +652,27 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                   </div>
                 </div>
 
-                {/* AR Model */}
+                {/* AR Experience URL */}
                 <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
                   <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">
                     <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
                     </svg>
-                    AR 3D Model (.gltf / .glb)
+                    AR Experience URL
                   </label>
                   
-                  {editingSpecies.arModelUrl ? (
-                    <div className="border-2 border-purple-200 dark:border-purple-600 rounded-xl p-4 bg-gradient-to-br from-purple-50 to-pink-50/30 dark:from-purple-900/20 dark:to-pink-900/10">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
-                          <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
-                          </svg>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                            {editingSpecies.arModelUrl.split('/').pop()}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            AR model uploaded
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={removeArModel}
-                          className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md transition-all hover:scale-105"
-                          title="Remove AR model"
-                        >
-                          <DeleteIcon className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <input
-                        type="file"
-                        accept=".gltf,.glb"
-                        onChange={handleArModelFileChange}
-                        disabled={uploadingArModel}
-                        className="w-full px-4 py-3 bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-300 dark:border-purple-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                      />
-                      {uploadingArModel && (
-                        <p className="text-sm text-purple-600 dark:text-purple-400 animate-pulse">
-                          ⏳ Uploading AR model...
-                        </p>
-                      )}
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Upload a 3D model in glTF or GLB format. This will be used for AR viewing.
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* AR Pattern File (.patt) */}
-                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
-                  <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">
-                    <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    AR.js Pattern File (.patt)
-                  </label>
-                  
-                  {editingSpecies.arPatternUrl ? (
-                    <div className="border-2 border-orange-200 dark:border-orange-600 rounded-xl p-4 bg-gradient-to-br from-orange-50 to-yellow-50/30 dark:from-orange-900/20 dark:to-yellow-900/10">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
-                          <svg className="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                            {editingSpecies.arPatternUrl.split('/').pop()}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            AR pattern uploaded
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={removeArPattern}
-                          className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md transition-all hover:scale-105"
-                          title="Remove AR pattern"
-                        >
-                          <DeleteIcon className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <input
-                        type="file"
-                        accept=".patt"
-                        onChange={handleArPatternFileChange}
-                        disabled={uploadingArPattern}
-                        className="w-full px-4 py-3 bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-300 dark:border-orange-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                      />
-                      {uploadingArPattern && (
-                        <p className="text-sm text-orange-600 dark:text-orange-400 animate-pulse">
-                          ⏳ Uploading AR pattern...
-                        </p>
-                      )}
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Upload a .patt file for AR.js marker recognition. Generate patterns at <a href="https://jeromeetienne.github.io/AR.js/three.js/examples/marker-training/examples/generator.html" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700 underline">AR.js Pattern Marker Generator</a>.
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* AR Marker Image */}
-                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
-                  <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">
-                    <svg className="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                    </svg>
-                    AR Marker Image (PNG/JPG)
-                  </label>
-                  
-                  {editingSpecies.arMarkerImageUrl ? (
-                    <div className="border-2 border-cyan-200 dark:border-cyan-600 rounded-xl p-4 bg-gradient-to-br from-cyan-50 to-blue-50/30 dark:from-cyan-900/20 dark:to-blue-900/10">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-white border-2 border-cyan-200 dark:border-cyan-600">
-                          <img 
-                            src={editingSpecies.arMarkerImageUrl} 
-                            alt="AR Marker"
-                            className="w-full h-full object-contain"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%23999"%3E✕%3C/text%3E%3C/svg%3E'
-                            }}
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                            {editingSpecies.arMarkerImageUrl.split('/').pop()}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            AR marker image - shown in species card
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={removeArMarker}
-                          className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md transition-all hover:scale-105"
-                          title="Remove AR marker image"
-                        >
-                          <DeleteIcon className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleArMarkerFileChange}
-                        disabled={uploadingArMarker}
-                        className="w-full px-4 py-3 bg-cyan-50 dark:bg-cyan-900/20 border-2 border-cyan-300 dark:border-cyan-700 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                      />
-                      {uploadingArMarker && (
-                        <p className="text-sm text-cyan-600 dark:text-cyan-400 animate-pulse">
-                          ⏳ Uploading AR marker image...
-                        </p>
-                      )}
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Upload the marker image (PNG/JPG). This will be displayed in the species card for users to scan with their camera.
-                      </p>
-                    </div>
-                  )}
+                  <div className="space-y-3">
+                    <input
+                      type="url"
+                      value={editingSpecies.arExperienceUrl || ''}
+                      onChange={(e) => setEditingSpecies({...editingSpecies, arExperienceUrl: e.target.value || undefined})}
+                      placeholder="https://example.com/ar-experience"
+                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Enter a URL for the AR experience. For 3D models (.glb, .gltf, etc.), this will open an AR viewer. For other URLs (webpages, videos, etc.), this will open directly in a new tab.
+                    </p>
+                  </div>
                 </div>
 
                 {/* Images */}

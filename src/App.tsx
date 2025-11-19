@@ -1588,6 +1588,8 @@ const ARDemo = memo(function ARDemo() {
   // Import species data
   const { species: allMatiSpecies } = useData()
   const [selectedSpecies, setSelectedSpecies] = useState<string | null>(null)
+  const [showARExperienceModal, setShowARExperienceModal] = useState(false)
+  const [arExperienceUrl, setArExperienceUrl] = useState<string>('')
 
   const generateQRCode = (speciesId: string, commonName: string) => {
     const arUrl = `${window.location.origin}/ar/${speciesId}`
@@ -1598,18 +1600,15 @@ const ARDemo = memo(function ARDemo() {
     ? allMatiSpecies.find(s => s.id === selectedSpecies)
     : null
 
-  // Check if species has AR content (model, pattern, and marker)
-  const hasARContent = selectedSpeciesData?.arModelUrl && 
-                       selectedSpeciesData?.arPatternUrl && 
-                       selectedSpeciesData?.arMarkerImageUrl
+  // Check if species has AR content (experience URL only)
+  const hasARContent = selectedSpeciesData?.arExperienceUrl
 
   // Generate AR viewer URL
   const getARViewerUrl = () => {
     if (!selectedSpeciesData || !hasARContent) return ''
     
     const params = new URLSearchParams({
-      model: selectedSpeciesData.arModelUrl || '',
-      pattern: selectedSpeciesData.arPatternUrl || '',
+      experience: selectedSpeciesData.arExperienceUrl || '',
       scale: selectedSpeciesData.arModelScale?.toString() || '1.0',
       rx: selectedSpeciesData.arModelRotation?.x?.toString() || '0',
       ry: selectedSpeciesData.arModelRotation?.y?.toString() || '0',
@@ -1799,78 +1798,58 @@ const ARDemo = memo(function ARDemo() {
                     </p>
                   </div>
 
-                  {/* Right: AR Marker or QR Code */}
+                  {/* Right: AR Experience */}  
                   <div className="flex flex-col items-center justify-center">
                     {hasARContent ? (
-                      /* Show AR Marker Image */
+                      /* Show AR Experience Button */
                       <>
                         <div className="bg-gradient-to-br from-purple-600 to-blue-600 p-6 rounded-3xl mb-4 shadow-xl">
-                          <div className="bg-white p-4 rounded-2xl">
-                            <img 
-                              src={selectedSpeciesData.arMarkerImageUrl} 
-                              alt={`AR Marker for ${selectedSpeciesData.commonName}`}
-                              className="w-48 h-48 object-contain"
-                            />
+                          <div className="bg-white p-6 rounded-2xl">
+                            <svg className="w-24 h-24 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                            </svg>
                           </div>
                         </div>
                         
                         <div className="text-center">
                           <p className="font-bold text-gray-900 dark:text-white mb-1 flex items-center justify-center gap-2">
                             <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
                             </svg>
-                            Scan AR Marker
+                            AR Experience Available
                           </p>
                           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            Point your camera at this marker to see the 3D model
+                            Click below to open the augmented reality experience
                           </p>
                           
-                          {/* AR Action Buttons */}
-                          <div className="flex flex-col gap-2 mt-4">
-                            <a
-                              href={selectedSpeciesData.arMarkerImageUrl}
-                              download={`${selectedSpeciesData.commonName}-AR-Marker.png`}
-                              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                              </svg>
-                              Download Marker
-                            </a>
-                            <button
-                              onClick={() => {
-                                console.log('Opening AR viewer for:', selectedSpeciesData.commonName);
-                                console.log('Has AR content:', hasARContent);
-                                console.log('AR URLs:', {
-                                  model: selectedSpeciesData.arModelUrl,
-                                  pattern: selectedSpeciesData.arPatternUrl,
-                                  marker: selectedSpeciesData.arMarkerImageUrl
-                                });
-                                // Open in new window for proper camera permissions
-                                const arUrl = getARViewerUrl();
-                                window.open(arUrl, '_blank', 'width=1024,height=768');
-                              }}
-                              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
-                              </svg>
-                              Open AR Experience
-                            </button>
-                          </div>
+                          {/* AR Action Button */}
+                          <button
+                            onClick={() => {
+                              console.log('Opening AR experience for:', selectedSpeciesData.commonName);
+                              console.log('AR URL:', selectedSpeciesData.arExperienceUrl);
+                              
+                              if (selectedSpeciesData.arExperienceUrl) {
+                                setArExperienceUrl(selectedSpeciesData.arExperienceUrl);
+                                setShowARExperienceModal(true);
+                              }
+                            }}
+                            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
+                          >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                            </svg>
+                            Open AR Experience
+                          </button>
                         </div>
                       </>
                     ) : (
-                      /* Fallback: Show QR Code if no AR content */
+                      /* Fallback: Show message when no AR content */
                       <>
-                        <div className="bg-gradient-to-br from-purple-600 to-blue-600 p-6 rounded-3xl mb-4 shadow-xl">
-                          <div className="bg-white p-4 rounded-2xl">
-                            <img 
-                              src={generateQRCode(selectedSpeciesData.id, selectedSpeciesData.commonName)} 
-                              alt={`QR Code for ${selectedSpeciesData.commonName}`}
-                              className="w-48 h-48"
-                            />
+                        <div className="bg-gradient-to-br from-gray-600 to-slate-600 p-6 rounded-3xl mb-4 shadow-xl">
+                          <div className="bg-white p-6 rounded-2xl">
+                            <svg className="w-24 h-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                            </svg>
                           </div>
                         </div>
                         
@@ -1882,7 +1861,7 @@ const ARDemo = memo(function ARDemo() {
                             AR Content Not Available
                           </p>
                           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            This species doesn't have AR content yet. Upload model, pattern, and marker in Admin Panel.
+                            This species doesn&apos;t have an AR experience URL configured yet.
                           </p>
                         </div>
                       </>
@@ -1894,13 +1873,72 @@ const ARDemo = memo(function ARDemo() {
           </div>
         )}
 
+        {/* AR Experience Modal */}
+        {showARExperienceModal && arExperienceUrl && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300"
+               onClick={() => setShowARExperienceModal(false)}>
+            <div className="bg-white dark:bg-slate-800 rounded-3xl max-w-6xl w-full h-[90vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500"
+                 onClick={(e) => e.stopPropagation()}>
+              {/* Header */}
+              <div className="relative h-16 bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-between px-6">
+                <div className="flex items-center gap-3">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                  </svg>
+                  <h2 className="text-xl font-bold text-white">AR Experience</h2>
+                </div>
+                <button
+                  onClick={() => setShowARExperienceModal(false)}
+                  className="bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition-all duration-300"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="h-full pb-16">
+                {(() => {
+                  const is3DModel = /\.(gltf|glb|obj|fbx|dae|3ds|ply|stl)$/i.test(arExperienceUrl);
+                  
+                  if (is3DModel) {
+                    // AR Viewer for 3D models
+                    const arUrl = getARViewerUrl();
+                    return (
+                      <iframe
+                        src={arUrl}
+                        className="w-full h-full border-0"
+                        title="AR Experience"
+                        allow="camera; microphone; gyroscope; accelerometer"
+                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation"
+                      />
+                    );
+                  } else {
+                    // Iframe for other content (webpages, videos, etc.)
+                    return (
+                      <iframe
+                        src={arExperienceUrl}
+                        className="w-full h-full border-0"
+                        title="External Content"
+                        allow="camera *; microphone *; gyroscope *; accelerometer *; xr-spatial-tracking *"
+                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation allow-downloads"
+                      />
+                    );
+                  }
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Footer CTA */}
         <div className="text-center mt-16">
           <div className="inline-flex items-center gap-4 bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-xl border border-gray-200 dark:border-slate-700">
             <div className="text-4xl">🎯</div>
             <div className="text-left">
               <h3 className="font-bold text-gray-900 dark:text-white">How to Use</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Click any species → Scan QR code → Experience in AR</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Click any species → Open AR Experience → Enjoy augmented reality</p>
             </div>
           </div>
         </div>
@@ -2516,7 +2554,7 @@ export default function App() {
       <DeviceProvider>
         <AdminProvider>
           <DataProvider>
-            <BrowserRouter>
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <div className="min-h-screen w-full bg-gradient-to-br from-sky-50/40 via-indigo-50/30 to-emerald-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900 overflow-x-hidden">
               {/* Optimized background - reduced animations for better performance */}
               <div className="fixed inset-0 overflow-hidden pointer-events-none">

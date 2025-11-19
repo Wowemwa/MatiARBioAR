@@ -244,7 +244,7 @@ export default function ARQRViewer({ onClose }: ARQRViewerProps) {
             </svg>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No AR Content</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              {detectedSpecies.commonName} doesn't have AR content yet. Please upload a 3D model or images in the Admin Panel.
+              {detectedSpecies.commonName} doesn&apos;t have AR content yet. Please upload a 3D model or images in the Admin Panel.
             </p>
             <div className="flex gap-3 justify-center">
               <button

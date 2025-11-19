@@ -137,7 +137,7 @@ export default function ARJSViewer({ isVisible, onClose, speciesId }: ARJSViewer
                 </svg>
                 <h3 className="text-xl font-bold mb-2">AR Content Not Available</h3>
                 <p className="text-white/80 mb-4">
-                  This species doesn't have AR content configured yet. Please upload:
+                  This species doesn&apos;t have AR content configured yet. Please upload:
                 </p>
                 <ul className="text-left text-white/70 space-y-2">
                   <li>• 3D Model (.glb file)</li>

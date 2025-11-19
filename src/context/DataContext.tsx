@@ -189,9 +189,7 @@ export function DataProvider({ children }: DataProviderProps) {
           siteIds: siteIds,
           highlights: species.key_facts || [], // Map key_facts to highlights
           images: species.image_urls || [], // Load images from image_urls column
-          arModelUrl: species.ar_model_url || undefined, // Load AR model URL
-          arPatternUrl: species.ar_pattern_url || undefined, // Load AR pattern URL
-          arMarkerImageUrl: species.ar_marker_image_url || undefined, // Load AR marker image URL
+          arExperienceUrl: species.ar_experience_url || undefined, // Load AR experience URL
           arModelScale: species.ar_model_scale || 1.0, // Load AR model scale
           arModelRotation: species.ar_model_rotation || { x: 0, y: 0, z: 0 }, // Load AR model rotation
           arViewerHtml: species.ar_viewer_html || undefined, // Load AR viewer HTML
@@ -288,57 +286,57 @@ export function DataProvider({ children }: DataProviderProps) {
     try {
       console.log('[DataContext] Creating species in Supabase:', newSpecies.commonName)
 
+      // Only include fields that are actually provided and not null/undefined
+      const insertData: any = {
+        id: newSpecies.id,
+        category: newSpecies.category,
+        common_name: newSpecies.commonName,
+        scientific_name: newSpecies.scientificName,
+        conservation_status: newSpecies.status,
+        description: newSpecies.blurb,
+        habitat: newSpecies.habitat,
+        key_facts: newSpecies.highlights || [],
+        image_urls: newSpecies.images || [],
+        ar_experience_url: newSpecies.arExperienceUrl || null
+      }
+
+      // Only add optional taxonomic fields if they exist
+      if (newSpecies.kingdom) insertData.kingdom = newSpecies.kingdom
+      if (newSpecies.phylum) insertData.phylum = newSpecies.phylum
+      if (newSpecies.class) insertData.class = newSpecies.class
+      if (newSpecies.taxonomic_order) insertData.taxonomic_order = newSpecies.taxonomic_order
+      if (newSpecies.family) insertData.family = newSpecies.family
+      if (newSpecies.genus) insertData.genus = newSpecies.genus
+      if (newSpecies.species) insertData.species = newSpecies.species
+      if (newSpecies.authorship) insertData.authorship = newSpecies.authorship
+      if (newSpecies.synonyms) insertData.synonyms = newSpecies.synonyms
+      if (newSpecies.endemic !== undefined) insertData.endemic = newSpecies.endemic
+      if (newSpecies.invasive !== undefined) insertData.invasive = newSpecies.invasive
+      if (newSpecies.diet) insertData.diet = newSpecies.diet
+      if (newSpecies.behavior) insertData.behavior = newSpecies.behavior
+      if (newSpecies.reproduction) insertData.reproduction = newSpecies.reproduction
+      if (newSpecies.ecosystem_services) insertData.ecosystem_services = newSpecies.ecosystem_services
+      if (newSpecies.phenology) insertData.phenology = newSpecies.phenology
+      if (newSpecies.interactions) insertData.interactions = newSpecies.interactions
+      if (newSpecies.growth_form) insertData.growth_form = newSpecies.growth_form
+      if (newSpecies.leaf_type) insertData.leaf_type = newSpecies.leaf_type
+      if (newSpecies.flowering_period) insertData.flowering_period = newSpecies.flowering_period
+      if (newSpecies.ethnobotanical_uses) insertData.ethnobotanical_uses = newSpecies.ethnobotanical_uses
+      if (newSpecies.mobility) insertData.mobility = newSpecies.mobility
+      if (newSpecies.activity_pattern) insertData.activity_pattern = newSpecies.activity_pattern
+      if (newSpecies.size) insertData.size = newSpecies.size
+      if (newSpecies.weight) insertData.weight = newSpecies.weight
+      if (newSpecies.lifespan) insertData.lifespan = newSpecies.lifespan
+      if (newSpecies.population_trend) insertData.population_trend = newSpecies.population_trend
+      if (newSpecies.threats) insertData.threats = newSpecies.threats
+      if (newSpecies.conservation_actions) insertData.conservation_actions = newSpecies.conservation_actions
+      if (newSpecies.legal_protection) insertData.legal_protection = newSpecies.legal_protection
+      if (newSpecies.reference_sources) insertData.reference_sources = newSpecies.reference_sources
+
       // Insert into Supabase species table
       const { data, error } = await supabase
         .from('species')
-        .insert({
-          id: newSpecies.id,
-          category: newSpecies.category,
-          common_name: newSpecies.commonName,
-          scientific_name: newSpecies.scientificName,
-          conservation_status: newSpecies.status,
-          description: newSpecies.blurb,
-          habitat: newSpecies.habitat,
-          key_facts: newSpecies.highlights,
-          image_urls: newSpecies.images || [], // Save images to image_urls column
-          ar_model_url: newSpecies.arModelUrl || null, // Save AR model URL
-          ar_pattern_url: newSpecies.arPatternUrl || null, // Save AR pattern URL
-          ar_marker_image_url: newSpecies.arMarkerImageUrl || null, // Save AR marker image URL
-          ar_model_scale: newSpecies.arModelScale || 1.0, // Save AR model scale
-          ar_model_rotation: newSpecies.arModelRotation || { x: 0, y: 0, z: 0 }, // Save AR model rotation
-          ar_viewer_html: newSpecies.arViewerHtml || null, // Save AR viewer HTML
-          kingdom: newSpecies.kingdom,
-          phylum: newSpecies.phylum,
-          class: newSpecies.class,
-          taxonomic_order: newSpecies.taxonomic_order,
-          family: newSpecies.family,
-          genus: newSpecies.genus,
-          species: newSpecies.species,
-          authorship: newSpecies.authorship,
-          synonyms: newSpecies.synonyms,
-          endemic: newSpecies.endemic,
-          invasive: newSpecies.invasive,
-          diet: newSpecies.diet,
-          behavior: newSpecies.behavior,
-          reproduction: newSpecies.reproduction,
-          ecosystem_services: newSpecies.ecosystem_services,
-          phenology: newSpecies.phenology,
-          interactions: newSpecies.interactions,
-          growth_form: newSpecies.growth_form,
-          leaf_type: newSpecies.leaf_type,
-          flowering_period: newSpecies.flowering_period,
-          ethnobotanical_uses: newSpecies.ethnobotanical_uses,
-          mobility: newSpecies.mobility,
-          activity_pattern: newSpecies.activity_pattern,
-          size: newSpecies.size,
-          weight: newSpecies.weight,
-          lifespan: newSpecies.lifespan,
-          population_trend: newSpecies.population_trend,
-          threats: newSpecies.threats,
-          conservation_actions: newSpecies.conservation_actions,
-          legal_protection: newSpecies.legal_protection,
-          reference_sources: newSpecies.reference_sources
-        })
+        .insert(insertData)
         .select()
         .single()
 
@@ -419,15 +417,13 @@ export function DataProvider({ children }: DataProviderProps) {
       if (updates.habitat) supabaseUpdates.habitat = updates.habitat
       if (updates.highlights) supabaseUpdates.key_facts = updates.highlights
       if (updates.images !== undefined) supabaseUpdates.image_urls = updates.images // Save images to image_urls column
-      if (updates.arModelUrl !== undefined) supabaseUpdates.ar_model_url = updates.arModelUrl // Save AR model URL
-      if (updates.arPatternUrl !== undefined) supabaseUpdates.ar_pattern_url = updates.arPatternUrl // Save AR pattern URL
-      if (updates.arMarkerImageUrl !== undefined) supabaseUpdates.ar_marker_image_url = updates.arMarkerImageUrl // Save AR marker image URL
+      if (updates.arExperienceUrl !== undefined) supabaseUpdates.ar_experience_url = updates.arExperienceUrl // Save AR experience URL
       if (updates.arModelScale !== undefined) supabaseUpdates.ar_model_scale = updates.arModelScale // Save AR model scale
       if (updates.arModelRotation !== undefined) supabaseUpdates.ar_model_rotation = updates.arModelRotation // Save AR model rotation
       if (updates.arViewerHtml !== undefined) supabaseUpdates.ar_viewer_html = updates.arViewerHtml // Save AR viewer HTML
 
       // Add other fields if they exist in updates, but skip client-only keys
-      const skipKeys = ['commonName', 'scientificName', 'status', 'blurb', 'habitat', 'highlights', 'images', 'arModelUrl', 'arPatternUrl', 'arMarkerImageUrl', 'arModelScale', 'arModelRotation', 'arViewerHtml', 'category', 'siteIds', 'id']
+      const skipKeys = ['commonName', 'scientificName', 'status', 'blurb', 'habitat', 'highlights', 'images', 'arModelUrl', 'arPatternUrl', 'arModelScale', 'arModelRotation', 'arViewerHtml', 'category', 'siteIds', 'id']
       Object.keys(updates).forEach(key => {
         if (key in supabaseUpdates) return // Already handled
         if (skipKeys.includes(key)) return // Skip client-only/mapped keys
