@@ -1838,6 +1838,8 @@ const ARDemo = memo(function ARDemo() {
                               <a
                                 href={selectedSpeciesData.arMarkerImageUrl}
                                 download={`${selectedSpeciesData.commonName.replace(/\s+/g, '_')}_AR_Marker.png`}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-semibold shadow-lg transition-all hover:scale-105"
                               >
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1994,7 +1996,21 @@ const ARDemo = memo(function ARDemo() {
                         Quick Actions
                       </h4>
                       <div className="space-y-2">
-                        <button className="w-full text-left p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 rounded-xl transition-all duration-200 border border-green-200 dark:border-green-800">
+                        <button 
+                          className="w-full text-left p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 rounded-xl transition-all duration-200 border border-green-200 dark:border-green-800"
+                          onClick={() => {
+                            if (selectedSpeciesData?.arMarkerImageUrl) {
+                              const link = document.createElement('a');
+                              link.href = selectedSpeciesData.arMarkerImageUrl;
+                              link.download = `${selectedSpeciesData.commonName.replace(/\s+/g, '_')}_AR_Marker.png`;
+                              link.target = '_blank';
+                              link.rel = 'noopener noreferrer';
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }
+                          }}
+                        >
                           <div className="flex items-center gap-3">
                             <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -2002,12 +2018,104 @@ const ARDemo = memo(function ARDemo() {
                             <span className="text-sm font-medium text-green-700 dark:text-green-300">Download Marker Again</span>
                           </div>
                         </button>
-                        <button className="w-full text-left p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/30 dark:hover:to-indigo-900/30 rounded-xl transition-all duration-200 border border-blue-200 dark:border-blue-800">
+                        <button 
+                          className="w-full text-left p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 rounded-xl transition-all duration-200 border border-purple-200 dark:border-purple-800"
+                          onClick={async () => {
+                            try {
+                              // Try to capture the AR iframe content
+                              const arContainer = document.querySelector('.relative.w-full.h-full.max-w-4xl.mx-auto');
+                              const iframe = arContainer?.querySelector('iframe') as HTMLIFrameElement;
+                              
+                              if (iframe && iframe.contentDocument) {
+                                // Try to access the iframe's canvas directly
+                                const iframeDoc = iframe.contentDocument;
+                                const canvas = iframeDoc.querySelector('canvas') as HTMLCanvasElement;
+                                
+                                if (canvas) {
+                                  // Convert canvas to blob and download
+                                  canvas.toBlob((blob) => {
+                                    if (blob) {
+                                      const url = URL.createObjectURL(blob);
+                                      const link = document.createElement('a');
+                                      link.href = url;
+                                      link.download = `AR_Capture_${selectedSpeciesData?.commonName.replace(/\s+/g, '_') || 'Screenshot'}_${new Date().toISOString().split('T')[0]}.png`;
+                                      document.body.appendChild(link);
+                                      link.click();
+                                      document.body.removeChild(link);
+                                      URL.revokeObjectURL(url);
+                                    }
+                                  }, 'image/png');
+                                } else {
+                                  // Fallback to html2canvas if canvas not found
+                                  const html2canvas = (await import('html2canvas')).default;
+                                  const canvas = await html2canvas(arContainer as HTMLElement, {
+                                    useCORS: true,
+                                    allowTaint: false,
+                                    scale: 1,
+                                    width: 800,
+                                    height: 600,
+                                    ignoreElements: (element) => {
+                                      // Ignore elements that might cause issues
+                                      return element.tagName === 'VIDEO' || element.tagName === 'CANVAS';
+                                    }
+                                  });
+                                  
+                                  canvas.toBlob((blob) => {
+                                    if (blob) {
+                                      const url = URL.createObjectURL(blob);
+                                      const link = document.createElement('a');
+                                      link.href = url;
+                                      link.download = `AR_Capture_${selectedSpeciesData?.commonName.replace(/\s+/g, '_') || 'Screenshot'}_${new Date().toISOString().split('T')[0]}.png`;
+                                      document.body.appendChild(link);
+                                      link.click();
+                                      document.body.removeChild(link);
+                                      URL.revokeObjectURL(url);
+                                    }
+                                  }, 'image/png');
+                                }
+                              } else {
+                                // Fallback: try html2canvas on the container
+                                const html2canvas = (await import('html2canvas')).default;
+                                const canvas = await html2canvas(arContainer as HTMLElement, {
+                                  useCORS: true,
+                                  allowTaint: false,
+                                  scale: 1,
+                                  width: 800,
+                                  height: 600
+                                });
+                                
+                                canvas.toBlob((blob) => {
+                                  if (blob) {
+                                    const url = URL.createObjectURL(blob);
+                                    const link = document.createElement('a');
+                                    link.href = url;
+                                    link.download = `AR_Capture_${selectedSpeciesData?.commonName.replace(/\s+/g, '_') || 'Screenshot'}_${new Date().toISOString().split('T')[0]}.png`;
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                    URL.revokeObjectURL(url);
+                                  }
+                                }, 'image/png');
+                              }
+                            } catch (error) {
+                              console.error('Screenshot failed:', error);
+                              // Try browser native screenshot API as last resort
+                              try {
+                                // Simple fallback: alert user to use browser screenshot
+                                alert('Screenshot failed. Please try again or use your browser\'s screenshot feature (F12 > Screenshot).');
+                              } catch (fallbackError) {
+                                console.error('All screenshot methods failed:', fallbackError);
+                                alert('Screenshot failed. Please try again or use your browser\'s screenshot feature (F12 > Screenshot).');
+                              }
+                            }
+                          }}
+                        >
                           <div className="flex items-center gap-3">
-                            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                            <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Share Experience</span>
+                            <span className="text-sm font-medium text-purple-700 dark:text-purple-300">Capture</span>
                           </div>
                         </button>
                       </div>
@@ -2022,7 +2130,7 @@ const ARDemo = memo(function ARDemo() {
                         AR Technology
                       </h4>
                       <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                        Powered by WebXR and A-Frame for immersive augmented reality experiences. Compatible with modern browsers and AR-capable devices.
+                        Powered by AR.js and A-Frame for marker-based augmented reality experiences. Uses WebRTC for camera access and Three.js for 3D rendering. Compatible with modern browsers and AR-capable devices.
                       </p>
                     </div>
                   </div>
