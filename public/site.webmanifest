@@ -10,7 +10,7 @@
   "background_color": "#ffffff",
   "categories": ["education", "science", "environment"],
   "lang": "en",
-  "icons": []
+  "icons": [],
   "shortcuts": [
     {
       "name": "Explore Map",
