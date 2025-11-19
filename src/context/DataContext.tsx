@@ -193,6 +193,7 @@ export function DataProvider({ children }: DataProviderProps) {
           arModelScale: species.ar_model_scale || 1.0, // Load AR model scale
           arModelRotation: species.ar_model_rotation || { x: 0, y: 0, z: 0 }, // Load AR model rotation
           arViewerHtml: species.ar_viewer_html || undefined, // Load AR viewer HTML
+          arMarkerImageUrl: species.ar_marker_image_url || undefined, // Load AR marker image URL
           // Additional fields from Supabase
           kingdom: species.kingdom,
           phylum: species.phylum,
@@ -297,7 +298,8 @@ export function DataProvider({ children }: DataProviderProps) {
         habitat: newSpecies.habitat,
         key_facts: newSpecies.highlights || [],
         image_urls: newSpecies.images || [],
-        ar_experience_url: newSpecies.arExperienceUrl || null
+        ar_experience_url: newSpecies.arExperienceUrl || null,
+        ar_marker_image_url: newSpecies.arMarkerImageUrl || null
       }
 
       // Only add optional taxonomic fields if they exist
@@ -421,9 +423,10 @@ export function DataProvider({ children }: DataProviderProps) {
       if (updates.arModelScale !== undefined) supabaseUpdates.ar_model_scale = updates.arModelScale // Save AR model scale
       if (updates.arModelRotation !== undefined) supabaseUpdates.ar_model_rotation = updates.arModelRotation // Save AR model rotation
       if (updates.arViewerHtml !== undefined) supabaseUpdates.ar_viewer_html = updates.arViewerHtml // Save AR viewer HTML
+      if (updates.arMarkerImageUrl !== undefined) supabaseUpdates.ar_marker_image_url = updates.arMarkerImageUrl // Save AR marker image URL
 
       // Add other fields if they exist in updates, but skip client-only keys
-      const skipKeys = ['commonName', 'scientificName', 'status', 'blurb', 'habitat', 'highlights', 'images', 'arModelUrl', 'arPatternUrl', 'arModelScale', 'arModelRotation', 'arViewerHtml', 'category', 'siteIds', 'id']
+      const skipKeys = ['commonName', 'scientificName', 'status', 'blurb', 'habitat', 'highlights', 'images', 'arModelUrl', 'arPatternUrl', 'arModelScale', 'arModelRotation', 'arViewerHtml', 'arMarkerImageUrl', 'category', 'siteIds', 'id']
       Object.keys(updates).forEach(key => {
         if (key in supabaseUpdates) return // Already handled
         if (skipKeys.includes(key)) return // Skip client-only/mapped keys

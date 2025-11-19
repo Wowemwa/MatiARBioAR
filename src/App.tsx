@@ -1803,12 +1803,22 @@ const ARDemo = memo(function ARDemo() {
                     {hasARContent ? (
                       /* Show AR Experience Button */
                       <>
-                        <div className="bg-gradient-to-br from-purple-600 to-blue-600 p-6 rounded-3xl mb-4 shadow-xl">
-                          <div className="bg-white p-6 rounded-2xl">
-                            <svg className="w-24 h-24 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="bg-gradient-to-br from-purple-600 to-blue-600 p-6 rounded-3xl mb-4 shadow-xl relative">
+                          {selectedSpeciesData.arMarkerImageUrl ? (
+                            <img
+                              src={selectedSpeciesData.arMarkerImageUrl}
+                              alt={`${selectedSpeciesData.commonName} AR Marker`}
+                              className="w-32 h-32 object-contain mx-auto"
+                              onError={(e) => {
+                                // Fallback to SVG if image fails to load
+                                console.log('Marker image failed to load for:', selectedSpeciesData.commonName);
+                              }}
+                            />
+                          ) : (
+                            <svg className="w-32 h-32 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
                             </svg>
-                          </div>
+                          )}
                         </div>
                         
                         <div className="text-center">
@@ -1822,6 +1832,22 @@ const ARDemo = memo(function ARDemo() {
                             Click below to open the augmented reality experience
                           </p>
                           
+                          {/* Download Marker Button */}
+                          {selectedSpeciesData.arMarkerImageUrl && (
+                            <div className="mb-4">
+                              <a
+                                href={selectedSpeciesData.arMarkerImageUrl}
+                                download={`${selectedSpeciesData.commonName.replace(/\s+/g, '_')}_AR_Marker.png`}
+                                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-semibold shadow-lg transition-all hover:scale-105"
+                              >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Download AR Marker
+                              </a>
+                            </div>
+                          )}
+                          
                           {/* AR Action Button */}
                           <button
                             onClick={() => {
@@ -1833,7 +1859,7 @@ const ARDemo = memo(function ARDemo() {
                                 setShowARExperienceModal(true);
                               }
                             }}
-                            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
+                            className="ml-[1.375rem] px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
                           >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
@@ -1875,58 +1901,220 @@ const ARDemo = memo(function ARDemo() {
 
         {/* AR Experience Modal */}
         {showARExperienceModal && arExperienceUrl && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300"
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-500"
                onClick={() => setShowARExperienceModal(false)}>
-            <div className="bg-white dark:bg-slate-800 rounded-3xl max-w-6xl w-full h-[90vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500"
+            <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-7xl w-full h-[95vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-6 duration-700 border border-slate-200/50 dark:border-slate-700/50"
                  onClick={(e) => e.stopPropagation()}>
-              {/* Header */}
-              <div className="relative h-16 bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-between px-6">
-                <div className="flex items-center gap-3">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
-                  </svg>
-                  <h2 className="text-xl font-bold text-white">AR Experience</h2>
+              {/* Enhanced Header */}
+              <div className="relative h-20 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 flex items-center justify-between px-8 overflow-hidden">
+                {/* Animated background elements */}
+                <div className="absolute inset-0 opacity-20">
+                  <div className="absolute top-0 left-0 w-32 h-32 bg-white/10 rounded-full -translate-x-16 -translate-y-16 animate-pulse"></div>
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full translate-x-12 -translate-y-12 animate-pulse delay-1000"></div>
+                  <div className="absolute bottom-0 left-1/2 w-20 h-20 bg-white/10 rounded-full -translate-x-10 translate-y-10 animate-pulse delay-500"></div>
                 </div>
-                <button
-                  onClick={() => setShowARExperienceModal(false)}
-                  className="bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition-all duration-300"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+
+                <div className="flex items-center gap-4 relative z-10">
+                  <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl shadow-lg">
+                    <svg className="w-8 h-8 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-black text-white">AR Experience</h2>
+                    <p className="text-white/80 text-sm font-medium">Immersive Augmented Reality</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 relative z-10">
+                  {/* Instructions Button */}
+                  <button
+                    onClick={() => {/* Could add instructions modal */}}
+                    className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-white transition-all duration-300 hover:scale-105"
+                    title="AR Instructions"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+
+                  {/* Close Button */}
+                  <button
+                    onClick={() => setShowARExperienceModal(false)}
+                    className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-white transition-all duration-300 hover:scale-105 hover:rotate-90"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
-              {/* Content */}
-              <div className="h-full pb-16">
-                {(() => {
-                  const is3DModel = /\.(gltf|glb|obj|fbx|dae|3ds|ply|stl)$/i.test(arExperienceUrl);
-                  
-                  if (is3DModel) {
-                    // AR Viewer for 3D models
-                    const arUrl = getARViewerUrl();
-                    return (
-                      <iframe
-                        src={arUrl}
-                        className="w-full h-full border-0"
-                        title="AR Experience"
-                        allow="camera; microphone; gyroscope; accelerometer"
-                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation"
-                      />
-                    );
-                  } else {
-                    // Iframe for other content (webpages, videos, etc.)
-                    return (
-                      <iframe
-                        src={arExperienceUrl}
-                        className="w-full h-full border-0"
-                        title="External Content"
-                        allow="camera *; microphone *; gyroscope *; accelerometer *; xr-spatial-tracking *"
-                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation allow-downloads"
-                      />
-                    );
-                  }
-                })()}
+              {/* Enhanced Content Area */}
+              <div className="flex h-full">
+                {/* Side Panel with Instructions */}
+                <div className="w-80 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 p-6 border-r border-slate-200 dark:border-slate-700 overflow-y-auto">
+                  <div className="space-y-6">
+                    {/* Species Info Card */}
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-200 dark:border-slate-700">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <h3 className="font-bold text-slate-900 dark:text-white">AR Instructions</h3>
+                      </div>
+                      <div className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                        <div className="flex items-start gap-2">
+                          <span className="text-green-500 mt-1">1.</span>
+                          <span>Point your camera at the downloaded AR marker</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-green-500 mt-1">2.</span>
+                          <span>Ensure good lighting for better detection</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-green-500 mt-1">3.</span>
+                          <span>Hold steady and wait for the 3D model to appear</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-green-500 mt-1">4.</span>
+                          <span>Move your device to explore different angles</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-200 dark:border-slate-700">
+                      <h4 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Quick Actions
+                      </h4>
+                      <div className="space-y-2">
+                        <button className="w-full text-left p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 rounded-xl transition-all duration-200 border border-green-200 dark:border-green-800">
+                          <div className="flex items-center gap-3">
+                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span className="text-sm font-medium text-green-700 dark:text-green-300">Download Marker Again</span>
+                          </div>
+                        </button>
+                        <button className="w-full text-left p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/30 dark:hover:to-indigo-900/30 rounded-xl transition-all duration-200 border border-blue-200 dark:border-blue-800">
+                          <div className="flex items-center gap-3">
+                            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                            </svg>
+                            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Share Experience</span>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Tech Info */}
+                    <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-2xl p-4 border border-purple-200 dark:border-purple-800">
+                      <h4 className="font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                        <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                        AR Technology
+                      </h4>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Powered by WebXR and A-Frame for immersive augmented reality experiences. Compatible with modern browsers and AR-capable devices.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Main Content Area */}
+                <div className="flex-1 flex flex-col">
+                  {/* Loading/Status Bar */}
+                  <div className="h-12 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm font-medium text-slate-600 dark:text-slate-300">AR Experience Ready</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                      <span>Mobile Optimized</span>
+                    </div>
+                  </div>
+
+                  {/* AR Content */}
+                  <div className="flex-1 relative bg-slate-900 overflow-hidden">
+                    {/* Background Pattern */}
+                    <div className="absolute inset-0 opacity-5">
+                      <div className="absolute inset-0" style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                      }}></div>
+                    </div>
+
+                    {/* AR Content Container */}
+                    <div className="h-full flex items-center justify-center p-8">
+                      {(() => {
+                        const is3DModel = /\.(gltf|glb|obj|fbx|dae|3ds|ply|stl)$/i.test(arExperienceUrl);
+
+                        if (is3DModel) {
+                          // Enhanced AR Viewer for 3D models
+                          const arUrl = getARViewerUrl();
+                          return (
+                            <div className="relative w-full h-full max-w-4xl mx-auto">
+                              {/* AR Viewer Frame */}
+                              <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                                <iframe
+                                  src={arUrl}
+                                  className="w-full h-full min-h-[600px] border-0"
+                                  title="AR Experience"
+                                  allow="camera; microphone; gyroscope; accelerometer"
+                                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation"
+                                />
+                                {/* Corner decorations */}
+                                <div className="absolute top-0 left-0 w-8 h-8 border-l-4 border-t-4 border-purple-500 rounded-tl-lg"></div>
+                                <div className="absolute top-0 right-0 w-8 h-8 border-r-4 border-t-4 border-blue-500 rounded-tr-lg"></div>
+                                <div className="absolute bottom-0 left-0 w-8 h-8 border-l-4 border-b-4 border-indigo-500 rounded-bl-lg"></div>
+                                <div className="absolute bottom-0 right-0 w-8 h-8 border-r-4 border-b-4 border-purple-500 rounded-br-lg"></div>
+                              </div>
+
+                              {/* Floating Instructions */}
+                              <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-md text-white px-4 py-2 rounded-xl text-sm font-medium animate-in slide-in-from-left duration-500 delay-1000">
+                                📱 Point camera at AR marker to begin
+                              </div>
+                            </div>
+                          );
+                        } else {
+                          // Enhanced iframe for other content
+                          return (
+                            <div className="relative w-full h-full max-w-6xl mx-auto">
+                              <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                                <iframe
+                                  src={arExperienceUrl}
+                                  className="w-full h-full min-h-[600px] border-0"
+                                  title="External Content"
+                                  allow="camera *; microphone *; gyroscope *; accelerometer *; xr-spatial-tracking *"
+                                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation allow-downloads"
+                                />
+                                {/* Corner decorations */}
+                                <div className="absolute top-0 left-0 w-8 h-8 border-l-4 border-t-4 border-green-500 rounded-tl-lg"></div>
+                                <div className="absolute top-0 right-0 w-8 h-8 border-r-4 border-t-4 border-teal-500 rounded-tr-lg"></div>
+                                <div className="absolute bottom-0 left-0 w-8 h-8 border-l-4 border-b-4 border-emerald-500 rounded-bl-lg"></div>
+                                <div className="absolute bottom-0 right-0 w-8 h-8 border-r-4 border-b-4 border-green-500 rounded-br-lg"></div>
+                              </div>
+
+                              {/* Floating Instructions */}
+                              <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-md text-white px-4 py-2 rounded-xl text-sm font-medium animate-in slide-in-from-right duration-500 delay-1000">
+                                🎯 Interactive content loaded
+                              </div>
+                            </div>
+                          );
+                        }
+                      })()}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

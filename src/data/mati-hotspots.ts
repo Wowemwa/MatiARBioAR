@@ -16,6 +16,7 @@ export interface SpeciesDetail {
   arExperienceUrl?: string
   arModelUrl?: string
   arPatternUrl?: string
+  arMarkerImageUrl?: string
   arModelScale?: number
   arModelRotation?: { x: number; y: number; z: number }
   arViewerHtml?: string

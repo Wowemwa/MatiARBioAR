@@ -23,6 +23,7 @@ interface SpeciesFormData {
   images: string[]
   arExperienceUrl?: string
   arViewerHtml?: string
+  marker?: string // Base64 encoded marker image for preview
 }
 
 const emptySpecies: SpeciesFormData = {
@@ -110,45 +111,95 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
 
     console.log('[AdminPanel] Saving species:', editingSpecies.commonName, 'Creating:', isCreating)
 
-    if (isCreating) {
-      // Add new species - ID already generated in handleCreate
-      const newSpeciesData: SpeciesDetail = {
-        id: editingSpecies.id,
-        category: editingSpecies.category,
-        commonName: editingSpecies.commonName,
-        scientificName: editingSpecies.scientificName,
-        status: editingSpecies.status,
-        habitat: editingSpecies.habitat,
-        blurb: editingSpecies.blurb,
-        siteIds: editingSpecies.siteIds,
-        highlights: editingSpecies.highlights.filter(h => h.trim()),
-        images: editingSpecies.images,
-        arExperienceUrl: editingSpecies.arExperienceUrl
+    try {
+      let markerUrl: string | undefined = undefined
+
+      // Handle marker upload if present
+      if (editingSpecies.marker && editingSpecies.marker.startsWith('data:image')) {
+        console.log('[AdminPanel] Uploading marker image to Supabase storage')
+
+        // Convert base64 to blob
+        const base64Data = editingSpecies.marker.split(',')[1]
+        const mimeType = editingSpecies.marker.split(';')[0].split(':')[1]
+        const byteCharacters = atob(base64Data)
+        const byteNumbers = new Array(byteCharacters.length)
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i)
+        }
+        const byteArray = new Uint8Array(byteNumbers)
+        const blob = new Blob([byteArray], { type: mimeType })
+
+        // Generate unique filename
+        const fileName = `${editingSpecies.id}-marker-${Date.now()}.${mimeType.split('/')[1]}`
+
+        // Upload to Supabase storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('ar-markers')
+          .upload(fileName, blob, {
+            contentType: mimeType,
+            upsert: false
+          })
+
+        if (uploadError) {
+          console.error('[AdminPanel] Failed to upload marker:', uploadError)
+          alert('❌ Failed to upload marker image. Please try again.')
+          return
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('ar-markers')
+          .getPublicUrl(fileName)
+
+        markerUrl = urlData.publicUrl
+        console.log('[AdminPanel] Marker uploaded successfully:', markerUrl)
       }
-      console.log('[AdminPanel] Creating new species:', newSpeciesData)
-      const ok = await createSpecies(newSpeciesData)
-      if (ok) {
-        setEditingSpecies(null)
-        setIsCreating(false)
-        alert('✅ Species saved successfully!')
+
+      if (isCreating) {
+        // Add new species - ID already generated in handleCreate
+        const newSpeciesData: SpeciesDetail = {
+          id: editingSpecies.id,
+          category: editingSpecies.category,
+          commonName: editingSpecies.commonName,
+          scientificName: editingSpecies.scientificName,
+          status: editingSpecies.status,
+          habitat: editingSpecies.habitat,
+          blurb: editingSpecies.blurb,
+          siteIds: editingSpecies.siteIds,
+          highlights: editingSpecies.highlights.filter(h => h.trim()),
+          images: editingSpecies.images,
+          arExperienceUrl: editingSpecies.arExperienceUrl,
+          arMarkerImageUrl: markerUrl
+        }
+        console.log('[AdminPanel] Creating new species:', newSpeciesData)
+        const ok = await createSpecies(newSpeciesData)
+        if (ok) {
+          setEditingSpecies(null)
+          setIsCreating(false)
+          alert('✅ Species saved successfully!')
+        } else {
+          alert('❌ Failed to save species. Check console for details.')
+        }
       } else {
-        alert('❌ Failed to save species. Check console for details.')
+        // Update existing species
+        const updates = {
+          ...editingSpecies,
+          highlights: editingSpecies.highlights.filter(h => h.trim()),
+          arMarkerImageUrl: markerUrl
+        }
+        console.log('[AdminPanel] Updating species:', editingSpecies.id)
+        const ok = await updateSpecies(editingSpecies.id, updates)
+        if (ok) {
+          setEditingSpecies(null)
+          setIsCreating(false)
+          alert('✅ Species updated successfully!')
+        } else {
+          alert('❌ Failed to update species. Check console for details.')
+        }
       }
-    } else {
-      // Update existing species
-      const updates = {
-        ...editingSpecies,
-        highlights: editingSpecies.highlights.filter(h => h.trim())
-      }
-      console.log('[AdminPanel] Updating species:', editingSpecies.id)
-      const ok = await updateSpecies(editingSpecies.id, updates)
-      if (ok) {
-        setEditingSpecies(null)
-        setIsCreating(false)
-        alert('✅ Species updated successfully!')
-      } else {
-        alert('❌ Failed to update species. Check console for details.')
-      }
+    } catch (error) {
+      console.error('[AdminPanel] Error saving species:', error)
+      alert('❌ An error occurred while saving. Check console for details.')
     }
   }
 
@@ -660,7 +711,6 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                     </svg>
                     AR Experience URL
                   </label>
-                  
                   <div className="space-y-3">
                     <input
                       type="url"
@@ -672,6 +722,44 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       Enter a URL for the AR experience. For 3D models (.glb, .gltf, etc.), this will open an AR viewer. For other URLs (webpages, videos, etc.), this will open directly in a new tab.
                     </p>
+                  </div>
+                  {/* Upload Marker Area */}
+                  <div className="mt-6">
+                    <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                      <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2H9a2 2 0 00-2 2v10z" />
+                      </svg>
+                      Upload AR Marker
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*,.patt,.mind,.jpg,.png,.jpeg"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0]
+                        if (!file || !editingSpecies) return
+                        // Read file as base64 for preview
+                        const reader = new FileReader()
+                        reader.onload = (ev) => {
+                          const result = ev.target?.result as string
+                          setEditingSpecies({
+                            ...editingSpecies,
+                            marker: result // Add marker property to editingSpecies
+                          })
+                        }
+                        reader.readAsDataURL(file)
+                      }}
+                      className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    />
+                    {editingSpecies && editingSpecies.marker && (
+                      <div className="mt-2">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Marker Preview:</p>
+                        {editingSpecies.marker.startsWith('data:image') ? (
+                          <img src={editingSpecies.marker} alt="AR Marker Preview" className="w-32 h-32 object-contain border rounded" />
+                        ) : (
+                          <span className="text-xs text-gray-500">File uploaded</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
