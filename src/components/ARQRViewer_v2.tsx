@@ -4,6 +4,25 @@ import 'aframe'
 import { SpeciesDetail } from '../data/mati-hotspots'
 import { useData } from '../context/DataContext'
 
+// A-Frame JSX type declarations
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'a-scene': any
+      'a-entity': any
+      'a-marker': any
+      'a-plane': any
+      'a-text': any
+      'a-box': any
+      'a-sphere': any
+      'a-cylinder': any
+      'a-sky': any
+      'a-camera': any
+      'a-light': any
+    }
+  }
+}
+
 interface ARQRViewerProps {
   onClose: () => void
 }
