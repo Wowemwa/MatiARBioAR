@@ -25,7 +25,7 @@ interface NewHotspotData {
 }
 
 export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerProps) {
-  const { hotspots, species } = useData()
+  const { hotspots, species, refresh } = useData()
   const mapRef = useRef<L.Map | null>(null)
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const [markerType, setMarkerType] = useState<'marine' | 'terrestrial'>('marine')
@@ -270,7 +270,8 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
         imageUrl: ''
       })
 
-      setTimeout(() => window.location.reload(), 1500)
+      // Refresh the data instead of reloading the page
+      refresh()
     } catch (error) {
       console.error('Unexpected error saving site:', error)
       alert(`Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -298,7 +299,8 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
 
       alert('✅ Site deleted successfully!')
       setSelectedHotspot(null)
-      setTimeout(() => window.location.reload(), 1500)
+      // Refresh the data instead of reloading the page
+      refresh()
     } catch (error) {
       console.error('Error deleting site:', error)
       alert(`Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`)
