@@ -144,11 +144,12 @@ const Navbar = memo(function Navbar() {
   const [open, setOpen] = useState(false)
   const scrolled = useScrollPosition(8)
   const location = useLocation()
+  const navigate = useNavigate()
   const { isMobileView, deviceInfo } = useDeviceDetection()
   const navItems = useMemo(() => [
     { to: '/gis', label: 'GIS Map', badge: <HiMapPin className="w-5 h-5" /> },
     { to: '/biodiversity', label: 'Biodiversity', badge: <GiButterfly className="w-5 h-5" /> },
-    { to: '/ar', label: 'AR Demo', badge: <MdAutoAwesome className="w-5 h-5" /> },
+    { to: '/ar', label: 'Augmented Reality', badge: <MdAutoAwesome className="w-5 h-5" /> },
     ...(isAdmin ? [{ to: '/mati-secret-admin-2024', label: 'Admin', badge: '👑', adminOnly: true }] : []),
     { to: '/about', label: 'About', badge: <IoInformationCircle className="w-5 h-5" /> },
   ], [isAdmin])
@@ -358,12 +359,12 @@ const Navbar = memo(function Navbar() {
               })}
 
               <Link
-                to="/ar-demo"
+                to="/ar"
                 onClick={() => setOpen(false)}
                 className="group flex items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 py-3 text-sm font-semibold text-white shadow-xl transition-all duration-500 hover:shadow-2xl hover:scale-105 relative overflow-hidden"
               >
                 {/* Shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 transform -skew-x-12" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 transform -skew-x-12 cursor-pointer" onClick={() => navigate('/ar')} />
                 
                 <ARIcon className="relative h-4 w-4 group-hover:rotate-12 transition-transform duration-300" /> 
                 <span className="relative">Try AR Demo</span>
@@ -610,7 +611,7 @@ const Home = memo(function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </Button>
-              <Link to="/ar-demo" className={isMobileView ? 'w-full' : ''}>
+              <Link to="/ar" className={isMobileView ? 'w-full' : ''}>
                 <Button 
                   variant="secondary" 
                   className={`group relative overflow-hidden flex items-center justify-center gap-3 transition-all duration-500 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border-2 border-slate-300 dark:border-slate-600 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-500/30 ${
@@ -623,7 +624,7 @@ const Home = memo(function Home() {
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   
                   <ARIcon className={`relative ${isMobileView ? 'h-5 w-5' : 'h-5 w-5 xl:h-6 xl:w-6'} group-hover:rotate-12 transition-transform duration-300`} />
-                  <span className="relative">{isMobileView ? 'AR Demo' : 'Launch AR demo'}</span>
+                  <span className="relative">{isMobileView ? 'Augmented Reality' : 'Launch AR demo'}</span>
                 </Button>
               </Link>
             </div>
@@ -997,7 +998,7 @@ const Home = memo(function Home() {
             </p>
           </div>
           <div className="relative z-10 flex flex-wrap gap-4">
-            <Link to="/ar-demo" className="inline-flex items-center gap-3 rounded-2xl bg-white/12 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20">
+            <Link to="/ar" className="inline-flex items-center gap-3 rounded-2xl bg-white/12 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20">
               <ARIcon className="h-4 w-4" />
               Launch AR
             </Link>
@@ -1486,7 +1487,7 @@ const SpeciesPage = memo(function SpeciesPage() {
         ))}
       </ul>
       <div className="mt-4">
-        <Link to="/ar-demo" className="text-green-700 underline">Try AR demo</Link>
+        <Link to="/ar" className="text-green-700 underline">Try AR demo</Link>
       </div>
     </div>
   )
@@ -2124,7 +2125,18 @@ const ARDemo = memo(function ARDemo() {
         {showARExperienceModal && arExperienceUrl && (
           <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-500"
                onClick={() => setShowARExperienceModal(false)}>
-            <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-7xl w-full h-[80vh] sm:h-[95vh] shadow-2xl overflow-y-auto animate-in slide-in-from-bottom-6 duration-700 border border-slate-200/50 dark:border-slate-700/50"
+            <style dangerouslySetInnerHTML={{
+              __html: `
+                .hide-scrollbar::-webkit-scrollbar {
+                  display: none;
+                }
+                .hide-scrollbar {
+                  -ms-overflow-style: none;
+                  scrollbar-width: none;
+                }
+              `
+            }} />
+            <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-7xl w-full h-[80vh] sm:h-[95vh] shadow-2xl overflow-y-auto animate-in slide-in-from-bottom-6 duration-700 border border-slate-200/50 dark:border-slate-700/50 hide-scrollbar"
                  onClick={(e) => e.stopPropagation()}>
               {/* Enhanced Header */}
               <div className="relative h-20 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 flex items-center justify-between px-4 sm:px-8 overflow-hidden">

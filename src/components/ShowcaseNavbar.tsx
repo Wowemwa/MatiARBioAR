@@ -43,7 +43,7 @@ export default function ShowcaseNavbar() {
   const navItems = [
     { to: '/explore', label: 'Explore', badge: '🗺️' },
     { to: '/biodiversity', label: 'Biodiversity', badge: '🌿' },
-    { to: '/ar', label: 'AR Demo', badge: '🎯' },
+    { to: '/ar', label: 'Augmented Reality', badge: '🎯' },
     { to: '/about', label: 'About', badge: '💡' },
   ]
   const pillRefs = useRef<HTMLDivElement[]>([])

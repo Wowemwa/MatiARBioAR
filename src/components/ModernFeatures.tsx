@@ -25,7 +25,7 @@ const ModernFeatures = memo(function ModernFeatures() {
       title: 'AR Experiences',
       description: 'Immerse yourself in augmented reality to visualize species in their natural habitats using your device.',
       gradient: 'from-purple-500 to-pink-500',
-      link: '/ar-demo',
+      link: '/ar',
       emoji: '📱'
     },
     {

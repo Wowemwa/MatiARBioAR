@@ -38,7 +38,7 @@ export default function NavbarClassic() {
   const navItems = [
     { to: '/explore', label: 'Explore', icon: <WaveIcon className="w-4 h-4" /> },
     { to: '/biodiversity', label: 'Biodiversity', icon: <SpeciesIcon className="w-4 h-4" /> },
-    { to: '/ar', label: 'AR Demo', icon: <ARIcon className="w-4 h-4" /> },
+    { to: '/ar', label: 'Augmented Reality', icon: <ARIcon className="w-4 h-4" /> },
     { to: '/about', label: 'About', icon: <InfoIcon className="w-4 h-4" /> },
   ]
 

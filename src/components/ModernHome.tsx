@@ -62,7 +62,7 @@ const ModernHome = memo(function ModernHome() {
                   </a>
                 </li>
                 <li>
-                  <a href="/ar-demo" className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200">
+                  <a href="/ar" className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200">
                     AR Experience
                   </a>
                 </li>
