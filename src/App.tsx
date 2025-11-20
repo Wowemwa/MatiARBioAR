@@ -8,7 +8,7 @@ import ModernHome from './components/ModernHome'
 import { WaveIcon, MountainIcon, SpeciesIcon, ARIcon, InfoIcon, MapIcon, EducationIcon, TechIcon, ConservationIcon, LeafIcon } from './components/Icons'
 import { HiMapPin } from 'react-icons/hi2'
 import { GiButterfly } from 'react-icons/gi'
-import { MdAutoAwesome } from 'react-icons/md'
+import { MdAutoAwesome, MdWbSunny, MdNightlight } from 'react-icons/md'
 import { IoInformationCircle } from 'react-icons/io5'
 import useScrollPosition from './hooks/useScrollPosition'
 import { DataProvider, useData } from './context/DataContext'
@@ -106,35 +106,49 @@ const SpeciesDetail = lazy(() => import('./pages/SpeciesDetail'))
 const GISMapPage = lazy(() => import('./components/GISMapPage'))
 
 const ThemeToggle = memo(function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme()
+  const { theme, toggleTheme, isMobile } = useTheme()
   
   const handleToggle = useCallback(() => {
-    toggleTheme()
-  }, [toggleTheme])
+    if (!isMobile) {
+      toggleTheme()
+    }
+  }, [toggleTheme, isMobile])
 
+  const Component = isMobile ? 'div' : 'button'
+  
   return (
-    <button
+    <Component
       onClick={handleToggle}
-      className="group relative inline-flex items-center justify-center w-12 h-12 rounded-2xl border-2 border-white/40 dark:border-white/20 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl hover:scale-105 transition-all duration-300 ease-out shadow-lg hover:shadow-xl overflow-hidden"
-      aria-label="Toggle dark mode"
+      className={`group relative inline-flex items-center justify-center w-12 h-12 rounded-2xl border-2 border-white/40 dark:border-white/20 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl hover:scale-105 transition-all duration-300 ease-out shadow-lg hover:shadow-xl overflow-hidden ${isMobile ? '' : 'cursor-pointer'}`}
+      aria-label={isMobile ? "Auto theme (time-based)" : "Toggle dark mode"}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/20 via-orange-400/20 to-blue-600/20 dark:from-blue-600/20 dark:via-purple-600/20 dark:to-slate-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out" />
       <div className="relative z-10 transition-transform duration-300 ease-out group-hover:scale-105">
         <div
-          className={`text-2xl transition-transform duration-500 ease-out ${
+          className={`transition-transform duration-500 ease-out ${
             theme === 'dark'
               ? 'rotate-0 opacity-100'
               : '-rotate-180 opacity-100'
           }`}
         >
-          {theme === 'dark' ? '🌙' : '☀️'}
+          {theme === 'dark' ? <MdNightlight className="w-6 h-6" /> : <MdWbSunny className="w-6 h-6" />}
         </div>
       </div>
-  <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-semibold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-out pointer-events-none whitespace-nowrap">
-        {theme === 'dark' ? 'Switch to Light' : 'Switch to Dark'}
+      <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-semibold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-out pointer-events-none whitespace-nowrap">
+        {isMobile ? (
+          theme === 'dark' ? 'Auto: Night Mode' : 'Auto: Day Mode'
+        ) : (
+          theme === 'dark' ? 'Switch to Light' : 'Switch to Dark'
+        )}
         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900 dark:bg-white"></div>
       </div>
-    </button>
+      {isMobile && (
+        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-out pointer-events-none whitespace-nowrap">
+          Auto Theme
+          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-blue-500"></div>
+        </div>
+      )}
+    </Component>
   )
 })
 
@@ -178,7 +192,7 @@ const Navbar = memo(function Navbar() {
         {/* Animated gradient border */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent dark:via-emerald-500/40" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-400/40 to-transparent dark:via-blue-500/30" />
-        <div className="relative mx-auto flex max-w-none flex-col gap-2 px-3 pt-2 pb-3 sm:px-4 lg:px-6 xl:px-8">
+        <div className="relative mx-auto flex max-w-screen-2xl flex-col gap-2 px-3 pt-2 pb-3 sm:px-4 lg:px-6 xl:px-8">
           <div className="flex items-center justify-between gap-4">
             <Link
               to="/"
@@ -207,7 +221,7 @@ const Navbar = memo(function Navbar() {
               <div className="hidden sm:flex flex-col leading-tight text-left text-xs text-gray-500 dark:text-gray-400">
                 <span className="font-semibold">Biodiversity Explorer</span>
                 <span className="text-[11px] uppercase tracking-wide text-gray-400 dark:text-gray-500">
-                  {isMobileView ? 'Mobile • ' : ''}MindAR • Leaflet{isMobileView ? '' : ' • Eco-tourism'}
+                  powered by ar.js • leaflet • openstreatmap
                   {deviceInfo.isIOS && ' • iOS'}
                   {deviceInfo.isAndroid && ' • Android'}
                 </span>

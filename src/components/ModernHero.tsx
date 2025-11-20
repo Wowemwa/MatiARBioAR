@@ -2,6 +2,9 @@ import { memo, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useData } from '../context/DataContext'
 import { useDeviceDetection } from '../context/DeviceContext'
+import { HiMapPin } from 'react-icons/hi2'
+import { GiButterfly } from 'react-icons/gi'
+import { MdWaves } from 'react-icons/md'
 import AnimatedText from './AnimatedText'
 
 /**
@@ -22,19 +25,19 @@ const ModernHero = memo(function ModernHero() {
     {
       value: loading ? '...' : hotspots.length,
       label: 'Biodiversity Hotspots',
-      icon: '📍',
+      icon: <HiMapPin className="w-12 h-12 text-cyan-500" />,
       gradient: 'from-cyan-500 to-blue-600'
     },
     {
       value: loading ? '...' : species.length,
       label: 'Species Documented',
-      icon: '🦋',
+      icon: <GiButterfly className="w-12 h-12 text-emerald-500" />,
       gradient: 'from-emerald-500 to-teal-600'
     },
     {
       value: loading ? '...' : hotspots.filter(h => h.type === 'marine').length,
       label: 'Marine Ecosystems',
-      icon: '🌊',
+      icon: <MdWaves className="w-12 h-12 text-blue-500" />,
       gradient: 'from-blue-500 to-indigo-600'
     }
   ]
@@ -109,7 +112,7 @@ const ModernHero = memo(function ModernHero() {
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400 to-emerald-400 blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
               
               <span className="relative flex items-center justify-center gap-3">
-                <span className="text-2xl transform group-hover:rotate-12 transition-transform duration-300">🗺️</span>
+                <HiMapPin className="w-6 h-6 transform group-hover:rotate-12 transition-transform duration-300" />
                 Explore Interactive Map
                 <svg className="w-5 h-5 transform group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -125,7 +128,7 @@ const ModernHero = memo(function ModernHero() {
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-emerald-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[length:200%_100%] group-hover:animate-gradient" />
               
               <span className="relative flex items-center justify-center gap-3">
-                <span className="text-2xl transform group-hover:scale-110 transition-transform duration-300">🦋</span>
+                <GiButterfly className="w-6 h-6 transform group-hover:scale-110 transition-transform duration-300" />
                 Browse Species
                 <svg className="w-5 h-5 transform group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -150,7 +153,7 @@ const ModernHero = memo(function ModernHero() {
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-emerald-500 rounded-3xl blur-lg opacity-0 group-hover:opacity-20 transition-opacity duration-500" />
                 
                 <div className="relative">
-                  <div className="text-5xl mb-4 transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
+                  <div className="mb-4 flex justify-center transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
                     {stat.icon}
                   </div>
                   <div className={`text-4xl font-black bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent mb-3 group-hover:scale-105 transition-transform duration-300`}>
