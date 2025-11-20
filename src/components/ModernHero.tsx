@@ -40,7 +40,7 @@ const ModernHero = memo(function ModernHero() {
   ]
 
   return (
-    <div className={`relative min-h-[70vh] sm:min-h-[80vh] lg:min-h-[85vh] flex items-center justify-center overflow-hidden rounded-3xl transition-all duration-1000 ${
+    <div className={`relative min-h-[60vh] sm:min-h-[70vh] lg:min-h-[75vh] flex items-center justify-center overflow-hidden rounded-3xl transition-all duration-1000 ${
       isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
     }`}>
       {/* Subtle overlay - works with main app background */}
@@ -58,7 +58,7 @@ const ModernHero = memo(function ModernHero() {
       />
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pb-2 -mt-20 md:-mt-32">
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pt-4 md:pt-10 pb-6">
         <div className="text-center space-y-6 max-w-5xl mx-auto pb-2">
           {/* Platform Badge */}
           <div className={`transition-all duration-1000 ${
@@ -72,7 +72,7 @@ const ModernHero = memo(function ModernHero() {
 
           {/* Main Heading - solid colors (no gradient, no per-char animation) */}
           <h1
-            className={`relative z-[999] -mt-12 md:-mt-16 text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight leading-tight md:leading-snug transition-opacity duration-1000 delay-100 ${
+            className={`relative z-10 text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight leading-tight md:leading-snug transition-opacity duration-1000 delay-100 ${
               isVisible ? 'opacity-100' : 'opacity-0'
             }`}
             style={{ transform: 'none', backfaceVisibility: 'hidden', WebkitFontSmoothing: 'antialiased' }}
@@ -135,7 +135,7 @@ const ModernHero = memo(function ModernHero() {
           </div>
 
           {/* Stats Grid - Enhanced with better hover effects */}
-          <div className={`grid grid-cols-1 sm:grid-cols-3 gap-6 mt-24 transition-all duration-1000 delay-400 ${
+          <div className={`grid grid-cols-1 sm:grid-cols-3 gap-6 mt-16 md:mt-20 transition-all duration-1000 delay-400 ${
             isVisible ? 'opacity-100' : 'opacity-0'
           }`}>
             {stats.map((stat, index) => (

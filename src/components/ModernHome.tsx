@@ -12,7 +12,7 @@ const ModernHome = memo(function ModernHome() {
       <ModernHero />
       
       {/* Decorative Separator */}
-      <div className="max-w-7xl 3xl:max-w-8xl 4xl:max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 mb-4">
+      <div className="max-w-7xl 3xl:max-w-8xl 4xl:max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 mb-8">
         <div className="relative">
           <div className="absolute inset-0 flex items-center" aria-hidden="true">
             <div className="w-full border-t border-slate-200/50 dark:border-slate-700/50" />

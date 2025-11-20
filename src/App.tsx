@@ -177,7 +177,7 @@ const Navbar = memo(function Navbar() {
         {/* Animated gradient border */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent dark:via-emerald-500/40" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-400/40 to-transparent dark:via-blue-500/30" />
-        <div className="relative mx-auto flex max-w-none flex-col gap-2 px-3 py-3 sm:px-4 lg:px-6 xl:px-8">
+        <div className="relative mx-auto flex max-w-none flex-col gap-2 px-3 pt-2 pb-3 sm:px-4 lg:px-6 xl:px-8">
           <div className="flex items-center justify-between gap-4">
             <Link
               to="/"
@@ -267,7 +267,7 @@ const Navbar = memo(function Navbar() {
                 Live Beta Testing
               </span>
             </div>
-            <div className="relative flex items-center gap-2 rounded-full border-2 border-emerald-300/70 bg-gradient-to-r from-emerald-100/95 via-teal-100/95 to-blue-100/95 px-3 py-2 shadow-2xl backdrop-blur-3xl transition-all duration-500 hover:shadow-3xl hover:border-emerald-400/80 dark:border-emerald-400/60 dark:bg-gradient-to-r dark:from-emerald-800/80 dark:via-teal-800/80 dark:to-blue-800/80">
+            <div className="relative flex items-center gap-2 rounded-full border-2 border-emerald-300/70 bg-gradient-to-r from-emerald-100/95 via-teal-100/95 to-blue-100/95 px-3 pt-1 pb-2 shadow-2xl backdrop-blur-3xl transition-all duration-500 hover:shadow-3xl hover:border-emerald-400/80 dark:border-emerald-400/60 dark:bg-gradient-to-r dark:from-emerald-800/80 dark:via-teal-800/80 dark:to-blue-800/80">
               {/* Animated gradient overlays */}
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-blue-500/20 rounded-full animate-[gradient-bg_6s_ease-in-out_infinite] opacity-50" />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-blue-400/15 via-purple-400/15 to-emerald-400/15 rounded-full animate-[gradient-bg_8s_ease-in-out_infinite_reverse] opacity-50" />
@@ -1020,6 +1020,7 @@ const Home = memo(function Home() {
     </div>
   )
 })
+
 
 const GISMap = memo(function GISMap() {
   return <GISMapPage />
