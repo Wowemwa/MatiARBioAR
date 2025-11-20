@@ -3216,13 +3216,18 @@ export default function App() {
     initProgressiveEnhancement()
   }, [])
 
-  // Keyboard shortcut for admin access (120108)
+  // Keyboard shortcut for admin access (120108) - Desktop only
   useEffect(() => {
     const targetSequence = '120108'
     let currentSequence = ''
     let timeoutId: NodeJS.Timeout
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Block admin access on mobile devices
+      if (window.innerWidth <= 768 || /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        return
+      }
+      
       // Only track number keys
       if (event.key >= '0' && event.key <= '9') {
         currentSequence += event.key
