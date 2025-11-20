@@ -357,15 +357,6 @@ const Navbar = memo(function Navbar() {
                 )
               })}
 
-              <div className="flex items-center gap-3 border-t border-white/50 pt-3 dark:border-white/15">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="flex-1 rounded-xl border border-white/60 bg-white/85 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/40 dark:border-white/15 dark:bg-slate-800/80"
-                />
-                <ThemeToggle />
-              </div>
-
               <Link
                 to="/ar-demo"
                 onClick={() => setOpen(false)}
@@ -1503,6 +1494,7 @@ const SpeciesPage = memo(function SpeciesPage() {
 
 const ARDemo = memo(function ARDemo() {
   const { isAdmin } = useAdmin()
+  const { isMobileView } = useDeviceDetection()
   const [isVisible, setIsVisible] = useState(false)
   
   useEffect(() => {
@@ -1592,10 +1584,32 @@ const ARDemo = memo(function ARDemo() {
   const [showARExperienceModal, setShowARExperienceModal] = useState(false)
   const [arExperienceUrl, setArExperienceUrl] = useState<string>('')
 
-  const generateQRCode = (speciesId: string, commonName: string) => {
-    const arUrl = `${window.location.origin}/ar/${speciesId}`
-    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(arUrl)}&bgcolor=255-255-255&color=0-0-0&qzone=2&format=svg`
-  }
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null)
+
+  // Filtered species based on search and filters
+  const filteredSpecies = useMemo(() => {
+    return allMatiSpecies.filter((species) => {
+      // Search filter
+      const matchesSearch = searchQuery === '' || 
+        species.commonName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        species.scientificName.toLowerCase().includes(searchQuery.toLowerCase())
+
+      // Category filter
+      const matchesCategory = selectedCategory === null || 
+        selectedCategory === 'all' || 
+        species.category === selectedCategory
+
+      // Status filter
+      const matchesStatus = selectedStatus === null || 
+        selectedStatus === 'all' || 
+        species.status === selectedStatus
+
+      return matchesSearch && matchesCategory && matchesStatus
+    })
+  }, [allMatiSpecies, searchQuery, selectedCategory, selectedStatus])
 
   const selectedSpeciesData = selectedSpecies 
     ? allMatiSpecies.find(s => s.id === selectedSpecies)
@@ -1654,9 +1668,104 @@ const ARDemo = memo(function ARDemo() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-12 max-w-7xl">
+        {/* Search and Filter Section */}
+        <div className="mb-8 space-y-4">
+          {/* Search Bar */}
+          <div className="relative max-w-md mx-auto">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Search species by name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="block w-full pl-10 pr-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+            />
+          </div>
+
+          {/* Filter Buttons */}
+          <div className="flex flex-wrap justify-center gap-2">
+            {/* Category Filters */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSelectedCategory(selectedCategory === 'all' ? null : 'all')}
+                className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
+                  selectedCategory === 'all'
+                    ? 'bg-emerald-500 text-white shadow-lg'
+                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                }`}
+              >
+                All Categories
+              </button>
+              <button
+                onClick={() => setSelectedCategory(selectedCategory === 'fauna' ? null : 'fauna')}
+                className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
+                  selectedCategory === 'fauna'
+                    ? 'bg-blue-500 text-white shadow-lg'
+                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                }`}
+              >
+                🦊 Fauna
+              </button>
+              <button
+                onClick={() => setSelectedCategory(selectedCategory === 'flora' ? null : 'flora')}
+                className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
+                  selectedCategory === 'flora'
+                    ? 'bg-green-500 text-white shadow-lg'
+                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                }`}
+              >
+                🌱 Flora
+              </button>
+            </div>
+
+            {/* Status Filters */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSelectedStatus(selectedStatus === 'all' ? null : 'all')}
+                className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
+                  selectedStatus === 'all'
+                    ? 'bg-purple-500 text-white shadow-lg'
+                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                }`}
+              >
+                All Status
+              </button>
+              <button
+                onClick={() => setSelectedStatus(selectedStatus === 'CR' ? null : 'CR')}
+                className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
+                  selectedStatus === 'CR'
+                    ? 'bg-red-500 text-white shadow-lg'
+                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                }`}
+              >
+                Critically Endangered
+              </button>
+              <button
+                onClick={() => setSelectedStatus(selectedStatus === 'EN' ? null : 'EN')}
+                className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
+                  selectedStatus === 'EN'
+                    ? 'bg-orange-500 text-white shadow-lg'
+                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                }`}
+              >
+                Endangered
+              </button>
+            </div>
+          </div>
+
+          {/* Results Count */}
+          <div className="text-center text-sm text-slate-600 dark:text-slate-400">
+            Showing {filteredSpecies.length} of {allMatiSpecies.length} species
+          </div>
+        </div>
+
         {/* Gallery Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-          {allMatiSpecies.map((species) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-12">
+          {filteredSpecies.map((species) => {
             const speciesImage = species.images && species.images.length > 0 ? species.images[0] : 
               (species.category === 'fauna' 
                 ? 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?w=800&h=600&fit=crop&crop=center'
@@ -1734,167 +1843,276 @@ const ARDemo = memo(function ARDemo() {
 
         {/* QR Code Modal/Section */}
         {selectedSpeciesData && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300"
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300"
                onClick={() => setSelectedSpecies(null)}>
-            <div className="bg-white dark:bg-slate-800 rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500"
+            <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500 border border-slate-200/50 dark:border-slate-700/50"
                  onClick={(e) => e.stopPropagation()}>
-              {/* Header */}
-              <div className="relative h-48 overflow-hidden">
-                <img 
-                  src={selectedSpeciesData.images && selectedSpeciesData.images.length > 0 
-                    ? selectedSpeciesData.images[0] 
-                    : (selectedSpeciesData.category === 'fauna' 
+
+              {/* Enhanced Header with Floating Elements */}
+              <div className="relative h-48 sm:h-64 flex-shrink-0 overflow-hidden">
+                {/* Background Image with Enhanced Overlay */}
+                <img
+                  src={selectedSpeciesData.images && selectedSpeciesData.images.length > 0
+                    ? selectedSpeciesData.images[0]
+                    : (selectedSpeciesData.category === 'fauna'
                       ? 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?w=800&h=600&fit=crop&crop=center'
-                      : 'https://images.unsplash.com/photo-1466781783364-36c955e42a7f?w=800&h=600&fit=crop&crop=center')} 
+                      : 'https://images.unsplash.com/photo-1466781783364-36c955e42a7f?w=800&h=600&fit=crop&crop=center')}
                   alt={selectedSpeciesData.commonName}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-                
-                {/* Close Button */}
+
+                {/* Multi-layered gradient overlays */}
+                <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-900/30 via-transparent to-purple-900/30"></div>
+
+                {/* Animated floating particles */}
+                <div className="absolute inset-0 overflow-hidden">
+                  <div className="absolute top-10 left-10 w-2 h-2 bg-white/30 rounded-full animate-pulse"></div>
+                  <div className="absolute top-20 right-20 w-1 h-1 bg-blue-300/40 rounded-full animate-pulse delay-1000"></div>
+                  <div className="absolute bottom-20 left-1/4 w-1.5 h-1.5 bg-purple-300/30 rounded-full animate-pulse delay-500"></div>
+                  <div className="absolute top-1/3 right-10 w-1 h-1 bg-emerald-300/40 rounded-full animate-pulse delay-1500"></div>
+                </div>
+
+                {/* Enhanced Close Button */}
                 <button
                   onClick={() => setSelectedSpecies(null)}
-                  className="absolute top-4 right-4 bg-white/20 backdrop-blur-md hover:bg-white/30 text-white p-2 rounded-full transition-all duration-300"
+                  className="absolute top-6 right-6 bg-white/10 backdrop-blur-xl hover:bg-white/20 text-white p-3 rounded-2xl transition-all duration-300 hover:scale-110 shadow-lg border border-white/20"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
 
-                {/* Title Overlay */}
-                <div className="absolute bottom-4 left-6">
-                  <h2 className="text-3xl font-black text-white mb-1">{selectedSpeciesData.commonName}</h2>
-                  <p className="text-white/80 italic">{selectedSpeciesData.scientificName}</p>
+                {/* Enhanced Title Section */}
+                <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 right-4 sm:right-6">
+                  <div className="flex items-end justify-between">
+                    <div className="space-y-1 sm:space-y-2">
+                      <h2 className="text-2xl sm:text-4xl font-black text-white leading-tight drop-shadow-lg">
+                        {selectedSpeciesData.commonName}
+                      </h2>
+                      <p className="text-white/90 italic text-sm sm:text-lg font-medium drop-shadow-md">
+                        {selectedSpeciesData.scientificName}
+                      </p>
+                    </div>
+
+                    {/* Floating Status Badge */}
+                    <div className="bg-white/95 backdrop-blur-xl px-3 sm:px-4 py-1 sm:py-2 rounded-2xl shadow-xl border border-white/20">
+                      <span className={`inline-flex items-center gap-2 text-xs sm:text-sm font-bold px-2 sm:px-3 py-1 rounded-xl ${
+                        selectedSpeciesData.status === 'CR' ? 'bg-red-100 text-red-700' :
+                        selectedSpeciesData.status === 'EN' ? 'bg-orange-100 text-orange-700' :
+                        selectedSpeciesData.status === 'VU' ? 'bg-yellow-100 text-yellow-700' :
+                        selectedSpeciesData.status === 'NT' ? 'bg-blue-100 text-blue-700' :
+                        'bg-green-100 text-green-700'
+                      }`}>
+                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current animate-pulse"></span>
+                        {selectedSpeciesData.status}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Content */}
-              <div className="p-8">
-                <div className="grid md:grid-cols-2 gap-8">
-                  {/* Left: Info */}
-                  <div>
-                    <div className="flex gap-2 mb-4">
-                      <Badge className={`text-xs px-3 py-1.5 rounded-full font-bold ${getStatusColor(
-                        selectedSpeciesData.status === 'CR' ? 'Critically Endangered' :
-                        selectedSpeciesData.status === 'EN' ? 'Endangered' :
-                        selectedSpeciesData.status === 'VU' ? 'Vulnerable' :
-                        selectedSpeciesData.status === 'NT' ? 'Near Threatened' :
-                        'Least Concern'
-                      )}`}>
-                        {selectedSpeciesData.status}
-                      </Badge>
-                      <Badge className="text-xs px-3 py-1.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 font-bold">
-                        {selectedSpeciesData.category === 'fauna' ? '🦊 Fauna' : '🌱 Flora'}
-                      </Badge>
+              {/* Enhanced Content Section - Scrollable */}
+              <div className="flex-1 overflow-y-auto">
+                <div className="p-4 sm:p-8">
+                  <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
+
+                    {/* Left Column - Species Information */}
+                    <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+
+                      {/* Enhanced Status and Category Cards */}
+                      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                        <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-3 sm:p-4 rounded-2xl border border-emerald-200/50 dark:border-emerald-700/50">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="p-1.5 sm:p-2 bg-emerald-500 rounded-xl">
+                              <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">Status</p>
+                              <p className="text-xs sm:text-sm font-bold text-emerald-800 dark:text-emerald-200">
+                                {selectedSpeciesData.status === 'CR' ? 'Critically Endangered' :
+                                 selectedSpeciesData.status === 'EN' ? 'Endangered' :
+                                 selectedSpeciesData.status === 'VU' ? 'Vulnerable' :
+                                 selectedSpeciesData.status === 'NT' ? 'Near Threatened' :
+                                 'Least Concern'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-3 sm:p-4 rounded-2xl border border-blue-200/50 dark:border-blue-700/50">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="p-1.5 sm:p-2 bg-blue-500 rounded-xl">
+                              <span className="text-sm sm:text-lg">{selectedSpeciesData.category === 'fauna' ? '🦊' : '🌱'}</span>
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">Category</p>
+                              <p className="text-xs sm:text-sm font-bold text-blue-800 dark:text-blue-200">
+                                {selectedSpeciesData.category === 'fauna' ? 'Fauna' : 'Flora'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Enhanced Description Section */}
+                      <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+                        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                          <div className="p-1.5 sm:p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
+                            <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">About</h3>
+                        </div>
+                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base">
+                          {selectedSpeciesData.blurb}
+                        </p>
+                      </div>
+
+                      {/* Enhanced Habitat Section */}
+                      <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+                        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                          <div className="p-1.5 sm:p-2 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-xl">
+                            <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Habitat</h3>
+                        </div>
+                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base">
+                          {selectedSpeciesData.habitat}
+                        </p>
+                      </div>
                     </div>
 
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">About</h3>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">
-                      {selectedSpeciesData.blurb}
-                    </p>
+                    {/* Right Column - AR Experience */}
+                    <div className="space-y-4 sm:space-y-6">
+                      {hasARContent ? (
+                        <>
+                          {/* Enhanced AR Marker Display */}
+                          <div className="bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-600 p-4 sm:p-6 rounded-3xl shadow-2xl relative overflow-hidden">
+                            {/* Animated background */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-purple-500/20 animate-pulse"></div>
 
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Habitat</h3>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                      {selectedSpeciesData.habitat}
-                    </p>
-                  </div>
+                            <div className="relative text-center">
+                              <div className="mb-3 sm:mb-4">
+                                {selectedSpeciesData.arMarkerImageUrl ? (
+                                  <img
+                                    src={selectedSpeciesData.arMarkerImageUrl}
+                                    alt={`${selectedSpeciesData.commonName} AR Marker`}
+                                    className="w-24 h-24 sm:w-32 sm:h-32 object-contain mx-auto rounded-2xl shadow-lg bg-white/90 p-2"
+                                    onError={(e) => {
+                                      console.log('Marker image failed to load for:', selectedSpeciesData.commonName);
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto bg-white/20 rounded-2xl flex items-center justify-center">
+                                    <svg className="w-12 h-12 sm:w-16 sm:h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                                    </svg>
+                                  </div>
+                                )}
+                              </div>
 
-                  {/* Right: AR Experience */}  
-                  <div className="flex flex-col items-center justify-center">
-                    {hasARContent ? (
-                      /* Show AR Experience Button */
-                      <>
-                        <div className="bg-gradient-to-br from-purple-600 to-blue-600 p-6 rounded-3xl mb-4 shadow-xl relative">
-                          {selectedSpeciesData.arMarkerImageUrl ? (
-                            <img
-                              src={selectedSpeciesData.arMarkerImageUrl}
-                              alt={`${selectedSpeciesData.commonName} AR Marker`}
-                              className="w-32 h-32 object-contain mx-auto"
-                              onError={(e) => {
-                                // Fallback to SVG if image fails to load
-                                console.log('Marker image failed to load for:', selectedSpeciesData.commonName);
-                              }}
-                            />
-                          ) : (
-                            <svg className="w-32 h-32 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
-                            </svg>
-                          )}
-                        </div>
-                        
-                        <div className="text-center">
-                          <p className="font-bold text-gray-900 dark:text-white mb-1 flex items-center justify-center gap-2">
-                            <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
-                            </svg>
-                            AR Experience Available
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            Click below to open the augmented reality experience
-                          </p>
-                          
-                          {/* Download Marker Button */}
-                          {selectedSpeciesData.arMarkerImageUrl && (
-                            <div className="mb-4">
-                              <a
-                                href={selectedSpeciesData.arMarkerImageUrl}
-                                download={`${selectedSpeciesData.commonName.replace(/\s+/g, '_')}_AR_Marker.png`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-semibold shadow-lg transition-all hover:scale-105"
-                              >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                Download AR Marker
-                              </a>
+                              <h4 className="text-lg sm:text-xl font-bold text-white mb-2">AR Marker</h4>
+                              <p className="text-white/80 text-xs sm:text-sm mb-4 sm:mb-6">
+                                Download and print this marker to begin your AR experience
+                              </p>
+
+                              {/* Download Button */}
+                              {selectedSpeciesData.arMarkerImageUrl && (
+                                <a
+                                  href={selectedSpeciesData.arMarkerImageUrl}
+                                  download={`${selectedSpeciesData.commonName.replace(/\s+/g, '_')}_AR_Marker.png`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl font-semibold shadow-lg transition-all hover:scale-105 border border-white/30 mb-3 sm:mb-4 text-sm sm:text-base"
+                                >
+                                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                  </svg>
+                                  Download Marker
+                                </a>
+                              )}
                             </div>
-                          )}
-                          
-                          {/* AR Action Button */}
+                          </div>
+
+                          {/* Enhanced AR Experience Button */}
                           <button
                             onClick={() => {
                               console.log('Opening AR experience for:', selectedSpeciesData.commonName);
                               console.log('AR URL:', selectedSpeciesData.arExperienceUrl);
-                              
+
                               if (selectedSpeciesData.arExperienceUrl) {
                                 setArExperienceUrl(selectedSpeciesData.arExperienceUrl);
                                 setShowARExperienceModal(true);
                               }
                             }}
-                            className="ml-[1.375rem] px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
+                            className="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white rounded-3xl font-bold shadow-2xl transition-all hover:scale-105 hover:shadow-3xl p-4 sm:p-6 relative overflow-hidden group"
                           >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
-                            </svg>
-                            Open AR Experience
+                            {/* Animated background */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                            <div className="relative flex flex-col items-center gap-2 sm:gap-3">
+                              <div className="p-2 sm:p-3 bg-white/20 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                                <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                                </svg>
+                              </div>
+                              <div className="text-center">
+                                <h4 className="text-lg sm:text-xl font-bold mb-1">Click to view AR</h4>
+                                <p className="text-white/80 text-xs sm:text-sm">Immerse yourself in augmented reality</p>
+                              </div>
+                            </div>
                           </button>
-                        </div>
-                      </>
-                    ) : (
-                      /* Fallback: Show message when no AR content */
-                      <>
-                        <div className="bg-gradient-to-br from-gray-600 to-slate-600 p-6 rounded-3xl mb-4 shadow-xl">
-                          <div className="bg-white p-6 rounded-2xl">
-                            <svg className="w-24 h-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
-                            </svg>
+
+                          {/* AR Instructions Card */}
+                          <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 p-4 sm:p-6 rounded-2xl border border-slate-200/50 dark:border-slate-600/50">
+                            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                              <div className="p-1.5 sm:p-2 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl">
+                                <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              </div>
+                              <h4 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">Quick Start</h4>
+                            </div>
+                            <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                              <div className="flex items-start gap-2">
+                                <span className="text-emerald-500 font-bold mt-1 text-xs sm:text-sm">1.</span>
+                                <span>Download and print the AR marker above</span>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="text-emerald-500 font-bold mt-1 text-xs sm:text-sm">2.</span>
+                                <span>Point your camera at the marker</span>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="text-emerald-500 font-bold mt-1 text-xs sm:text-sm">3.</span>
+                                <span>Watch the 3D model come to life!</span>
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        /* Enhanced No AR Content Message */
+                        <div className="bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 p-6 sm:p-8 rounded-3xl text-center border border-slate-200/50 dark:border-slate-600/50">
+                          <div className="mb-4 sm:mb-6">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-gradient-to-br from-slate-400 to-slate-500 rounded-2xl flex items-center justify-center mb-3 sm:mb-4">
+                              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                              </svg>
+                            </div>
+                            <h4 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-2">AR Experience Coming Soon</h4>
+                            <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base">
+                              This species doesn't have an AR experience configured yet. We're working on bringing you immersive 3D content!
+                            </p>
                           </div>
                         </div>
-                        
-                        <div className="text-center">
-                          <p className="font-bold text-gray-900 dark:text-white mb-1 flex items-center justify-center gap-2">
-                            <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            AR Content Not Available
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            This species doesn&apos;t have an AR experience URL configured yet.
-                          </p>
-                        </div>
-                      </>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1906,10 +2124,10 @@ const ARDemo = memo(function ARDemo() {
         {showARExperienceModal && arExperienceUrl && (
           <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-500"
                onClick={() => setShowARExperienceModal(false)}>
-            <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-7xl w-full h-[95vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-6 duration-700 border border-slate-200/50 dark:border-slate-700/50"
+            <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-7xl w-full h-[80vh] sm:h-[95vh] shadow-2xl overflow-y-auto animate-in slide-in-from-bottom-6 duration-700 border border-slate-200/50 dark:border-slate-700/50"
                  onClick={(e) => e.stopPropagation()}>
               {/* Enhanced Header */}
-              <div className="relative h-20 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 flex items-center justify-between px-8 overflow-hidden">
+              <div className="relative h-20 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 flex items-center justify-between px-4 sm:px-8 overflow-hidden">
                 {/* Animated background elements */}
                 <div className="absolute inset-0 opacity-20">
                   <div className="absolute top-0 left-0 w-32 h-32 bg-white/10 rounded-full -translate-x-16 -translate-y-16 animate-pulse"></div>
@@ -1924,7 +2142,7 @@ const ARDemo = memo(function ARDemo() {
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-white">AR Experience</h2>
+                    <h2 className="text-xl sm:text-2xl font-black text-white">AR Experience</h2>
                     <p className="text-white/80 text-sm font-medium">Immersive Augmented Reality</p>
                   </div>
                 </div>
@@ -1954,9 +2172,10 @@ const ARDemo = memo(function ARDemo() {
               </div>
 
               {/* Enhanced Content Area */}
-              <div className="flex h-full">
-                {/* Side Panel with Instructions */}
-                <div className="w-80 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 p-6 border-r border-slate-200 dark:border-slate-700 overflow-y-auto">
+              <div className={`flex ${isMobileView ? 'flex-col' : ''} h-full`}>
+                {/* Side Panel with Instructions - Hidden on mobile */}
+                {!isMobileView && (
+                  <div className="w-80 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 p-4 sm:p-6 border-r border-slate-200 dark:border-slate-700 overflow-y-auto">
                   <div className="space-y-6">
                     {/* Species Info Card */}
                     <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-200 dark:border-slate-700">
@@ -2136,11 +2355,12 @@ const ARDemo = memo(function ARDemo() {
                     </div>
                   </div>
                 </div>
+                )}
 
                 {/* Main Content Area */}
                 <div className="flex-1 flex flex-col">
                   {/* Loading/Status Bar */}
-                  <div className="h-12 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-6">
+                  <div className="h-12 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 sm:px-6">
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                       <span className="text-sm font-medium text-slate-600 dark:text-slate-300">AR Experience Ready</span>
@@ -2163,7 +2383,7 @@ const ARDemo = memo(function ARDemo() {
                     </div>
 
                     {/* AR Content Container */}
-                    <div className="h-full flex items-center justify-center p-8">
+                    <div className="h-full flex items-center justify-center p-4 sm:p-8">
                       {(() => {
                         const is3DModel = /\.(gltf|glb|obj|fbx|dae|3ds|ply|stl)$/i.test(arExperienceUrl);
 
@@ -2176,7 +2396,7 @@ const ARDemo = memo(function ARDemo() {
                               <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
                                 <iframe
                                   src={arUrl}
-                                  className="w-full h-full min-h-[600px] border-0"
+                                  className="w-full h-full min-h-[400px] sm:min-h-[600px] border-0"
                                   title="AR Experience"
                                   allow="camera; microphone; gyroscope; accelerometer"
                                   sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation"
@@ -2201,7 +2421,7 @@ const ARDemo = memo(function ARDemo() {
                               <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
                                 <iframe
                                   src={arExperienceUrl}
-                                  className="w-full h-full min-h-[600px] border-0"
+                                  className="w-full h-full min-h-[400px] sm:min-h-[600px] border-0"
                                   title="External Content"
                                   allow="camera *; microphone *; gyroscope *; accelerometer *; xr-spatial-tracking *"
                                   sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation allow-downloads"
@@ -2224,6 +2444,190 @@ const ARDemo = memo(function ARDemo() {
                     </div>
                   </div>
                 </div>
+
+                {/* Mobile Instructions and Actions - Shown below camera on mobile */}
+                {isMobileView && (
+                  <div className="bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 p-4 sm:p-6 border-t border-slate-200 dark:border-slate-700">
+                    <div className="space-y-6">
+                      {/* Species Info Card */}
+                      <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg">
+                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <h3 className="font-bold text-slate-900 dark:text-white">AR Instructions</h3>
+                        </div>
+                        <div className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                          <div className="flex items-start gap-2">
+                            <span className="text-green-500 mt-1">1.</span>
+                            <span>Point your camera at the downloaded AR marker</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="text-green-500 mt-1">2.</span>
+                            <span>Ensure good lighting for better detection</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="text-green-500 mt-1">3.</span>
+                            <span>Hold steady and wait for the 3D model to appear</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="text-green-500 mt-1">4.</span>
+                            <span>Move your device to explore different angles</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Quick Actions */}
+                      <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-200 dark:border-slate-700">
+                        <h4 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                          <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          Quick Actions
+                        </h4>
+                        <div className="space-y-2">
+                          <button 
+                            className="w-full text-left p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 rounded-xl transition-all duration-200 border border-green-200 dark:border-green-800"
+                            onClick={() => {
+                              if (selectedSpeciesData?.arMarkerImageUrl) {
+                                const link = document.createElement('a');
+                                link.href = selectedSpeciesData.arMarkerImageUrl;
+                                link.download = `${selectedSpeciesData.commonName.replace(/\s+/g, '_')}_AR_Marker.png`;
+                                link.target = '_blank';
+                                link.rel = 'noopener noreferrer';
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                              }
+                            }}
+                          >
+                            <div className="flex items-center gap-3">
+                              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              <span className="text-sm font-medium text-green-700 dark:text-green-300">Download Marker Again</span>
+                            </div>
+                          </button>
+                          <button 
+                            className="w-full text-left p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 rounded-xl transition-all duration-200 border border-purple-200 dark:border-purple-800"
+                            onClick={async () => {
+                              try {
+                                // Try to capture the AR iframe content
+                                const arContainer = document.querySelector('.relative.w-full.h-full.max-w-4xl.mx-auto');
+                                const iframe = arContainer?.querySelector('iframe') as HTMLIFrameElement;
+                                
+                                if (iframe && iframe.contentDocument) {
+                                  // Try to access the iframe's canvas directly
+                                  const iframeDoc = iframe.contentDocument;
+                                  const canvas = iframeDoc.querySelector('canvas') as HTMLCanvasElement;
+                                  
+                                  if (canvas) {
+                                    // Convert canvas to blob and download
+                                    canvas.toBlob((blob) => {
+                                      if (blob) {
+                                        const url = URL.createObjectURL(blob);
+                                        const link = document.createElement('a');
+                                        link.href = url;
+                                        link.download = `AR_Capture_${selectedSpeciesData?.commonName.replace(/\s+/g, '_') || 'Screenshot'}_${new Date().toISOString().split('T')[0]}.png`;
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        document.body.removeChild(link);
+                                        URL.revokeObjectURL(url);
+                                      }
+                                    }, 'image/png');
+                                  } else {
+                                    // Fallback to html2canvas if canvas not found
+                                    const html2canvas = (await import('html2canvas')).default;
+                                    const canvas = await html2canvas(arContainer as HTMLElement, {
+                                      useCORS: true,
+                                      allowTaint: false,
+                                      scale: 1,
+                                      width: 800,
+                                      height: 600,
+                                      ignoreElements: (element) => {
+                                        // Ignore elements that might cause issues
+                                        return element.tagName === 'VIDEO' || element.tagName === 'CANVAS';
+                                      }
+                                    });
+                                    
+                                    canvas.toBlob((blob) => {
+                                      if (blob) {
+                                        const url = URL.createObjectURL(blob);
+                                        const link = document.createElement('a');
+                                        link.href = url;
+                                        link.download = `AR_Capture_${selectedSpeciesData?.commonName.replace(/\s+/g, '_') || 'Screenshot'}_${new Date().toISOString().split('T')[0]}.png`;
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        document.body.removeChild(link);
+                                        URL.revokeObjectURL(url);
+                                      }
+                                    }, 'image/png');
+                                  }
+                                } else {
+                                  // Fallback: try html2canvas on the container
+                                  const html2canvas = (await import('html2canvas')).default;
+                                  const canvas = await html2canvas(arContainer as HTMLElement, {
+                                    useCORS: true,
+                                    allowTaint: false,
+                                    scale: 1,
+                                    width: 800,
+                                    height: 600
+                                  });
+                                  
+                                  canvas.toBlob((blob) => {
+                                    if (blob) {
+                                      const url = URL.createObjectURL(blob);
+                                      const link = document.createElement('a');
+                                      link.href = url;
+                                      link.download = `AR_Capture_${selectedSpeciesData?.commonName.replace(/\s+/g, '_') || 'Screenshot'}_${new Date().toISOString().split('T')[0]}.png`;
+                                      document.body.appendChild(link);
+                                      link.click();
+                                      document.body.removeChild(link);
+                                      URL.revokeObjectURL(url);
+                                    }
+                                  }, 'image/png');
+                                }
+                              } catch (error) {
+                                console.error('Screenshot failed:', error);
+                                // Try browser native screenshot API as last resort
+                                try {
+                                  // Simple fallback: alert user to use browser screenshot
+                                  alert('Screenshot failed. Please try again or use your browser\'s screenshot feature (F12 > Screenshot).');
+                                } catch (fallbackError) {
+                                  console.error('All screenshot methods failed:', fallbackError);
+                                  alert('Screenshot failed. Please try again or use your browser\'s screenshot feature (F12 > Screenshot).');
+                                }
+                              }
+                            }}
+                          >
+                            <div className="flex items-center gap-3">
+                              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              <span className="text-sm font-medium text-purple-700 dark:text-purple-300">Capture</span>
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Tech Info */}
+                      <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-2xl p-4 border border-purple-200 dark:border-purple-800">
+                        <h4 className="font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                          <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                          </svg>
+                          AR Technology
+                        </h4>
+                        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                          Powered by AR.js and A-Frame for marker-based augmented reality experiences. Uses WebRTC for camera access and Three.js for 3D rendering. Compatible with modern browsers and AR-capable devices.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -2235,7 +2639,7 @@ const ARDemo = memo(function ARDemo() {
             <div className="text-4xl">🎯</div>
             <div className="text-left">
               <h3 className="font-bold text-gray-900 dark:text-white">How to Use</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Click any species → Open AR Experience → Enjoy augmented reality</p>
+              <p className="hidden sm:block text-sm text-gray-600 dark:text-gray-400">Click any species → Click to view AR → Enjoy augmented reality</p>
             </div>
           </div>
         </div>

@@ -42,7 +42,7 @@ export default function NavbarClassic() {
     { to: '/about', label: 'About', icon: <InfoIcon className="w-4 h-4" /> },
   ]
 
-  const pillRefs = useRef<HTMLButtonElement[]>([])
+  const pillRefs = useRef<HTMLElement[]>([])
   const [pillStyle, setPillStyle] = useState<{ width: number; left: number }>({ width: 0, left: 0 })
 
   const progress = typeof window !== 'undefined'

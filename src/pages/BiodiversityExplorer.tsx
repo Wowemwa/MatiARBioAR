@@ -40,7 +40,7 @@ export default function BiodiversityExplorer() {
           <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-emerald-400/20 to-blue-400/20 rounded-full blur-2xl" />
           <div className="absolute bottom-0 right-0 w-40 h-40 bg-gradient-to-tl from-purple-400/20 to-pink-400/20 rounded-full blur-2xl" />
           
-          <div className="relative p-8 space-y-8">
+          <div className="relative p-4 sm:p-8 space-y-6 sm:space-y-8">
             <div className="text-center space-y-4">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100/80 dark:bg-emerald-900/30 border border-emerald-200/60 dark:border-emerald-700/60 backdrop-blur-sm">
                 <SpeciesIcon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
@@ -51,23 +51,23 @@ export default function BiodiversityExplorer() {
                 Biodiversity Explorer
               </h1>
               
-              <p className="text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+              <p className="text-lg sm:text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
                 Discover and explore the rich flora and fauna of Mati City&apos;s protected areas and biodiversity hotspots
               </p>
               
-              <div className="flex justify-center items-center gap-6 mt-8">
+              <div className="flex justify-center items-center gap-2 sm:gap-6 mt-8">
                 <div className="text-center">
-                  <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{allSpecies.length}</div>
+                  <div className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">{allSpecies.length}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">Total Species</div>
                 </div>
-                <div className="w-px h-12 bg-gradient-to-b from-transparent via-gray-300 to-transparent dark:via-gray-600" />
+                <div className="w-px h-8 sm:h-12 bg-gradient-to-b from-transparent via-gray-300 to-transparent dark:via-gray-600" />
                 <div className="text-center">
-                  <div className="text-3xl font-black text-blue-600 dark:text-blue-400">{sites.length}</div>
+                  <div className="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-400">{sites.length}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">Conservation Sites</div>
                 </div>
-                <div className="w-px h-12 bg-gradient-to-b from-transparent via-gray-300 to-transparent dark:via-gray-600" />
+                <div className="w-px h-8 sm:h-12 bg-gradient-to-b from-transparent via-gray-300 to-transparent dark:via-gray-600" />
                 <div className="text-center">
-                  <div className="text-3xl font-black text-purple-600 dark:text-purple-400">{allSpecies.filter(s => s.endemic).length}</div>
+                  <div className="text-2xl sm:text-3xl font-black text-purple-600 dark:text-purple-400">{allSpecies.filter(s => s.endemic).length}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">Endemic Species</div>
                 </div>
               </div>
@@ -188,18 +188,18 @@ export default function BiodiversityExplorer() {
 
         {/* Results Section */}
         <div className="space-y-6">
-          <div className="flex items-center justify-between p-4 rounded-2xl bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-white/20">
-            <div className="flex items-center gap-4">
-              <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-2xl bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-white/20">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2 sm:mb-0">
+              <div className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100">
                 {results.length} result{results.length!==1 && 's'} found
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                 {query ? 'Filtered' : 'All'} dataset • Mati City biodiversity
               </div>
             </div>
             
             {results.length > 0 && (
-              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                 <div className="flex items-center gap-1">
                   <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
                   <span>{results.filter(r => r.type === 'flora').length} Flora</span>
