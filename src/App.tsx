@@ -1598,6 +1598,7 @@ const ARDemo = memo(function ARDemo() {
   const [selectedSpecies, setSelectedSpecies] = useState<string | null>(null)
   const [showARExperienceModal, setShowARExperienceModal] = useState(false)
   const [arExperienceUrl, setArExperienceUrl] = useState<string>('')
+  const [showAboutPopup, setShowAboutPopup] = useState(false)
 
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('')
@@ -1929,52 +1930,16 @@ const ARDemo = memo(function ARDemo() {
               </div>
 
               {/* Enhanced Content Section - Scrollable */}
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden">
                 <div className="p-4 sm:p-8">
                   <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
 
                     {/* Left Column - Species Information */}
                     <div className="lg:col-span-2 space-y-4 sm:space-y-6">
 
-                      {/* Enhanced Status and Category Cards */}
-                      <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                        <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-3 sm:p-4 rounded-2xl border border-emerald-200/50 dark:border-emerald-700/50">
-                          <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="p-1.5 sm:p-2 bg-emerald-500 rounded-xl">
-                              <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                            </div>
-                            <div>
-                              <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">Status</p>
-                              <p className="text-xs sm:text-sm font-bold text-emerald-800 dark:text-emerald-200">
-                                {selectedSpeciesData.status === 'CR' ? 'Critically Endangered' :
-                                 selectedSpeciesData.status === 'EN' ? 'Endangered' :
-                                 selectedSpeciesData.status === 'VU' ? 'Vulnerable' :
-                                 selectedSpeciesData.status === 'NT' ? 'Near Threatened' :
-                                 'Least Concern'}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-3 sm:p-4 rounded-2xl border border-blue-200/50 dark:border-blue-700/50">
-                          <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="p-1.5 sm:p-2 bg-blue-500 rounded-xl">
-                              <span className="text-sm sm:text-lg">{selectedSpeciesData.category === 'fauna' ? '🦊' : '🌱'}</span>
-                            </div>
-                            <div>
-                              <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">Category</p>
-                              <p className="text-xs sm:text-sm font-bold text-blue-800 dark:text-blue-200">
-                                {selectedSpeciesData.category === 'fauna' ? 'Fauna' : 'Flora'}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
                       {/* Enhanced Description Section */}
-                      <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+                      <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/90 transition-all duration-200"
+                           onClick={() => setShowAboutPopup(true)}>
                         <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                           <div className="p-1.5 sm:p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
                             <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1982,25 +1947,13 @@ const ARDemo = memo(function ARDemo() {
                             </svg>
                           </div>
                           <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">About</h3>
+                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
                         </div>
-                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base">
-                          {selectedSpeciesData.blurb}
-                        </p>
-                      </div>
-
-                      {/* Enhanced Habitat Section */}
-                      <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50">
-                        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                          <div className="p-1.5 sm:p-2 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-xl">
-                            <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </div>
-                          <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Habitat</h3>
+                        <div className="mt-3 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                          Click to read more →
                         </div>
-                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base">
-                          {selectedSpeciesData.habitat}
-                        </p>
                       </div>
                     </div>
 
@@ -2654,6 +2607,135 @@ const ARDemo = memo(function ARDemo() {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* About Popup Modal */}
+        {showAboutPopup && selectedSpeciesData && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-500"
+               onClick={() => setShowAboutPopup(false)}>
+            <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-6 duration-700 scale-in-center border border-slate-200/50 dark:border-slate-700/50"
+                 onClick={(e) => e.stopPropagation()}>
+
+              {/* Header */}
+              <div className="relative h-32 sm:h-40 flex-shrink-0 overflow-hidden">
+                {/* Background Image */}
+                <img
+                  src={selectedSpeciesData.images && selectedSpeciesData.images.length > 0
+                    ? selectedSpeciesData.images[0]
+                    : (selectedSpeciesData.category === 'fauna'
+                      ? 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?w=800&h=600&fit=crop&crop=center'
+                      : 'https://images.unsplash.com/photo-1466781783364-36c955e42a7f?w=800&h=600&fit=crop&crop=center')}
+                  alt={selectedSpeciesData.commonName}
+                  className="w-full h-full object-cover"
+                />
+
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
+
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowAboutPopup(false)}
+                  className="absolute top-4 right-4 bg-white/10 backdrop-blur-xl hover:bg-white/20 text-white p-2 rounded-2xl transition-all duration-300 hover:scale-110 shadow-lg border border-white/20"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+
+                {/* Title Section */}
+                <div className="absolute bottom-4 left-4 right-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-black text-white leading-tight drop-shadow-lg">
+                        About {selectedSpeciesData.commonName}
+                      </h2>
+                      <p className="text-white/80 text-sm font-medium drop-shadow-md">
+                        Detailed Information
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="space-y-6">
+                  {/* Status and Category - Above About */}
+                  <div className="grid gap-4">
+                    {/* Conservation Status */}
+                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 p-4 rounded-xl border border-amber-200/50 dark:border-amber-700/50">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-amber-500 rounded-lg">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wide">Conservation Status</p>
+                          <p className="text-sm font-bold text-amber-800 dark:text-amber-200">
+                            {selectedSpeciesData.status === 'CR' ? 'Critically Endangered' :
+                             selectedSpeciesData.status === 'EN' ? 'Endangered' :
+                             selectedSpeciesData.status === 'VU' ? 'Vulnerable' :
+                             selectedSpeciesData.status === 'NT' ? 'Near Threatened' :
+                             'Least Concern'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Category */}
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-xl border border-green-200/50 dark:border-green-700/50">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-green-500 rounded-lg">
+                          <span className="text-sm">{selectedSpeciesData.category === 'fauna' ? '🦊' : '🌱'}</span>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-green-700 dark:text-green-300 uppercase tracking-wide">Category</p>
+                          <p className="text-sm font-bold text-green-800 dark:text-green-200">
+                            {selectedSpeciesData.category === 'fauna' ? 'Fauna (Animal)' : 'Flora (Plant)'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Full Description with Habitat */}
+                  <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      About
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base break-words hyphens-auto">
+                          {selectedSpeciesData.blurb}
+                        </p>
+                      </div>
+                      <div className="border-t border-slate-200 dark:border-slate-600 pt-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <svg className="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Habitat</h4>
+                        </div>
+                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base break-words hyphens-auto">
+                          {selectedSpeciesData.habitat}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
