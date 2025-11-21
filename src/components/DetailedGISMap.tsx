@@ -868,7 +868,7 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
       />
       
       {/* Modern Legend */}
-      <div className="absolute top-4 left-2 sm:left-4 z-[1000] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-lg sm:rounded-xl p-2 sm:p-3 shadow-lg border border-slate-200/80 dark:border-slate-700/80">
+      <div className="absolute top-20 right-2 sm:right-4 z-[1000] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-lg sm:rounded-xl p-2 sm:p-3 shadow-lg border border-slate-200/80 dark:border-slate-700/80">
         <h4 className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-slate-100 mb-1 sm:mb-2 uppercase tracking-wider">Legend</h4>
         <div className="space-y-1 sm:space-y-2">
           <div className="flex items-center gap-1.5 sm:gap-2">
@@ -883,7 +883,7 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
       </div>
 
       {/* Modern Data Info Panel */}
-      <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 z-[1000] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-lg sm:rounded-xl p-2 sm:p-3 shadow-lg border border-slate-200/80 dark:border-slate-700/80">
+      <div className="absolute bottom-8 right-2 sm:right-4 z-[1000] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-lg sm:rounded-xl p-2 sm:p-3 shadow-lg border border-slate-200/80 dark:border-slate-700/80">
         <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-1.5">
           <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-500/50"></div>
           <span className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-slate-100">Live Data</span>
