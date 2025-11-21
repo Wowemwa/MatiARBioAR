@@ -71,6 +71,10 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
   // Initialize map centered on Mati City
   useEffect(() => {
     if (!map) {
+      // Ensure container exists before initializing map
+      const container = document.getElementById('mati-gis-map')
+      if (!container) return
+
       const mapInstance = L.map('mati-gis-map', {
         center: [6.9483, 126.2272], // Mati City coordinates
         zoom: 11,
@@ -290,125 +294,142 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
   useEffect(() => {
     if (!map || !isMapReady || loading) return
 
+    // Additional safety check - ensure map container exists and map is properly initialized
+    const mapContainer = document.getElementById('mati-gis-map')
+    if (!mapContainer || !map.getContainer()) return
+
     // Clear existing markers
-    activeMarkers.forEach(marker => map.removeLayer(marker))
+    activeMarkers.forEach(marker => {
+      if (map.hasLayer(marker)) {
+        map.removeLayer(marker)
+      }
+    })
     const newMarkers = new Map<string, L.Marker>()
 
   // Add markers for filtered hotspots
-    filteredHotspots.forEach(site => {
-      // Custom icons based on site type with pulse animation
-      const iconHtml = site.type === 'marine' 
-        ? `<div class="marker-pulse" style="
-            width: 40px; 
-            height: 40px; 
-            background: linear-gradient(135deg, #0ea5e9, #0284c7); 
-            border: 3px solid white; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 18px; 
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
-            cursor: pointer;
-            transition: all 0.3s ease;
-          ">🌊</div>`
-        : `<div class="marker-pulse" style="
-            width: 40px; 
-            height: 40px; 
-            background: linear-gradient(135deg, #10b981, #059669); 
-            border: 3px solid white; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 18px; 
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-            cursor: pointer;
-            transition: all 0.3s ease;
-          ">🏔️</div>`
+    try {
+      filteredHotspots.forEach(site => {
+        // Custom icons based on site type with pulse animation
+        const iconHtml = site.type === 'marine' 
+          ? `<div class="marker-pulse" style="
+              width: 40px; 
+              height: 40px; 
+              background: linear-gradient(135deg, #0ea5e9, #0284c7); 
+              border: 3px solid white; 
+              border-radius: 50%; 
+              display: flex; 
+              align-items: center; 
+              justify-content: center; 
+              font-size: 18px; 
+              box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+              cursor: pointer;
+              transition: all 0.3s ease;
+            ">🌊</div>`
+          : `<div class="marker-pulse" style="
+              width: 40px; 
+              height: 40px; 
+              background: linear-gradient(135deg, #10b981, #059669); 
+              border: 3px solid white; 
+              border-radius: 50%; 
+              display: flex; 
+              align-items: center; 
+              justify-content: center; 
+              font-size: 18px; 
+              box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+              cursor: pointer;
+              transition: all 0.3s ease;
+            ">🏔️</div>`
 
-      const customIcon = L.divIcon({
-        html: iconHtml,
-        className: 'custom-div-icon',
-        iconSize: [40, 40],
-        iconAnchor: [20, 20]
-      })
+        const customIcon = L.divIcon({
+          html: iconHtml,
+          className: 'custom-div-icon',
+          iconSize: [40, 40],
+          iconAnchor: [20, 20]
+        })
 
   const marker = L.marker([site.lat, site.lng], { 
     icon: customIcon,
     riseOnHover: true
   }).addTo(map)
 
-      // Enhanced marker interactions
-      marker.on('click', () => {
-        setSelectedHotspot(site.id)
-        setPanelOpen(true)
-        setShowGallery(false)
-        setSelectedSpeciesId(null)
-        
-        // Fly to marker with smooth animation
-        map.flyTo([site.lat, site.lng], 13, {
-          duration: 1.5,
-          easeLinearity: 0.5
-        })
-        
-        // Highlight the clicked marker
-        newMarkers.forEach(m => {
-          const el = m.getElement()
-          if (el) el.style.filter = 'none'
-        })
-        const el = marker.getElement()
-        if (el) {
-          el.style.filter = 'drop-shadow(0 0 10px rgba(59, 130, 246, 0.8))'
-        }
-      })
-
-      // Hover effects with tooltip
-      marker.on('mouseover', function(this: L.Marker) {
-        const el = this.getElement()
-        if (el) {
-          const innerDiv = el.querySelector('.marker-pulse') as HTMLElement
-          if (innerDiv) {
-            innerDiv.style.transform = 'scale(1.2)'
-            innerDiv.style.zIndex = '1000'
+        // Enhanced marker interactions
+        marker.on('click', () => {
+          setSelectedHotspot(site.id)
+          setPanelOpen(true)
+          setShowGallery(false)
+          setSelectedSpeciesId(null)
+          
+          // Fly to marker with smooth animation
+          map.flyTo([site.lat, site.lng], 13, {
+            duration: 1.5,
+            easeLinearity: 0.5
+          })
+          
+          // Highlight the clicked marker
+          newMarkers.forEach(m => {
+            const el = m.getElement()
+            if (el) el.style.filter = 'none'
+          })
+          const el = marker.getElement()
+          if (el) {
+            el.style.filter = 'drop-shadow(0 0 10px rgba(59, 130, 246, 0.8))'
           }
-        }
-        
-        // Show tooltip with site name
-        this.bindTooltip(site.name, {
-          permanent: false,
-          direction: 'top',
-          className: 'custom-tooltip',
-          offset: [0, -20]
-        }).openTooltip()
-      })
+        })
 
-      marker.on('mouseout', function(this: L.Marker) {
-        const el = this.getElement()
-        if (el && site.id !== selectedHotspot) {
-          const innerDiv = el.querySelector('.marker-pulse') as HTMLElement
-          if (innerDiv) {
-            innerDiv.style.transform = 'scale(1)'
-            innerDiv.style.zIndex = '600'
+        // Hover effects with tooltip
+        marker.on('mouseover', function(this: L.Marker) {
+          const el = this.getElement()
+          if (el) {
+            const innerDiv = el.querySelector('.marker-pulse') as HTMLElement
+            if (innerDiv) {
+              innerDiv.style.transform = 'scale(1.2)'
+              innerDiv.style.zIndex = '1000'
+            }
           }
-        }
-        this.closeTooltip()
-      })
+          
+          // Show tooltip with site name
+          this.bindTooltip(site.name, {
+            permanent: false,
+            direction: 'top',
+            className: 'custom-tooltip',
+            offset: [0, -20]
+          }).openTooltip()
+        })
 
-      newMarkers.set(site.id, marker)
-    })
+        marker.on('mouseout', function(this: L.Marker) {
+          const el = this.getElement()
+          if (el && site.id !== selectedHotspot) {
+            const innerDiv = el.querySelector('.marker-pulse') as HTMLElement
+            if (innerDiv) {
+              innerDiv.style.transform = 'scale(1)'
+              innerDiv.style.zIndex = '600'
+            }
+          }
+          this.closeTooltip()
+        })
+
+        newMarkers.set(site.id, marker)
+      })
+    } catch (error) {
+      console.error('Error adding markers to map:', error)
+      return
+    }
 
     setActiveMarkers(newMarkers)
 
     // Fit map to show all markers if there are hotspots
     if (filteredHotspots.length > 0) {
-      const group = L.featureGroup(
-        filteredHotspots.map(site => L.marker([site.lat, site.lng]))
-      )
-      map.fitBounds(group.getBounds().pad(0.1), {
-        animate: true,
-        duration: 1
-      })
+      try {
+        const group = L.featureGroup(
+          filteredHotspots.map(site => L.marker([site.lat, site.lng]))
+        )
+        map.fitBounds(group.getBounds().pad(0.1), {
+          animate: true,
+          duration: 1
+        })
+      } catch (error) {
+        console.error('Error fitting map bounds:', error)
+      }
     }
 
   }, [map, filteredHotspots, loading, isMapReady, selectedHotspot])
