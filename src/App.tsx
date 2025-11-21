@@ -1932,32 +1932,9 @@ const ARDemo = memo(function ARDemo() {
               {/* Enhanced Content Section - Scrollable */}
               <div className="flex-1 overflow-y-auto overflow-x-hidden">
                 <div className="p-4 sm:p-8">
-                  <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
+                  <div className="grid lg:grid-cols-2 gap-6 sm:gap-8">
 
-                    {/* Left Column - Species Information */}
-                    <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-
-                      {/* Enhanced Description Section */}
-                      <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/90 transition-all duration-200"
-                           onClick={() => setShowAboutPopup(true)}>
-                        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                          <div className="p-1.5 sm:p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
-                            <svg className="w-3 h-3 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </div>
-                          <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">About</h3>
-                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                          </svg>
-                        </div>
-                        <div className="mt-3 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                          Click to read more →
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Right Column - AR Experience */}
+                    {/* Left Column - AR Experience */}
                     <div className="space-y-4 sm:space-y-6">
                       {hasARContent ? (
                         <>
@@ -2080,6 +2057,82 @@ const ARDemo = memo(function ARDemo() {
                           </div>
                         </div>
                       )}
+                    </div>
+
+                    {/* Right Column - Species Information */}
+                    <div className="space-y-4 sm:space-y-6">
+                      {/* Species Overview Cards - Grid Layout */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        {/* Conservation Status */}
+                        <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 p-4 rounded-xl border border-amber-200/50 dark:border-amber-700/50">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-amber-500 rounded-lg">
+                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wide">Status</p>
+                              <p className="text-sm font-bold text-amber-800 dark:text-amber-200">
+                                {selectedSpeciesData.status === 'CR' ? 'Critically Endangered' :
+                                 selectedSpeciesData.status === 'EN' ? 'Endangered' :
+                                 selectedSpeciesData.status === 'VU' ? 'Vulnerable' :
+                                 selectedSpeciesData.status === 'NT' ? 'Near Threatened' :
+                                 'Least Concern'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Category */}
+                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-xl border border-green-200/50 dark:border-green-700/50">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-green-500 rounded-lg">
+                              <span className="text-sm">{selectedSpeciesData.category === 'fauna' ? '🦊' : '🌱'}</span>
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-green-700 dark:text-green-300 uppercase tracking-wide">Category</p>
+                              <p className="text-sm font-bold text-green-800 dark:text-green-200">
+                                {selectedSpeciesData.category === 'fauna' ? 'Fauna' : 'Flora'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Habitat */}
+                      <div className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 p-4 rounded-xl border border-teal-200/50 dark:border-teal-700/50">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-teal-500 rounded-lg">
+                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-teal-700 dark:text-teal-300 uppercase tracking-wide">Habitat</p>
+                            <p className="text-sm font-bold text-teal-800 dark:text-teal-200">
+                              {selectedSpeciesData.habitat}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Full Description */}
+                      <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                          <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          About {selectedSpeciesData.commonName}
+                        </h3>
+                        <div className="space-y-4">
+                          <div>
+                            <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base break-words hyphens-auto">
+                              {selectedSpeciesData.blurb}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2612,8 +2665,8 @@ const ARDemo = memo(function ARDemo() {
           </div>
         )}
 
-        {/* About Popup Modal */}
-        {showAboutPopup && selectedSpeciesData && (
+        {/* About Popup Modal - Mobile Only */}
+        {showAboutPopup && selectedSpeciesData && isMobileView && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-500"
                onClick={() => setShowAboutPopup(false)}>
             <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-6 duration-700 scale-in-center border border-slate-200/50 dark:border-slate-700/50"
