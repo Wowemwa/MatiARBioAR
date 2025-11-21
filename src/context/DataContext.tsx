@@ -189,11 +189,12 @@ export function DataProvider({ children }: DataProviderProps) {
           siteIds: siteIds,
           highlights: species.key_facts || [], // Map key_facts to highlights
           images: species.image_urls || [], // Load images from image_urls column
-          arExperienceUrl: species.ar_experience_url || undefined, // Load AR experience URL
+          arExperienceUrl: species.ar_model_url || undefined, // Load AR experience URL
           arModelScale: species.ar_model_scale || 1.0, // Load AR model scale
           arModelRotation: species.ar_model_rotation || { x: 0, y: 0, z: 0 }, // Load AR model rotation
           arViewerHtml: species.ar_viewer_html || undefined, // Load AR viewer HTML
           arMarkerImageUrl: species.ar_marker_image_url || undefined, // Load AR marker image URL
+          arPatternUrl: species.ar_pattern_url || undefined, // Load AR pattern URL
           // Additional fields from Supabase
           kingdom: species.kingdom,
           phylum: species.phylum,
@@ -280,6 +281,41 @@ export function DataProvider({ children }: DataProviderProps) {
     void hydrate()
   }, [hydrate])
 
+  // Listen for service worker updates and refresh data when cache is cleared
+  useEffect(() => {
+    const handleServiceWorkerUpdate = () => {
+      console.log('[DataContext] Service worker updated, refreshing data...')
+      setDataLoaded(false)
+      void hydrate(true)
+    }
+
+    // Listen for service worker controller change (when SW updates)
+    const handleControllerChange = () => {
+      console.log('[DataContext] Service worker controller changed, refreshing data...')
+      setDataLoaded(false)
+      void hydrate(true)
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange)
+      
+      // Also listen for messages from service worker
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'CACHE_CLEARED') {
+          console.log('[DataContext] Cache cleared by service worker, refreshing data...')
+          setDataLoaded(false)
+          void hydrate(true)
+        }
+      })
+    }
+
+    return () => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange)
+      }
+    }
+  }, [hydrate])
+
   // Note: Data is now stored in Supabase, localStorage is no longer used for persistence
 
   // Admin CRUD operations - now work with Supabase
@@ -298,8 +334,12 @@ export function DataProvider({ children }: DataProviderProps) {
         habitat: newSpecies.habitat,
         key_facts: newSpecies.highlights || [],
         image_urls: newSpecies.images || [],
-        ar_experience_url: newSpecies.arExperienceUrl || null,
-        ar_marker_image_url: newSpecies.arMarkerImageUrl || null
+        ar_model_url: newSpecies.arExperienceUrl || null,
+        ar_marker_image_url: newSpecies.arMarkerImageUrl || null,
+        ar_model_scale: newSpecies.arModelScale || 1.0,
+        ar_model_rotation: newSpecies.arModelRotation || { x: 0, y: 0, z: 0 },
+        ar_pattern_url: newSpecies.arPatternUrl || null,
+        ar_viewer_html: newSpecies.arViewerHtml || null
       }
 
       // Only add optional taxonomic fields if they exist
@@ -419,14 +459,15 @@ export function DataProvider({ children }: DataProviderProps) {
       if (updates.habitat) supabaseUpdates.habitat = updates.habitat
       if (updates.highlights) supabaseUpdates.key_facts = updates.highlights
       if (updates.images !== undefined) supabaseUpdates.image_urls = updates.images // Save images to image_urls column
-      if (updates.arExperienceUrl !== undefined) supabaseUpdates.ar_experience_url = updates.arExperienceUrl // Save AR experience URL
+      if (updates.arExperienceUrl !== undefined) supabaseUpdates.ar_model_url = updates.arExperienceUrl // Save AR experience URL
       if (updates.arModelScale !== undefined) supabaseUpdates.ar_model_scale = updates.arModelScale // Save AR model scale
       if (updates.arModelRotation !== undefined) supabaseUpdates.ar_model_rotation = updates.arModelRotation // Save AR model rotation
       if (updates.arViewerHtml !== undefined) supabaseUpdates.ar_viewer_html = updates.arViewerHtml // Save AR viewer HTML
       if (updates.arMarkerImageUrl !== undefined) supabaseUpdates.ar_marker_image_url = updates.arMarkerImageUrl // Save AR marker image URL
+      if (updates.arPatternUrl !== undefined) supabaseUpdates.ar_pattern_url = updates.arPatternUrl // Save AR pattern URL
 
       // Add other fields if they exist in updates, but skip client-only keys
-      const skipKeys = ['commonName', 'scientificName', 'status', 'blurb', 'habitat', 'highlights', 'images', 'arModelUrl', 'arPatternUrl', 'arModelScale', 'arModelRotation', 'arViewerHtml', 'arMarkerImageUrl', 'category', 'siteIds', 'id']
+      const skipKeys = ['commonName', 'scientificName', 'status', 'blurb', 'habitat', 'highlights', 'images', 'arModelUrl', 'arPatternUrl', 'arModelScale', 'arModelRotation', 'arViewerHtml', 'arMarkerImageUrl', 'arExperienceUrl', 'category', 'siteIds', 'id']
       Object.keys(updates).forEach(key => {
         if (key in supabaseUpdates) return // Already handled
         if (skipKeys.includes(key)) return // Skip client-only/mapped keys

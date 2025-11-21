@@ -1,5 +1,5 @@
 // Service Worker for Mati ARBio - Offline Support & Caching
-const CACHE_NAME = 'mati-arbio-v2.0'
+const CACHE_NAME = 'mati-arbio-v2.1'
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -46,6 +46,14 @@ self.addEventListener('activate', (event) => {
       })
       .then(() => {
         console.log('✅ Service Worker activated')
+        // Notify clients that cache has been cleared
+        return self.clients.matchAll().then(clients => {
+          clients.forEach(client => {
+            client.postMessage({ type: 'CACHE_CLEARED' })
+          })
+        })
+      })
+      .then(() => {
         return self.clients.claim() // Take control immediately
       })
   )
@@ -58,6 +66,13 @@ self.addEventListener('fetch', (event) => {
   
   // Skip non-GET requests
   if (request.method !== 'GET') {
+    return
+  }
+  
+  // Skip external API requests (like Supabase) - let them go directly to network
+  // This prevents caching of dynamic database data that should always be fresh
+  if (url.origin !== location.origin) {
+    console.log('🔄 Skipping cache for external request:', url.href)
     return
   }
   
