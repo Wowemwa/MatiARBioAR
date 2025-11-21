@@ -867,30 +867,31 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
         className="h-[60vh] sm:h-[70vh] w-full relative z-0 rounded-2xl overflow-hidden"
       />
       
-      {/* Modern Legend */}
-      <div className="absolute top-20 right-2 sm:right-4 z-[1000] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-lg sm:rounded-xl p-2 sm:p-3 shadow-lg border border-slate-200/80 dark:border-slate-700/80">
-        <h4 className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-slate-100 mb-1 sm:mb-2 uppercase tracking-wider">Legend</h4>
-        <div className="space-y-1 sm:space-y-2">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full border-2 border-white dark:border-slate-800 shadow-sm"></div>
-            <span className="text-[10px] sm:text-xs text-slate-700 dark:text-slate-300 font-medium">Marine</span>
-          </div>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full border-2 border-white dark:border-slate-800 shadow-sm"></div>
-            <span className="text-[10px] sm:text-xs text-slate-700 dark:text-slate-300 font-medium">Terrestrial</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Modern Data Info Panel */}
+      {/* Combined Legend and Data Info Panel */}
       <div className="absolute bottom-8 right-2 sm:right-4 z-[1000] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-lg sm:rounded-xl p-2 sm:p-3 shadow-lg border border-slate-200/80 dark:border-slate-700/80">
-        <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-1.5">
+        {/* Live Data Section */}
+        <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
           <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-500/50"></div>
           <span className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-slate-100">Live Data</span>
         </div>
-        <div className="text-[9px] sm:text-[10px] text-slate-600 dark:text-slate-400">
+        <div className="text-[9px] sm:text-[10px] text-slate-600 dark:text-slate-400 mb-3">
           <div className="font-semibold">{filteredHotspots.length} hotspot{filteredHotspots.length !== 1 ? 's' : ''} shown</div>
           <div className="opacity-75">Click markers for details</div>
+        </div>
+        
+        {/* Legend Section */}
+        <div className="border-t border-slate-200 dark:border-slate-700 pt-2 sm:pt-3">
+          <h4 className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-slate-100 mb-1 sm:mb-2 uppercase tracking-wider">Legend</h4>
+          <div className="space-y-1 sm:space-y-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full border-2 border-white dark:border-slate-800 shadow-sm"></div>
+              <span className="text-[10px] sm:text-xs text-slate-700 dark:text-slate-300 font-medium">Marine</span>
+            </div>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full border-2 border-white dark:border-slate-800 shadow-sm"></div>
+              <span className="text-[10px] sm:text-xs text-slate-700 dark:text-slate-300 font-medium">Terrestrial</span>
+            </div>
+          </div>
         </div>
       </div>
 
