@@ -196,7 +196,7 @@ const Navbar = memo(function Navbar() {
           <div className="flex items-center justify-between gap-4">
             <Link
               to="/"
-              className="group relative flex items-center gap-3 font-black text-2xl lg:text-3xl tracking-tight transition-all duration-500 hover:scale-[1.03]"
+              className="group relative flex flex-col md:flex-row md:items-center gap-2 md:gap-3 font-black text-2xl lg:text-3xl tracking-tight transition-all duration-500 hover:scale-[1.03]"
               onClick={() => setOpen(false)}
             >
               <div className="relative">
