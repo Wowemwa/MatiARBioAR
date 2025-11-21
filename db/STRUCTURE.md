@@ -155,8 +155,9 @@
 | **feedback** | User feedback | User Input | ❌ Own/Admin | ✅ Admins | ✅ Anyone |
 | **analytics_events** | Usage tracking | Analytics | ❌ Admin only | ✅ Admins | ✅ Anyone |
 | **performance_metrics** | Performance data | Analytics | ❌ Admin only | ✅ Admins | ✅ Anyone |
+| **site_visits** | Website visit tracking | Analytics | ❌ Admin only | ✅ Admins | ✅ Anyone |
 | **team_members** | Team info | Content | ✅ All | ✅ Admins | ❌ |
-| **activity_log** | Audit trail | Admin | ❌ Admin only | ✅ Admins | ❌ |
+| **site_visits** | Website analytics | User Input | ❌ Admin only | ✅ Admins | ✅ Anyone (anon) |
 
 ## Column Type Reference
 
@@ -235,6 +236,7 @@
 🔒 feedback (all records)
 🔒 analytics_events (all records)
 🔒 performance_metrics (all records)
+🔒 site_visits (all records)
 🔒 activity_log (all records)
 
 ### Mixed Access
@@ -244,6 +246,7 @@
 📝 feedback (insert only)
 📝 analytics_events (insert only)
 📝 performance_metrics (insert only)
+📝 site_visits (insert/update for tracking)
 
 ## Storage Buckets
 
@@ -271,6 +274,8 @@
 | `handle_updated_at_sites` | sites | handle_updated_at() | Update timestamp |
 | `handle_updated_at_species` | species | handle_updated_at() | Update timestamp |
 | `handle_updated_at_team_members` | team_members | handle_updated_at() | Update timestamp |
+| `track_site_visit` | site_visits | track_site_visit() | Track unique visitors |
+| `get_total_visitors` | site_visits | get_total_visitors() | Get visitor count |
 
 ## Database Size Estimates
 
@@ -284,6 +289,7 @@ For planning purposes (empty database is ~1MB):
 | 1 media reference | ~0.5 KB |
 | 1 feedback | ~1 KB |
 | 1 analytics event | ~0.5 KB |
+| 1 site visit record | ~0.3 KB |
 
 **Example:** 100 sites + 500 species + 1000 observations + 2000 media = ~3.5 MB (metadata only)
 

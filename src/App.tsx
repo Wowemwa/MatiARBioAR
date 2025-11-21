@@ -221,7 +221,7 @@ const Navbar = memo(function Navbar() {
               <div className="hidden sm:flex flex-col leading-tight text-left text-xs text-gray-500 dark:text-gray-400">
                 <span className="font-semibold">Biodiversity Explorer</span>
                 <span className="text-[11px] uppercase tracking-wide text-gray-400 dark:text-gray-500">
-                  powered by ar.js • leaflet • openstreatmap
+                  powered by ar.js • leaflet • openstreetmap
                   {deviceInfo.isIOS && ' • iOS'}
                   {deviceInfo.isAndroid && ' • Android'}
                 </span>
@@ -2122,7 +2122,7 @@ const ARDemo = memo(function ARDemo() {
                             </div>
                             <h4 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-2">AR Experience Coming Soon</h4>
                             <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base">
-                              This species doesn't have an AR experience configured yet. We're working on bringing you immersive 3D content!
+                              This species doesn&apos;t have an AR experience configured yet. We&apos;re working on bringing you immersive 3D content!
                             </p>
                           </div>
                         </div>
