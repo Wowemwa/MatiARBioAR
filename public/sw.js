@@ -69,25 +69,17 @@ self.addEventListener('fetch', (event) => {
     return
   }
   
-  // Skip external API requests (like Supabase) - let them go directly to network
-  // This prevents caching of dynamic database data that should always be fresh
+  // Skip ALL external requests (including Supabase API calls) - never cache them
   if (url.origin !== location.origin) {
     console.log('🔄 Skipping cache for external request:', url.href)
     return
   }
   
-  // Handle different types of requests
-  if (url.pathname.startsWith('/api/')) {
-    // API requests - Network First strategy
-    event.respondWith(networkFirstStrategy(request))
-  } else if (url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)$/)) {
-    // Static assets - Cache First strategy
-    event.respondWith(cacheFirstStrategy(request))
-  } else {
-    // HTML pages - Stale While Revalidate strategy
-    event.respondWith(staleWhileRevalidateStrategy(request))
+  // Skip API routes entirely - let them go directly to network
+  if (url.pathname.startsWith('/api/') || url.pathname.includes('supabase')) {
+    console.log('🔄 Skipping cache for API request:', url.href)
+    return
   }
-})
 
 // Network First Strategy - Good for API calls
 async function networkFirstStrategy(request) {

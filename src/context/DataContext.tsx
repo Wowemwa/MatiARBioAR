@@ -107,171 +107,215 @@ export function DataProvider({ children }: DataProviderProps) {
 
   // Load data from Supabase
   const hydrate = useCallback(async (force = false) => {
-    // Skip loading if data is already loaded and not forced
-    if (dataLoaded && !force) {
-      return
+    // Always try to load fresh data on page load, but allow force refresh
+    if (!force && dataLoaded) {
+      // Check if data was loaded recently (within last 5 minutes)
+      const lastLoadTime = localStorage.getItem('mati-data-last-load')
+      const fiveMinutesAgo = Date.now() - (5 * 60 * 1000)
+
+      if (lastLoadTime && parseInt(lastLoadTime) > fiveMinutesAgo) {
+        console.log('[DataContext] Using cached data (loaded recently)')
+        return
+      }
     }
 
     try {
       setLoading(true)
       setError(undefined)
 
-      // Load all data in parallel for better performance with timeout
-      const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Database connection timeout after 10 seconds')), 10000)
-      )
+      console.log('[DataContext] Loading fresh data from Supabase...')
 
-      const dataPromise = Promise.all([
-        supabase.from('sites').select('*').order('name'),
-        supabase.from('species').select('*').order('common_name'),
-        supabase.from('species_sites').select('*'),
-        supabase.from('team_members').select('*').order('sort_order')
-      ])
+      // Retry logic for database connection issues
+      let attempts = 0
+      const maxAttempts = 3
+      let lastError: Error | null = null
 
-      const results = await Promise.race([dataPromise, timeout])
-      
-      if (!Array.isArray(results)) {
-        throw new Error('Database query timeout')
+      while (attempts < maxAttempts) {
+        try {
+          // Load all data in parallel for better performance with increased timeout
+          const timeout = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Database connection timeout after 30 seconds')), 30000)
+          )
+
+          const dataPromise = Promise.all([
+            supabase.from('sites').select('*').order('name'),
+            supabase.from('species').select('*').order('common_name'),
+            supabase.from('species_sites').select('*'),
+            supabase.from('team_members').select('*').order('sort_order')
+          ])
+
+          const results = await Promise.race([dataPromise, timeout])
+          
+          if (!Array.isArray(results)) {
+            throw new Error('Database query timeout')
+          }
+
+          const [sitesResult, speciesResult, speciesSitesResult, teamResult] = results
+
+          // Check for errors
+          if (sitesResult.error) throw sitesResult.error
+          if (speciesResult.error) throw speciesResult.error
+          if (speciesSitesResult.error) throw speciesSitesResult.error
+          if (teamResult.error) throw teamResult.error
+
+          const sitesData = sitesResult.data || []
+          const speciesData = speciesResult.data || []
+          const speciesSitesData = speciesSitesResult.data || []
+          const teamData = teamResult.data || []
+
+          // Transform sites data to match Hotspot interface
+          const transformedSites: Hotspot[] = sitesData.map((site: any) => ({
+            id: site.id,
+            name: site.name,
+            type: (site.type === 'freshwater' || site.type === 'mixed' ? 'marine' : site.type) as 'marine' | 'terrestrial', // Map unsupported types to marine
+            barangay: site.barangay,
+            city: site.city,
+            province: site.province,
+            designation: site.designation,
+            areaHectares: site.area_hectares,
+            lat: site.lat,
+            lng: site.lng,
+            elevationRangeMeters: site.elevation_range_meters,
+            summary: site.summary,
+            description: site.description,
+            features: site.features || [],
+            stewardship: site.stewardship,
+            image: site.image_url,
+            tags: site.tags || [],
+            visitorNotes: site.visitor_notes,
+            // Map species relationships
+            highlightSpeciesIds: [], // Will be populated below
+            floraIds: [],
+            faunaIds: []
+          }))
+
+          // Transform species data to match SpeciesDetail interface
+          const transformedSpecies: SpeciesDetail[] = speciesData.map((species: any) => {
+            const speciesSiteRelations = speciesSitesData?.filter((rel: any) => rel.species_id === species.id) || []
+            const siteIds = speciesSiteRelations.map((rel: any) => rel.site_id)
+
+            return {
+              id: species.id,
+              category: species.category as 'flora' | 'fauna',
+              commonName: species.common_name,
+              scientificName: species.scientific_name,
+              status: species.conservation_status as SpeciesDetail['status'] || 'LC',
+              blurb: species.description,
+              habitat: species.habitat,
+              siteIds: siteIds,
+              highlights: species.key_facts || [], // Map key_facts to highlights
+              images: species.image_urls || [], // Load images from image_urls column
+              arExperienceUrl: species.ar_model_url || undefined, // Load AR experience URL
+              arModelScale: species.ar_model_scale || 1.0, // Load AR model scale
+              arModelRotation: species.ar_model_rotation || { x: 0, y: 0, z: 0 }, // Load AR model rotation
+              arViewerHtml: species.ar_viewer_html || undefined, // Load AR viewer HTML
+              arMarkerImageUrl: species.ar_marker_image_url || undefined, // Load AR marker image URL
+              arPatternUrl: species.ar_pattern_url || undefined, // Load AR pattern URL
+              // Additional fields from Supabase
+              kingdom: species.kingdom,
+              phylum: species.phylum,
+              class: species.class,
+              taxonomic_order: species.taxonomic_order,
+              family: species.family,
+              genus: species.genus,
+              species: species.species,
+              authorship: species.authorship,
+              synonyms: species.synonyms,
+              endemic: species.endemic,
+              invasive: species.invasive,
+              key_facts: species.key_facts,
+              diet: species.diet,
+              behavior: species.behavior,
+              reproduction: species.reproduction,
+              ecosystem_services: species.ecosystem_services,
+              phenology: species.phenology,
+              interactions: species.interactions,
+              growth_form: species.growth_form,
+              leaf_type: species.leaf_type,
+              flowering_period: species.flowering_period,
+              ethnobotanical_uses: species.ethnobotanical_uses,
+              mobility: species.mobility,
+              activity_pattern: species.activity_pattern,
+              size: species.size,
+              weight: species.weight,
+              lifespan: species.lifespan,
+              population_trend: species.population_trend,
+              threats: species.threats,
+              conservation_actions: species.conservation_actions,
+              legal_protection: species.legal_protection,
+              reference_sources: species.reference_sources
+            }
+          })
+
+          // Update hotspots with species relationships
+          const updatedSites = transformedSites.map(site => {
+            const siteSpeciesRelations = speciesSitesData?.filter((rel: any) => rel.site_id === site.id) || []
+            const highlightSpeciesIds = siteSpeciesRelations
+              .filter((rel: any) => rel.is_highlight)
+              .map((rel: any) => rel.species_id)
+
+            const siteSpecies = transformedSpecies.filter(species =>
+              siteSpeciesRelations.some((rel: any) => rel.species_id === species.id)
+            )
+
+            return {
+              ...site,
+              highlightSpeciesIds,
+              floraIds: siteSpecies.filter(s => s.category === 'flora').map(s => s.id),
+              faunaIds: siteSpecies.filter(s => s.category === 'fauna').map(s => s.id)
+            }
+          })
+
+          // Transform team members data
+          const transformedTeam: TeamMember[] = teamData.map((member: any) => ({
+            id: member.id,
+            name: member.name,
+            role: member.role,
+            image: member.avatar_url || '/default-avatar.jpg',
+            description: member.bio || ''
+          }))
+
+          // Update state
+          setHotspots(updatedSites)
+          setSpecies(transformedSpecies)
+          setTeamMembers(transformedTeam)
+          setDataLoaded(true)
+
+          // Store last load time
+          localStorage.setItem('mati-data-last-load', Date.now().toString())
+
+          console.log('[DataContext] Data loaded successfully from Supabase')
+
+          // Success - break out of retry loop
+          return
+
+        } catch (attemptError) {
+          attempts++
+          lastError = attemptError as Error
+          console.warn(`[DataContext] Database load attempt ${attempts} failed:`, attemptError)
+          
+          if (attempts < maxAttempts) {
+            // Wait before retrying (exponential backoff)
+            const delay = Math.min(1000 * Math.pow(2, attempts - 1), 5000)
+            console.log(`[DataContext] Retrying in ${delay}ms...`)
+            await new Promise(resolve => setTimeout(resolve, delay))
+          }
+        }
       }
 
-      const [sitesResult, speciesResult, speciesSitesResult, teamResult] = results
-
-      // Check for errors
-      if (sitesResult.error) throw sitesResult.error
-      if (speciesResult.error) throw speciesResult.error
-      if (speciesSitesResult.error) throw speciesSitesResult.error
-      if (teamResult.error) throw teamResult.error
-
-      const sitesData = sitesResult.data || []
-      const speciesData = speciesResult.data || []
-      const speciesSitesData = speciesSitesResult.data || []
-      const teamData = teamResult.data || []
-
-      // Transform sites data to match Hotspot interface
-      const transformedSites: Hotspot[] = sitesData.map((site: any) => ({
-        id: site.id,
-        name: site.name,
-        type: (site.type === 'freshwater' || site.type === 'mixed' ? 'marine' : site.type) as 'marine' | 'terrestrial', // Map unsupported types to marine
-        barangay: site.barangay,
-        city: site.city,
-        province: site.province,
-        designation: site.designation,
-        areaHectares: site.area_hectares,
-        lat: site.lat,
-        lng: site.lng,
-        elevationRangeMeters: site.elevation_range_meters,
-        summary: site.summary,
-        description: site.description,
-        features: site.features || [],
-        stewardship: site.stewardship,
-        image: site.image_url,
-        tags: site.tags || [],
-        visitorNotes: site.visitor_notes,
-        // Map species relationships
-        highlightSpeciesIds: [], // Will be populated below
-        floraIds: [],
-        faunaIds: []
-      }))
-
-      // Transform species data to match SpeciesDetail interface
-      const transformedSpecies: SpeciesDetail[] = speciesData.map((species: any) => {
-        const speciesSiteRelations = speciesSitesData?.filter((rel: any) => rel.species_id === species.id) || []
-        const siteIds = speciesSiteRelations.map((rel: any) => rel.site_id)
-
-        return {
-          id: species.id,
-          category: species.category as 'flora' | 'fauna',
-          commonName: species.common_name,
-          scientificName: species.scientific_name,
-          status: species.conservation_status as SpeciesDetail['status'] || 'LC',
-          blurb: species.description,
-          habitat: species.habitat,
-          siteIds: siteIds,
-          highlights: species.key_facts || [], // Map key_facts to highlights
-          images: species.image_urls || [], // Load images from image_urls column
-          arExperienceUrl: species.ar_model_url || undefined, // Load AR experience URL
-          arModelScale: species.ar_model_scale || 1.0, // Load AR model scale
-          arModelRotation: species.ar_model_rotation || { x: 0, y: 0, z: 0 }, // Load AR model rotation
-          arViewerHtml: species.ar_viewer_html || undefined, // Load AR viewer HTML
-          arMarkerImageUrl: species.ar_marker_image_url || undefined, // Load AR marker image URL
-          arPatternUrl: species.ar_pattern_url || undefined, // Load AR pattern URL
-          // Additional fields from Supabase
-          kingdom: species.kingdom,
-          phylum: species.phylum,
-          class: species.class,
-          taxonomic_order: species.taxonomic_order,
-          family: species.family,
-          genus: species.genus,
-          species: species.species,
-          authorship: species.authorship,
-          synonyms: species.synonyms,
-          endemic: species.endemic,
-          invasive: species.invasive,
-          key_facts: species.key_facts,
-          diet: species.diet,
-          behavior: species.behavior,
-          reproduction: species.reproduction,
-          ecosystem_services: species.ecosystem_services,
-          phenology: species.phenology,
-          interactions: species.interactions,
-          growth_form: species.growth_form,
-          leaf_type: species.leaf_type,
-          flowering_period: species.flowering_period,
-          ethnobotanical_uses: species.ethnobotanical_uses,
-          mobility: species.mobility,
-          activity_pattern: species.activity_pattern,
-          size: species.size,
-          weight: species.weight,
-          lifespan: species.lifespan,
-          population_trend: species.population_trend,
-          threats: species.threats,
-          conservation_actions: species.conservation_actions,
-          legal_protection: species.legal_protection,
-          reference_sources: species.reference_sources
-        }
-      })
-
-      // Update hotspots with species relationships
-      const updatedSites = transformedSites.map(site => {
-        const siteSpeciesRelations = speciesSitesData?.filter((rel: any) => rel.site_id === site.id) || []
-        const highlightSpeciesIds = siteSpeciesRelations
-          .filter((rel: any) => rel.is_highlight)
-          .map((rel: any) => rel.species_id)
-
-        const siteSpecies = transformedSpecies.filter(species =>
-          siteSpeciesRelations.some((rel: any) => rel.species_id === species.id)
-        )
-
-        return {
-          ...site,
-          highlightSpeciesIds,
-          floraIds: siteSpecies.filter(s => s.category === 'flora').map(s => s.id),
-          faunaIds: siteSpecies.filter(s => s.category === 'fauna').map(s => s.id)
-        }
-      })
-
-      // Transform team members data
-      const transformedTeam: TeamMember[] = teamData.map((member: any) => ({
-        id: member.id,
-        name: member.name,
-        role: member.role,
-        image: member.avatar_url || '/default-avatar.jpg',
-        description: member.bio || ''
-      }))
-
-      // Update state
-      setHotspots(updatedSites)
-      setSpecies(transformedSpecies)
-      setTeamMembers(transformedTeam)
-      setDataLoaded(true)
+      // If we get here, all attempts failed
+      throw lastError || new Error('All database connection attempts failed')
 
     } catch (err) {
-      console.error('[DataProvider] failed to load data from Supabase', err)
-      setError('Unable to load biodiversity data from database. Please try again later.')
-      // Note: No longer falling back to local sample data - database is the source of truth
-      setHotspots([])
-      setSpecies([])
-      setTeamMembers([])
+      console.error('[DataContext] failed to load data from Supabase', err)
+      setError('Unable to load biodiversity data from database. Please check your internet connection and try refreshing the page.')
+
+      // Don't set empty arrays if we already have data - keep existing data
+      if (!dataLoaded) {
+        setHotspots([])
+        setSpecies([])
+        setTeamMembers([])
+      }
     } finally {
       setLoading(false)
     }
@@ -447,39 +491,51 @@ export function DataProvider({ children }: DataProviderProps) {
 
   const updateSpecies = useCallback(async (id: string, updates: Partial<SpeciesDetail>) => {
     try {
-      console.log('[DataContext] Updating species in Supabase:', id, updates)
+      console.log('[DataContext] Updates object keys:', Object.keys(updates))
+      console.log('[DataContext] Updates object:', updates)
 
-      // Update in Supabase species table
+      // Update in Supabase species table - only send defined fields
       const supabaseUpdates: any = {}
-      if (updates.category) supabaseUpdates.category = updates.category
-      if (updates.commonName) supabaseUpdates.common_name = updates.commonName
-      if (updates.scientificName) supabaseUpdates.scientific_name = updates.scientificName
-      if (updates.status) supabaseUpdates.conservation_status = updates.status
-      if (updates.blurb) supabaseUpdates.description = updates.blurb
-      if (updates.habitat) supabaseUpdates.habitat = updates.habitat
-      if (updates.highlights) supabaseUpdates.key_facts = updates.highlights
-      if (updates.images !== undefined) supabaseUpdates.image_urls = updates.images // Save images to image_urls column
-      if (updates.arExperienceUrl !== undefined) supabaseUpdates.ar_model_url = updates.arExperienceUrl // Save AR experience URL
-      if (updates.arModelScale !== undefined) supabaseUpdates.ar_model_scale = updates.arModelScale // Save AR model scale
-      if (updates.arModelRotation !== undefined) supabaseUpdates.ar_model_rotation = updates.arModelRotation // Save AR model rotation
-      if (updates.arViewerHtml !== undefined) supabaseUpdates.ar_viewer_html = updates.arViewerHtml // Save AR viewer HTML
-      if (updates.arMarkerImageUrl !== undefined) supabaseUpdates.ar_marker_image_url = updates.arMarkerImageUrl // Save AR marker image URL
-      if (updates.arPatternUrl !== undefined) supabaseUpdates.ar_pattern_url = updates.arPatternUrl // Save AR pattern URL
+      
+      // Required fields
+      if (updates.category !== undefined) supabaseUpdates.category = updates.category
+      if (updates.commonName !== undefined) supabaseUpdates.common_name = updates.commonName
+      if (updates.scientificName !== undefined) supabaseUpdates.scientific_name = updates.scientificName
+      if (updates.status !== undefined) supabaseUpdates.conservation_status = updates.status
+      if (updates.blurb !== undefined) supabaseUpdates.description = updates.blurb
+      if (updates.habitat !== undefined) supabaseUpdates.habitat = updates.habitat
+      
+      // Array fields
+      if (updates.highlights !== undefined) supabaseUpdates.key_facts = updates.highlights
+      if (updates.images !== undefined) supabaseUpdates.image_urls = updates.images
+      
+      // AR fields
+      if (updates.arExperienceUrl !== undefined) supabaseUpdates.ar_model_url = updates.arExperienceUrl
+      if (updates.arMarkerImageUrl !== undefined) supabaseUpdates.ar_marker_image_url = updates.arMarkerImageUrl
 
       // Add other fields if they exist in updates, but skip client-only keys
-      const skipKeys = ['commonName', 'scientificName', 'status', 'blurb', 'habitat', 'highlights', 'images', 'arModelUrl', 'arPatternUrl', 'arModelScale', 'arModelRotation', 'arViewerHtml', 'arMarkerImageUrl', 'arExperienceUrl', 'category', 'siteIds', 'id']
-      Object.keys(updates).forEach(key => {
-        if (key in supabaseUpdates) return // Already handled
-        if (skipKeys.includes(key)) return // Skip client-only/mapped keys
-        supabaseUpdates[key] = (updates as any)[key]
-      })
+      // const skipKeys = ['commonName', 'scientificName', 'status', 'blurb', 'habitat', 'highlights', 'images', 'arModelUrl', 'arPatternUrl', 'arModelScale', 'arModelRotation', 'arViewerHtml', 'arMarkerImageUrl', 'arExperienceUrl', 'category', 'siteIds', 'id', 'marker']
+      // Object.keys(updates).forEach(key => {
+      //   if (key in supabaseUpdates) return // Already handled
+      //   if (skipKeys.includes(key)) return // Skip client-only/mapped keys
+      //   supabaseUpdates[key] = (updates as any)[key]
+      // })
+
+      console.log('[DataContext] Supabase updates object:', supabaseUpdates)
+
+      // Check authentication
+      const { data: { user } } = await supabase.auth.getUser()
+      console.log('[DataContext] Current user:', user)
 
       const { error } = await supabase
         .from('species')
         .update(supabaseUpdates)
         .eq('id', id)
 
-      if (error) throw error
+      if (error) {
+        console.error('[DataContext] Supabase update error:', error)
+        throw error
+      }
 
       // Update local state
       setSpecies(prev => prev.map(s =>
@@ -683,6 +739,7 @@ export function DataProvider({ children }: DataProviderProps) {
     loading,
     error,
     refresh: async () => {
+      console.log('[DataContext] Manual refresh requested')
       setDataLoaded(false)
       await hydrate(true)
     },
