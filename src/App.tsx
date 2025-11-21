@@ -218,7 +218,7 @@ const Navbar = memo(function Navbar() {
                   <div className="absolute inset-0 rounded-full bg-gradient-to-r from-green-400 to-blue-400 animate-ping opacity-75" />
                 </div>
               </div>
-              <div className="hidden sm:flex flex-col leading-tight text-left text-xs text-gray-500 dark:text-gray-400">
+              <div className="flex flex-col leading-tight text-left text-xs text-gray-500 dark:text-gray-400">
                 <span className="font-semibold">Biodiversity Explorer</span>
                 <span className="text-[11px] uppercase tracking-wide text-gray-400 dark:text-gray-500">
                   powered by ar.js • leaflet • openstreetmap
