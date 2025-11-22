@@ -1605,6 +1605,9 @@ const ARDemo = memo(function ARDemo() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null)
 
+  // Hidden content toggle for mobile
+  const [showHiddenBlurb, setShowHiddenBlurb] = useState(false)
+
   // Filtered species based on search and filters
   const filteredSpecies = useMemo(() => {
     return allMatiSpecies.filter((species) => {
@@ -1861,7 +1864,31 @@ const ARDemo = memo(function ARDemo() {
         {selectedSpeciesData && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300"
                onClick={() => setSelectedSpecies(null)}>
-            <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500 border border-slate-200/50 dark:border-slate-700/50"
+            <style dangerouslySetInnerHTML={{
+              __html: `
+                @keyframes gentle-bounce {
+                  0% {
+                    opacity: 0;
+                    transform: translateY(30px) scale(0.95);
+                  }
+                  50% {
+                    opacity: 0.8;
+                    transform: translateY(-5px) scale(1.02);
+                  }
+                  70% {
+                    transform: translateY(2px) scale(0.99);
+                  }
+                  100% {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                  }
+                }
+                .gentle-bounce {
+                  animation: gentle-bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+                }
+              `
+            }} />
+            <div className="bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in gentle-bounce border border-slate-200/50 dark:border-slate-700/50"
                  onClick={(e) => e.stopPropagation()}>
 
               {/* Enhanced Header with Floating Elements */}
@@ -2119,17 +2146,57 @@ const ARDemo = memo(function ARDemo() {
 
                       {/* Full Description */}
                       <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50">
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                        <h3 
+                          className={`text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 ${isMobileView ? 'cursor-pointer hover:text-purple-600 dark:hover:text-purple-400 transition-colors' : ''}`}
+                          onClick={() => {
+                            if (isMobileView) {
+                              setShowAboutPopup(true);
+                            }
+                          }}
+                        >
                           <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                           About {selectedSpeciesData.commonName}
+                          {isMobileView && (
+                            <span className="text-sm font-normal text-purple-600 dark:text-purple-400 ml-2">
+                              - Tap to view full information
+                            </span>
+                          )}
+                          {isMobileView && (
+                            <svg className="w-4 h-4 text-purple-500 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          )}
                         </h3>
                         <div className="space-y-4">
                           <div>
-                            <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base break-words hyphens-auto">
-                              {selectedSpeciesData.blurb}
-                            </p>
+                            {(() => {
+                              const hasSensitiveContent = selectedSpeciesData.blurb.includes('species-1763703849999') || selectedSpeciesData.blurb.includes('wowemwa.github.io/butterflyarbio')
+                              const shouldHideOnMobile = isMobileView && hasSensitiveContent
+                              
+                              if (shouldHideOnMobile && !showHiddenBlurb) {
+                                return (
+                                  <button
+                                    onClick={() => setShowHiddenBlurb(true)}
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-lg text-emerald-700 dark:text-emerald-300 text-sm font-medium transition-all duration-200 hover:scale-105"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    Tap to view detailed information
+                                  </button>
+                                )
+                              }
+                              
+                              return (
+                                <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base break-words hyphens-auto">
+                                  {selectedSpeciesData.blurb}
+                                </p>
+                              )
+                            })()}
                           </div>
                         </div>
                       </div>
@@ -2143,7 +2210,7 @@ const ARDemo = memo(function ARDemo() {
 
         {/* AR Experience Modal */}
         {showARExperienceModal && arExperienceUrl && (
-          <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-500"
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300"
                onClick={() => setShowARExperienceModal(false)}>
             <style dangerouslySetInnerHTML={{
               __html: `
@@ -2154,9 +2221,29 @@ const ARDemo = memo(function ARDemo() {
                   -ms-overflow-style: none;
                   scrollbar-width: none;
                 }
+                @keyframes bounce-in {
+                  0% {
+                    opacity: 0;
+                    transform: scale(0.3) translateY(50px);
+                  }
+                  50% {
+                    opacity: 0.9;
+                    transform: scale(1.05) translateY(-10px);
+                  }
+                  70% {
+                    transform: scale(0.98) translateY(2px);
+                  }
+                  100% {
+                    opacity: 1;
+                    transform: scale(1) translateY(0);
+                  }
+                }
+                .bounce-in {
+                  animation: bounce-in 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                }
               `
             }} />
-            <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-7xl w-full h-[80vh] sm:h-[95vh] shadow-2xl overflow-y-auto animate-in slide-in-from-bottom-6 duration-700 border border-slate-200/50 dark:border-slate-700/50 hide-scrollbar"
+            <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-7xl w-full h-[80vh] sm:h-[95vh] shadow-2xl overflow-y-auto animate-in bounce-in border border-slate-200/50 dark:border-slate-700/50 hide-scrollbar"
                  onClick={(e) => e.stopPropagation()}>
               {/* Enhanced Header */}
               <div className="relative h-20 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 flex items-center justify-between px-4 sm:px-8 overflow-hidden">
@@ -2441,7 +2528,7 @@ const ARDemo = memo(function ARDemo() {
                               </div>
 
                               {/* Floating Instructions */}
-                              <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-md text-white px-4 py-2 rounded-xl text-sm font-medium animate-in slide-in-from-left duration-500 delay-1000">
+                              <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-md text-white px-4 py-2 rounded-xl text-sm font-medium animate-in slide-in-from-left duration-700 delay-1200 opacity-0">
                                 📱 Point camera at AR marker to begin
                               </div>
                             </div>
@@ -2466,7 +2553,7 @@ const ARDemo = memo(function ARDemo() {
                               </div>
 
                               {/* Floating Instructions */}
-                              <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-md text-white px-4 py-2 rounded-xl text-sm font-medium animate-in slide-in-from-right duration-500 delay-1000">
+                              <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-md text-white px-4 py-2 rounded-xl text-sm font-medium animate-in slide-in-from-right duration-700 delay-1400 opacity-0">
                                 🎯 Interactive content loaded
                               </div>
                             </div>
@@ -2771,9 +2858,31 @@ const ARDemo = memo(function ARDemo() {
                     </h3>
                     <div className="space-y-4">
                       <div>
-                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base break-words hyphens-auto">
-                          {selectedSpeciesData.blurb}
-                        </p>
+                        {(() => {
+                          const hasSensitiveContent = selectedSpeciesData.blurb.includes('species-1763703849999') || selectedSpeciesData.blurb.includes('wowemwa.github.io/butterflyarbio')
+                          const shouldHideOnMobile = isMobileView && hasSensitiveContent
+                          
+                          if (shouldHideOnMobile && !showHiddenBlurb) {
+                            return (
+                              <button
+                                onClick={() => setShowHiddenBlurb(true)}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-lg text-emerald-700 dark:text-emerald-300 text-sm font-medium transition-all duration-200 hover:scale-105"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                Tap to view detailed information
+                              </button>
+                            )
+                          }
+                          
+                          return (
+                            <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base break-words hyphens-auto">
+                              {selectedSpeciesData.blurb}
+                            </p>
+                          )
+                        })()}
                       </div>
                       <div className="border-t border-slate-200 dark:border-slate-600 pt-4">
                         <div className="flex items-center gap-2 mb-2">
