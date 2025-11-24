@@ -161,7 +161,7 @@ const Navbar = memo(function Navbar() {
   const navigate = useNavigate()
   const { isMobileView, deviceInfo } = useDeviceDetection()
   const navItems = useMemo(() => [
-    { to: '/gis', label: 'GIS Map', badge: <HiMapPin className="w-5 h-5" /> },
+    { to: '/gis', label: 'Interactive Map', badge: <HiMapPin className="w-5 h-5" /> },
     { to: '/biodiversity', label: 'Biodiversity', badge: <GiButterfly className="w-5 h-5" /> },
     { to: '/ar', label: 'Augmented Reality', badge: <MdAutoAwesome className="w-5 h-5" /> },
     ...(isAdmin ? [{ to: '/mati-secret-admin-2024', label: 'Admin', badge: '👑', adminOnly: true }] : []),
@@ -1599,14 +1599,12 @@ const ARDemo = memo(function ARDemo() {
   const [showARExperienceModal, setShowARExperienceModal] = useState(false)
   const [arExperienceUrl, setArExperienceUrl] = useState<string>('')
   const [showAboutPopup, setShowAboutPopup] = useState(false)
+  const [showAboutContent, setShowAboutContent] = useState(false)
 
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null)
-
-  // Hidden content toggle for mobile
-  const [showHiddenBlurb, setShowHiddenBlurb] = useState(false)
 
   // Filtered species based on search and filters
   const filteredSpecies = useMemo(() => {
@@ -2147,10 +2145,13 @@ const ARDemo = memo(function ARDemo() {
                       {/* Full Description */}
                       <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50">
                         <h3 
-                          className={`text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 ${isMobileView ? 'cursor-pointer hover:text-purple-600 dark:hover:text-purple-400 transition-colors' : ''}`}
+                          className={`text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 ${isMobileView ? 'cursor-pointer hover:text-purple-600 dark:hover:text-purple-400 transition-colors' : 'cursor-pointer hover:text-purple-600 dark:hover:text-purple-400 transition-colors'}`}
                           onClick={() => {
                             if (isMobileView) {
                               setShowAboutPopup(true);
+                              setShowAboutContent(true); // Show content immediately when popup opens
+                            } else {
+                              setShowAboutContent(!showAboutContent);
                             }
                           }}
                         >
@@ -2158,10 +2159,21 @@ const ARDemo = memo(function ARDemo() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                           About {selectedSpeciesData.commonName}
-                          {isMobileView && (
+                          {!isMobileView && (
                             <span className="text-sm font-normal text-purple-600 dark:text-purple-400 ml-2">
-                              - Tap to view full information
+                              - {showAboutContent ? 'Tap to hide information' : 'Tap to view full information'}
                             </span>
+                          )}
+                          {!isMobileView && (
+                            <svg className="w-4 h-4 text-purple-500 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          )}
+                          {!isMobileView && (
+                            <svg className={`w-4 h-4 text-purple-500 ml-2 transition-transform duration-200 ${showAboutContent ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
                           )}
                           {isMobileView && (
                             <svg className="w-4 h-4 text-purple-500 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2170,35 +2182,15 @@ const ARDemo = memo(function ARDemo() {
                             </svg>
                           )}
                         </h3>
-                        <div className="space-y-4">
-                          <div>
-                            {(() => {
-                              const hasSensitiveContent = selectedSpeciesData.blurb.includes('species-1763703849999') || selectedSpeciesData.blurb.includes('wowemwa.github.io/butterflyarbio')
-                              const shouldHideOnMobile = isMobileView && hasSensitiveContent
-                              
-                              if (shouldHideOnMobile && !showHiddenBlurb) {
-                                return (
-                                  <button
-                                    onClick={() => setShowHiddenBlurb(true)}
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-lg text-emerald-700 dark:text-emerald-300 text-sm font-medium transition-all duration-200 hover:scale-105"
-                                  >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                    </svg>
-                                    Tap to view detailed information
-                                  </button>
-                                )
-                              }
-                              
-                              return (
-                                <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base break-words hyphens-auto">
-                                  {selectedSpeciesData.blurb}
-                                </p>
-                              )
-                            })()}
+                        {(!isMobileView && showAboutContent) && (
+                          <div className="space-y-4">
+                            <div>
+                              <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base break-words hyphens-auto">
+                                {selectedSpeciesData.blurb}
+                              </p>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -2858,31 +2850,9 @@ const ARDemo = memo(function ARDemo() {
                     </h3>
                     <div className="space-y-4">
                       <div>
-                        {(() => {
-                          const hasSensitiveContent = selectedSpeciesData.blurb.includes('species-1763703849999') || selectedSpeciesData.blurb.includes('wowemwa.github.io/butterflyarbio')
-                          const shouldHideOnMobile = isMobileView && hasSensitiveContent
-                          
-                          if (shouldHideOnMobile && !showHiddenBlurb) {
-                            return (
-                              <button
-                                onClick={() => setShowHiddenBlurb(true)}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-lg text-emerald-700 dark:text-emerald-300 text-sm font-medium transition-all duration-200 hover:scale-105"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                                Tap to view detailed information
-                              </button>
-                            )
-                          }
-                          
-                          return (
-                            <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base break-words hyphens-auto">
-                              {selectedSpeciesData.blurb}
-                            </p>
-                          )
-                        })()}
+                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base break-words hyphens-auto">
+                          {selectedSpeciesData.blurb}
+                        </p>
                       </div>
                       <div className="border-t border-slate-200 dark:border-slate-600 pt-4">
                         <div className="flex items-center gap-2 mb-2">

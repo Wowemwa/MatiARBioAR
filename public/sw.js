@@ -81,82 +81,18 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-// Network First Strategy - Good for API calls
-async function networkFirstStrategy(request) {
-  try {
-    // Try network first
-    const networkResponse = await fetch(request)
-    
-    if (networkResponse.ok) {
-      // Cache successful responses
-      const cache = await caches.open(CACHE_NAME)
-      cache.put(request, networkResponse.clone())
-    }
-    
-    return networkResponse
-  } catch (error) {
-    console.log('📶 Network failed, checking cache:', request.url)
-    
-    // Fall back to cache
-    const cachedResponse = await caches.match(request)
-    if (cachedResponse) {
-      return cachedResponse
-    }
-    
-    // Return offline page for navigation requests
-    if (request.mode === 'navigate') {
-      return caches.match('/offline.html') || new Response('Offline')
-    }
-    
-    throw error
+  // Use appropriate caching strategy based on resource type
+  if (request.destination === 'document') {
+    // HTML pages - Stale While Revalidate
+    event.respondWith(staleWhileRevalidateStrategy(request))
+  } else if (request.destination === 'script' || request.destination === 'style' || request.destination === 'image' || request.destination === 'font') {
+    // Static assets - Cache First
+    event.respondWith(cacheFirstStrategy(request))
+  } else {
+    // Other requests - Network First
+    event.respondWith(networkFirstStrategy(request))
   }
-}
-
-// Cache First Strategy - Good for static assets
-async function cacheFirstStrategy(request) {
-  // Check cache first
-  const cachedResponse = await caches.match(request)
-  if (cachedResponse) {
-    return cachedResponse
-  }
-  
-  try {
-    // Fall back to network
-    const networkResponse = await fetch(request)
-    
-    if (networkResponse.ok) {
-      // Cache for future use
-      const cache = await caches.open(CACHE_NAME)
-      cache.put(request, networkResponse.clone())
-    }
-    
-    return networkResponse
-  } catch (error) {
-    console.error('📶 Failed to fetch asset:', request.url)
-    throw error
-  }
-}
-
-// Stale While Revalidate Strategy - Good for HTML pages
-async function staleWhileRevalidateStrategy(request) {
-  const cache = await caches.open(CACHE_NAME)
-  
-  // Get from cache immediately (stale)
-  const cachedResponse = await caches.match(request)
-  
-  // Update cache in background (revalidate)
-  const networkResponsePromise = fetch(request).then((networkResponse) => {
-    if (networkResponse.ok) {
-      cache.put(request, networkResponse.clone())
-    }
-    return networkResponse
-  }).catch(() => {
-    // Network failed, that's ok for this strategy
-  })
-  
-  // Return cached version immediately, or wait for network if no cache
-  return cachedResponse || networkResponsePromise
-}
+})
 
 // Background sync for offline actions
 self.addEventListener('sync', (event) => {

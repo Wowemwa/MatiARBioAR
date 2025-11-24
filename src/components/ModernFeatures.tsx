@@ -15,7 +15,7 @@ const ModernFeatures = memo(function ModernFeatures() {
     {
       icon: MapPin,
       title: 'Interactive Mapping',
-      description: 'Explore biodiversity hotspots with our advanced GIS system featuring real-time data and satellite imagery.',
+      description: 'Explore biodiversity hotspots with our advanced Interactive Map system featuring real-time data and satellite imagery.',
       gradient: 'from-blue-500 to-cyan-500',
       link: '/gis',
       emoji: '🗺️'

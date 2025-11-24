@@ -921,7 +921,7 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
       {/* Attribution */}
       <div className="text-center text-sm text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-700">
         <p>
-          GIS data sourced from DENR-BMB, UNESCO, and local research institutions. 
+          Interactive map data sourced from DENR-BMB, UNESCO, and local research institutions. 
           Map data © OpenStreetMap contributors.
         </p>
       </div>

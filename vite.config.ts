@@ -29,8 +29,11 @@ export default defineConfig({
           // Map library (heavy)
           leaflet: ['leaflet'],
           
+          // AR libraries (heavy)
+          ar: ['aframe', '@ar-js-org/ar.js', 'ar.js'],
+          
           // Utility libraries
-          utils: ['clsx', 'fuse.js']
+          utils: ['clsx', 'fuse.js', 'html5-qrcode', 'html2canvas']
         },
         
         // Optimize chunk naming for better caching
@@ -77,13 +80,7 @@ export default defineConfig({
       'leaflet',
       'clsx'
     ],
-    exclude: [
-      'firebase',
-      'firebase/app',
-      'firebase/auth', 
-      'firebase/firestore',
-      'firebase/storage'
-    ] // Exclude Firebase libs to avoid build issues
+    exclude: [] // No exclusions needed
   },
   
   // Development server configuration
