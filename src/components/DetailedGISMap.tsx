@@ -560,7 +560,7 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
       
       // Log activity
       addActivityLog({
-        type: 'site_add',
+        type: 'create',
         entityType: 'site',
         entityId: siteId,
         entityName: newHotspotData.name,
