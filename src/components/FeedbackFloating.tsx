@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, MessageCircle, Star, Camera } from 'lucide-react'
+import { X, MessageCircle, Star } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import { useAdmin } from '../context/AdminContext'
 
@@ -31,7 +31,7 @@ export default function FeedbackFloating() {
         .from('feedback')
         .insert([
           {
-            name: name.trim() || 'Anonymous',
+            name: name.trim() || null,
             email: email.trim() || null,
             message: message.trim(),
             rating: rating,
@@ -44,8 +44,8 @@ export default function FeedbackFloating() {
 
       setSubmitStatus('success')
       setName('')
-      setMessage('')
       setEmail('')
+      setMessage('')
       setRating(5)
 
       // Close after success
@@ -187,8 +187,8 @@ export default function FeedbackFloating() {
                   onClick={() => { 
                     setOpen(false)
                     setName('')
-                    setMessage('')
                     setEmail('')
+                    setMessage('')
                     setRating(5)
                     setSubmitStatus('idle')
                   }}

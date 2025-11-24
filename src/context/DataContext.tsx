@@ -453,16 +453,7 @@ export function DataProvider({ children }: DataProviderProps) {
   console.log('[DataContext] Species created successfully in Supabase')
 
       // Log activity
-      addActivityLog({
-        type: 'create',
-        entityType: 'species',
-        entityId: newSpecies.id,
-        entityName: newSpecies.commonName,
-        details: `Created ${newSpecies.category} species: ${newSpecies.scientificName}`
-      })
-
-      // Log activity
-      addActivityLog({
+      await addActivityLog({
         type: 'create',
         entityType: 'species',
         entityId: newSpecies.id,
@@ -477,7 +468,7 @@ export function DataProvider({ children }: DataProviderProps) {
       setSpecies(prev => [...prev, newSpecies])
       
       // Log activity even on fallback
-      addActivityLog({
+      await addActivityLog({
         type: 'create',
         entityType: 'species',
         entityId: newSpecies.id,
@@ -605,7 +596,7 @@ export function DataProvider({ children }: DataProviderProps) {
 
       // Log activity
       if (speciesItem) {
-        addActivityLog({
+        await addActivityLog({
           type: 'delete',
           entityType: 'species',
           entityId: id,
@@ -621,7 +612,7 @@ export function DataProvider({ children }: DataProviderProps) {
       
       // Log activity even on fallback
       if (speciesItem) {
-        addActivityLog({
+        await addActivityLog({
           type: 'delete',
           entityType: 'species',
           entityId: id,
@@ -664,10 +655,28 @@ export function DataProvider({ children }: DataProviderProps) {
       setTeamMembers(prev => [...prev, createdMember])
       console.log('[DataContext] Team member created successfully in Supabase')
 
+      // Log activity
+      await addActivityLog({
+        type: 'create',
+        entityType: 'team_member',
+        entityId: createdMember.id,
+        entityName: createdMember.name,
+        details: `Created team member: ${createdMember.name} (${createdMember.role})`
+      })
+
     } catch (err) {
       console.error('[DataContext] Failed to create team member in Supabase:', err)
       // Fallback to local state only
       setTeamMembers(prev => [...prev, newMember])
+
+      // Log activity even on fallback
+      await addActivityLog({
+        type: 'create',
+        entityType: 'team_member',
+        entityId: newMember.id,
+        entityName: newMember.name,
+        details: `Created team member: ${newMember.name} (${newMember.role})`
+      })
     }
   }, [teamMembers.length])
 
@@ -694,12 +703,42 @@ export function DataProvider({ children }: DataProviderProps) {
       ))
       console.log('[DataContext] Team member updated successfully in Supabase')
 
+      // Log activity
+      const updatedMember = teamMembers.find(m => m.id === id)
+      if (updatedMember) {
+        const changeDetails = []
+        if (updates.name) changeDetails.push(`name to "${updates.name}"`)
+        if (updates.role) changeDetails.push(`role to "${updates.role}"`)
+        if (updates.description) changeDetails.push('description')
+        if (updates.image) changeDetails.push('image')
+
+        await addActivityLog({
+          type: 'update',
+          entityType: 'team_member',
+          entityId: id,
+          entityName: updates.name || updatedMember.name,
+          details: changeDetails.length > 0 ? `Updated ${changeDetails.join(', ')}` : 'Updated team member information'
+        })
+      }
+
     } catch (err) {
       console.error('[DataContext] Failed to update team member in Supabase:', err)
       // Fallback to local state only
       setTeamMembers(prev => prev.map(m =>
         m.id === id ? { ...m, ...updates } : m
       ))
+
+      // Log activity even on fallback
+      const updatedMember = teamMembers.find(m => m.id === id)
+      if (updatedMember) {
+        await addActivityLog({
+          type: 'update',
+          entityType: 'team_member',
+          entityId: id,
+          entityName: updates.name || updatedMember.name,
+          details: 'Updated team member information'
+        })
+      }
     }
   }, [])
 
@@ -718,10 +757,34 @@ export function DataProvider({ children }: DataProviderProps) {
       setTeamMembers(prev => prev.filter(m => m.id !== id))
       console.log('[DataContext] Team member deleted successfully from Supabase')
 
+      // Log activity
+      const deletedMember = teamMembers.find(m => m.id === id)
+      if (deletedMember) {
+        await addActivityLog({
+          type: 'delete',
+          entityType: 'team_member',
+          entityId: id,
+          entityName: deletedMember.name,
+          details: `Deleted team member: ${deletedMember.name} (${deletedMember.role})`
+        })
+      }
+
     } catch (err) {
       console.error('[DataContext] Failed to delete team member from Supabase:', err)
       // Fallback to local state only
       setTeamMembers(prev => prev.filter(m => m.id !== id))
+
+      // Log activity even on fallback
+      const deletedMember = teamMembers.find(m => m.id === id)
+      if (deletedMember) {
+        await addActivityLog({
+          type: 'delete',
+          entityType: 'team_member',
+          entityId: id,
+          entityName: deletedMember.name,
+          details: `Deleted team member: ${deletedMember.name} (${deletedMember.role})`
+        })
+      }
     }
   }, [])
 

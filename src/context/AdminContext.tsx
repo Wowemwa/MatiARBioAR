@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import type { User } from '@supabase/supabase-js'
+import { logAdminLogin, logAdminLogout } from '../utils/activityLog'
 
 type AdminContextValue = {
   isAdmin: boolean
@@ -98,6 +99,8 @@ export function AdminProvider({ children }: AdminProviderProps) {
         if (adminData && adminData.length > 0 && adminData[0].is_admin) {
           // User is admin - login time already updated by the function
           setLastLoginAt(new Date().toISOString())
+          // Log admin login activity
+          await logAdminLogin()
           return true
         } else {
           // Not an admin, sign out
@@ -115,6 +118,8 @@ export function AdminProvider({ children }: AdminProviderProps) {
 
   const logout: AdminContextValue['logout'] = async () => {
     try {
+      // Log admin logout activity before signing out
+      await logAdminLogout()
       await supabase.auth.signOut()
       setUser(null)
       setIsAdmin(false)

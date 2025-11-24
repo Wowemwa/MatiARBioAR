@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useData, TeamMember } from '../context/DataContext'
+import { supabase } from '../supabaseClient'
 import { PlusIcon, EditIcon, DeleteIcon, SaveIcon, CancelIcon } from './Icons'
 
 interface TeamFormData {
@@ -16,6 +17,26 @@ const emptyMember: TeamFormData = {
   role: '',
   image: '',
   description: ''
+}
+
+const uploadImageToStorage = async (file: File): Promise<string> => {
+  const fileExt = file.name.split('.').pop()
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+  const filePath = `team-members/${fileName}`
+
+  const { error } = await supabase.storage
+    .from('images')
+    .upload(filePath, file)
+
+  if (error) {
+    throw error
+  }
+
+  const { data } = supabase.storage
+    .from('images')
+    .getPublicUrl(filePath)
+
+  return data.publicUrl
 }
 
 export default function AdminTeam() {
@@ -35,17 +56,34 @@ export default function AdminTeam() {
     setEditingMember({ ...member })
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editingMember) return
 
-    if (isCreating) {
-      createTeamMember(editingMember as TeamMember)
-    } else {
-      updateTeamMember(editingMember.id, editingMember)
-    }
+    try {
+      let imageUrl = editingMember.image
 
-    setEditingMember(null)
-    setIsCreating(false)
+      // If there's a new file uploaded, upload it to Supabase Storage
+      if ((editingMember as any).imageFile) {
+        imageUrl = await uploadImageToStorage((editingMember as any).imageFile)
+      }
+
+      const memberData = {
+        ...editingMember,
+        image: imageUrl
+      }
+
+      if (isCreating) {
+        createTeamMember(memberData as TeamMember)
+      } else {
+        updateTeamMember(editingMember.id, memberData)
+      }
+
+      setEditingMember(null)
+      setIsCreating(false)
+    } catch (error) {
+      console.error('Error saving team member:', error)
+      alert('Error uploading image. Please try again.')
+    }
   }
 
   const handleCancel = () => {
@@ -128,27 +166,32 @@ export default function AdminTeam() {
               />
             </div>
 
-            {/* Image URL */}
+            {/* Image Upload */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Image URL *
+                Upload Image *
               </label>
               <input
-                type="text"
-                value={editingMember.image}
-                onChange={(e) => setEditingMember({ ...editingMember, image: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-cyan-500 focus:border-transparent"
-                placeholder="/path/to/photo.jpg"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    // Store file temporarily for upload
+                    ;(editingMember as any).imageFile = file
+                    // Create preview URL for immediate display
+                    const previewUrl = URL.createObjectURL(file)
+                    setEditingMember({ ...editingMember, image: previewUrl })
+                  }
+                }}
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-cyan-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
               />
               {editingMember.image && (
                 <div className="mt-2">
                   <img 
                     src={editingMember.image} 
                     alt="Preview" 
-                    className="w-32 h-32 object-cover rounded-lg"
-                    onError={(e) => {
-                      e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="128" height="128"%3E%3Crect fill="%23ddd" width="128" height="128"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3ENo Image%3C/text%3E%3C/svg%3E'
-                    }}
+                    className="w-32 h-32 object-cover rounded-lg border border-slate-200 dark:border-slate-600"
                   />
                 </div>
               )}
@@ -172,7 +215,7 @@ export default function AdminTeam() {
             <div className="flex gap-3 pt-4">
               <button
                 onClick={handleSave}
-                disabled={!editingMember.name || !editingMember.role || !editingMember.image || !editingMember.description}
+                disabled={!editingMember.name || !editingMember.role || !editingMember.description || (!editingMember.image && !(editingMember as any).imageFile)}
                 className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 <SaveIcon />

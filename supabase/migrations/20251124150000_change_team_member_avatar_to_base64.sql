@@ -1,0 +1,2 @@
+-- Revert avatar_url column back to VARCHAR for URL storage
+-- This migration is cancelled - we'll use Supabase Storage for file uploads instead

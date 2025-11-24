@@ -3,8 +3,12 @@ import { supabase } from '../supabaseClient'
 
 type FeedbackEntry = {
   id: string
+  name: string | null
   email: string | null
   message: string
+  rating: number | null
+  url: string | null
+  user_agent: string | null
   created_at: string
   is_read: boolean
 }
@@ -12,6 +16,23 @@ type FeedbackEntry = {
 export default function AdminFeedbacks() {
   const [items, setItems] = useState<FeedbackEntry[]>([])
   const [loading, setLoading] = useState(true)
+
+  const renderStars = (rating: number | null) => {
+    if (!rating) return null
+    return (
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <span
+            key={star}
+            className={`text-sm ${star <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
+          >
+            ★
+          </span>
+        ))}
+        <span className="text-xs text-gray-500 ml-1">({rating}/5)</span>
+      </div>
+    )
+  }
 
   useEffect(() => {
     fetchFeedback()
@@ -116,7 +137,7 @@ export default function AdminFeedbacks() {
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {item.email || 'Anonymous'}
+                    {item.name || item.email || 'Anonymous'}
                   </span>
                   {!item.is_read && (
                     <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full">
@@ -127,6 +148,16 @@ export default function AdminFeedbacks() {
                 <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
                   {item.message}
                 </p>
+                {item.rating && (
+                  <div className="mb-2">
+                    {renderStars(item.rating)}
+                  </div>
+                )}
+                {item.url && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                    From: {item.url}
+                  </p>
+                )}
                 <div className="text-xs text-gray-500 dark:text-gray-400">
                   {new Date(item.created_at).toLocaleString()}
                 </div>

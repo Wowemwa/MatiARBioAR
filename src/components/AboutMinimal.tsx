@@ -40,34 +40,58 @@ const About = memo(function About() {
     try {
       const visitorId = generateVisitorId()
       const userAgent = navigator.userAgent
-      const ipAddress = null // Will be captured server-side
+
+      // Check if we've already tracked this visitor today
+      const today = new Date().toDateString()
+      const lastTracked = localStorage.getItem('mati_last_visit_date')
+
+      if (lastTracked === today) {
+        // Already tracked today, just get the stored count
+        const storedCount = localStorage.getItem('mati_visitor_count')
+        if (storedCount) {
+          setVisitCount(parseInt(storedCount))
+          setIsLoadingVisits(false)
+          return
+        }
+      }
 
       // Call the database function to track visit
       const { data, error } = await supabase.rpc('track_site_visit', {
         p_visitor_id: visitorId,
-        p_ip_address: ipAddress,
         p_user_agent: userAgent
       })
 
       if (error) {
-        console.error('Error tracking visit:', error)
-        // Fallback to localStorage if database fails
-        const visits = localStorage.getItem('mati_website_visits')
-        const currentVisits = visits ? parseInt(visits) : 0
-        const newVisits = currentVisits + 1
-        localStorage.setItem('mati_website_visits', newVisits.toString())
-        setVisitCount(newVisits)
-      } else {
-        setVisitCount(data || 0)
+        console.error('Database tracking failed:', error)
+        throw error
       }
+
+      // Update state and localStorage
+      setVisitCount(data || 0)
+      localStorage.setItem('mati_visitor_count', data?.toString() || '0')
+      localStorage.setItem('mati_last_visit_date', today)
+
     } catch (error) {
       console.error('Error tracking visit:', error)
-      // Fallback to localStorage
-      const visits = localStorage.getItem('mati_website_visits')
-      const currentVisits = visits ? parseInt(visits) : 0
-      const newVisits = currentVisits + 1
-      localStorage.setItem('mati_website_visits', newVisits.toString())
-      setVisitCount(newVisits)
+
+      // Fallback: increment localStorage counter
+      const today = new Date().toDateString()
+      const lastTracked = localStorage.getItem('mati_last_visit_date')
+
+      if (lastTracked !== today) {
+        // First visit today, increment counter
+        const currentCount = parseInt(localStorage.getItem('mati_visitor_count') || '0')
+        const newCount = currentCount + 1
+        localStorage.setItem('mati_visitor_count', newCount.toString())
+        localStorage.setItem('mati_last_visit_date', today)
+        setVisitCount(newCount)
+      } else {
+        // Already visited today, use stored count
+        const storedCount = localStorage.getItem('mati_visitor_count')
+        if (storedCount) {
+          setVisitCount(parseInt(storedCount))
+        }
+      }
     } finally {
       setIsLoadingVisits(false)
     }
@@ -160,39 +184,56 @@ const About = memo(function About() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {teamMembers.map((member, index) => (
-              <div key={index} className="relative group">
-                <div className="absolute -inset-0.5 bg-gradient-to-br from-blue-500 via-cyan-500 to-emerald-500 rounded-2xl opacity-0 group-hover:opacity-100 blur transition-all duration-500"></div>
-                <div className="relative bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
-                  {/* Photo Container */}
-                  <div className="relative h-48 sm:h-56 lg:h-64 bg-gradient-to-br from-blue-100 via-cyan-50 to-emerald-100 dark:from-slate-700 dark:via-slate-600 dark:to-slate-700 overflow-hidden">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      {/* Placeholder - Replace with actual image */}
-                      <div className="w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-white text-2xl sm:text-3xl lg:text-5xl font-bold shadow-2xl">
-                        {member.name.split(' ').map(n => n[0]).join('')}
+              <div key={index} className="group">
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-slate-200 dark:border-slate-700">
+                  {/* Professional Header with Photo */}
+                  <div className="relative">
+                    <div className="h-48 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center">
+                      {member.image ? (
+                        <img
+                          src={member.image}
+                          alt={member.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                            const fallback = e.currentTarget.parentElement?.querySelector('.fallback-avatar') as HTMLElement
+                            if (fallback) fallback.style.display = 'flex'
+                          }}
+                        />
+                      ) : null}
+                      {/* Professional Avatar Fallback */}
+                      <div
+                        className="fallback-avatar w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold shadow-lg border-4 border-white dark:border-slate-800"
+                        style={{ display: member.image ? 'none' : 'flex' }}
+                      >
+                        {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                       </div>
-                      {/* Uncomment when you have photos:
-                      <img 
-                        src={member.image} 
-                        alt={member.name}
-                        className="w-full h-full object-cover"
-                      />
-                      */}
                     </div>
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 to-transparent"></div>
+                    {/* Subtle overlay for better text contrast */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                   </div>
-                  
-                  {/* Info Section */}
-                  <div className="p-4 sm:p-6">
-                    <h4 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-1">
-                      {member.name}
-                    </h4>
-                    <div className="inline-flex items-center gap-2 px-2 sm:px-3 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs sm:text-sm font-semibold rounded-full mb-3">
-                      {member.role}
+
+                  {/* Professional Content Section */}
+                  <div className="p-6">
+                    {/* Name and Title */}
+                    <div className="text-center mb-4">
+                      <h4 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
+                        {member.name}
+                      </h4>
+                      <div className="inline-block px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-full">
+                        {member.role}
+                      </div>
                     </div>
-                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+
+                    {/* Description */}
+                    <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed text-center">
                       {member.description}
                     </p>
+
+                    {/* Professional accent line */}
+                    <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                      <div className="w-12 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mx-auto"></div>
+                    </div>
                   </div>
                 </div>
               </div>

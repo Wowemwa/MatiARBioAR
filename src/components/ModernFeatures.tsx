@@ -107,17 +107,14 @@ const ModernFeatures = memo(function ModernFeatures() {
       
       <div className="relative max-w-7xl 3xl:max-w-8xl 4xl:max-w-9xl mx-auto">
         {/* Section Header */}
-        <div className="text-center mb-12 space-y-4">
+        <div className="pt-0 md:pt-4 text-center mb-8 space-y-3">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500/10 to-emerald-500/10 backdrop-blur-sm border border-blue-500/20 rounded-full text-sm font-bold text-blue-700 dark:text-emerald-400 mb-4">
             <Sparkles className="w-4 h-4" />
             Platform Features
           </div>
           
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 dark:text-white">
-            Powered by
-            <span className="block mt-2 bg-gradient-to-r from-blue-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
-              Modern Technology
-            </span>
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
+            Powered by <span className="bg-gradient-to-r from-blue-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">Modern Technology</span>
           </h2>
           
           <p className="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed">
@@ -240,25 +237,6 @@ const ModernFeatures = memo(function ModernFeatures() {
               <div className={`w-2 h-2 rounded-full ${isAutoPlaying ? 'bg-green-500 animate-pulse' : 'bg-slate-400'}`} />
               {isAutoPlaying ? 'Auto-playing' : 'Paused'}
             </button>
-          </div>
-        </div>
-
-        {/* Call to Action */}
-        <div className="mt-20 text-center">
-          <div className="inline-flex flex-col sm:flex-row items-center gap-4">
-            <Link
-              to="/gis"
-              className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 via-emerald-600 to-teal-600 hover:from-blue-700 hover:via-emerald-700 hover:to-teal-700 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-emerald-500/50 transition-all duration-500 overflow-hidden transform hover:scale-105"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 transform -skew-x-12 group-hover:translate-x-full" />
-              <span className="relative flex items-center gap-3">
-                <MapPin className="w-5 h-5" />
-                Start Exploring Now
-                <svg className="w-5 h-5 transform group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </span>
-            </Link>
           </div>
         </div>
       </div>
