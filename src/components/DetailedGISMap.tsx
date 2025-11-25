@@ -4,7 +4,6 @@ import 'leaflet/dist/leaflet.css'
 import { useData } from '../context/DataContext'
 import { useAdmin } from '../context/AdminContext'
 import { supabase } from '../supabaseClient'
-import { addActivityLog } from '../utils/activityLog'
 
 // Fix for Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -557,15 +556,6 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
             `Type: ${newHotspotData.type}\n` +
             `Species linked: ${newHotspotData.selectedSpeciesIds.length}\n\n` +
             `Refreshing map...`)
-      
-      // Log activity
-      addActivityLog({
-        type: 'create',
-        entityType: 'site',
-        entityId: siteId,
-        entityName: newHotspotData.name,
-        details: `Added ${newHotspotData.type} biodiversity site in ${newHotspotData.barangay}${newHotspotData.selectedSpeciesIds.length > 0 ? ` with ${newHotspotData.selectedSpeciesIds.length} species` : ''}`
-      })
       
       // Clean up
       if (tempMarker && map) {

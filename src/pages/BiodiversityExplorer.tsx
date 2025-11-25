@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import Fuse from 'fuse.js'
 import { useData } from '../context/DataContext'
-import AnimatedText from '../components/AnimatedText'
 import { MountainIcon, SpeciesIcon } from '../components/Icons'
+import SpeciesDetailModal from './SpeciesDetailModal'
 
 const STATUS_ORDER = ['CR','EN','VU','NT','LC','DD']
 
@@ -14,6 +14,20 @@ export default function BiodiversityExplorer() {
   const [typeFilter, setTypeFilter] = useState<'all'|'flora'|'fauna'>('all')
   const [siteFilter, setSiteFilter] = useState<string>('all')
   const [endemicOnly, setEndemicOnly] = useState(false)
+  const [selectedSpecies, setSelectedSpecies] = useState<any>(null)
+  const [showSpeciesModal, setShowSpeciesModal] = useState(false)
+  const [isOpeningModal, setIsOpeningModal] = useState(false)
+
+  const handleViewDetails = (species: any) => {
+    setIsOpeningModal(true)
+    setSelectedSpecies(species)
+    
+    // Add a small delay for the animation effect
+    setTimeout(() => {
+      setShowSpeciesModal(true)
+      setIsOpeningModal(false)
+    }, 150)
+  }
 
   const fuse = useMemo(()=>new Fuse(allSpecies, { keys: ['commonName','scientificName','description','habitats'], threshold: 0.36 }),[allSpecies])
   const results = useMemo(()=>{
@@ -217,7 +231,10 @@ export default function BiodiversityExplorer() {
             {results.map((s, index) => (
               <div 
                 key={s.id} 
-                className="group relative overflow-hidden rounded-2xl border border-white/30 bg-white/80 backdrop-blur-xl shadow-xl hover:shadow-2xl dark:border-white/10 dark:bg-slate-900/80 transition-all duration-500 hover:-translate-y-2 hover:scale-105"
+                onClick={() => handleViewDetails(s)}
+                className={`group relative overflow-hidden rounded-2xl border border-white/30 bg-white/80 backdrop-blur-xl shadow-xl hover:shadow-2xl dark:border-white/10 dark:bg-slate-900/80 transition-all duration-500 hover:-translate-y-2 hover:scale-105 cursor-pointer ${
+                  isOpeningModal && selectedSpecies?.id === s.id ? 'animate-pulse scale-95' : ''
+                }`}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 {/* Background Effects */}
@@ -328,6 +345,7 @@ export default function BiodiversityExplorer() {
                       {s.siteIds.length} conservation site{s.siteIds.length !== 1 ? 's' : ''}
                     </div>
                   </div>
+
                 </div>
 
                 {/* Hover Overlay */}
@@ -363,6 +381,19 @@ export default function BiodiversityExplorer() {
           )}
         </div>
       </div>
+
+      {/* Species Detail Modal */}
+      {showSpeciesModal && selectedSpecies && (
+        <SpeciesDetailModal
+          species={selectedSpecies}
+          isOpen={showSpeciesModal}
+          onClose={() => {
+            setShowSpeciesModal(false)
+            setSelectedSpecies(null)
+            setIsOpeningModal(false)
+          }}
+        />
+      )}
     </div>
   )
 }

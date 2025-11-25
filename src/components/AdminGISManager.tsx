@@ -337,7 +337,7 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
         <div className="bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 text-white p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-bold mb-2">🗺️ GIS Map Manager</h2>
+              <h2 className="text-3xl font-bold mb-2">🗺️ Interactive Map Manager</h2>
               <p className="text-white/90">Add or remove markers on the conservation map</p>
             </div>
             <button

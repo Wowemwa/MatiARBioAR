@@ -108,92 +108,177 @@ const About = memo(function About() {
   }, [])
 
   const timeline = [
-    { year: '2024', event: 'Platform founded with initial biodiversity surveys', status: 'completed' },
-    { year: '2025', event: 'AR features launched and community partnerships established', status: 'completed' },
-    { year: '2026', event: `Expanded to ${hotspots.length} protected areas with ${species.length} documented species`, status: 'current' },
-    { year: '2027', event: 'Planning international collaboration and advanced monitoring tools', status: 'planned' }
-  ]
-
-  const impact = [
-    { metric: species.length.toString(), label: 'Species documented' },
-    { metric: hotspots.length.toString(), label: 'Protected areas mapped' },
-    { metric: isLoadingVisits ? '...' : visitCount.toLocaleString(), label: 'Unique visitors' },
-    { metric: '0', label: 'Partner organizations' }
+    { year: '2024', event: 'Platform founded with initial biodiversity surveys', status: 'completed', icon: '🌱' },
+    { year: '2025', event: 'AR features launched and community partnerships established', status: 'completed', icon: '🎯' },
+    { year: '2026', event: `Expanded to ${hotspots.length} protected areas with ${species.length} documented species`, status: 'current', icon: '📈' },
+    { year: '2027', event: 'Planning international collaboration and advanced monitoring tools', status: 'planned', icon: '🚀' }
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
-        {/* Header */}
-        <div className={`text-center mb-12 sm:mb-16 transform transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600/10 dark:bg-emerald-500/10 backdrop-blur-sm border border-blue-600/20 dark:border-emerald-500/20 rounded-full text-xs sm:text-sm font-semibold text-blue-700 dark:text-emerald-400 mb-4 sm:mb-6">
-            <span className="w-2 h-2 bg-blue-600 dark:bg-emerald-500 rounded-full animate-pulse"></span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-purple-400/10 to-pink-400/10 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-20">
+        {/* Hero Header */}
+        <div className={`text-center mb-16 sm:mb-20 transform transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-emerald-600/10 backdrop-blur-sm border border-blue-600/20 rounded-full text-sm font-semibold text-blue-700 dark:text-emerald-400 mb-6 shadow-lg">
+            <span className="w-2 h-2 bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full animate-pulse"></span>
             About the Platform
           </div>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white mb-4 px-2">
+
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black bg-gradient-to-r from-slate-900 via-blue-800 to-emerald-800 dark:from-white dark:via-blue-200 dark:to-emerald-200 bg-clip-text text-transparent mb-6 leading-tight">
             Mati ARBio
-          </h2>
-          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto px-4">
-            A digital platform connecting technology with biodiversity conservation in Mati City.
+          </h1>
+
+          <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto mb-8 leading-relaxed">
+            A revolutionary digital platform connecting cutting-edge technology with biodiversity conservation in Mati City, Davao Oriental.
           </p>
+
+          <div className="flex flex-wrap justify-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+              Augmented Reality
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+              Biodiversity Data
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+              Conservation Education
+            </div>
+          </div>
         </div>
 
-        {/* Timeline */}
-        <div className={`mb-12 sm:mb-16 transform transition-all duration-1000 delay-200 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-          <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-6 sm:mb-8 text-center flex items-center justify-center gap-2 px-4">
-            <span className="text-xl sm:text-2xl">📅</span>
-            Project Timeline
-          </h3>
-          <div className="space-y-3 sm:space-y-4">
-            {timeline.map((item, index) => (
-              <div key={index} className="group relative">
-                <div className={`absolute -left-1 top-0 bottom-0 w-1 ${
-                  item.status === 'completed' ? 'bg-gradient-to-b from-emerald-500 to-teal-500' :
-                  item.status === 'current' ? 'bg-gradient-to-b from-blue-500 to-cyan-500' :
-                  'bg-slate-300 dark:bg-slate-600'
-                }`}></div>
-                <div className="ml-4 sm:ml-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 p-3 sm:p-4 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:border-blue-300 dark:hover:border-emerald-500/50">
-                  <div className="flex-shrink-0 w-12 sm:w-16 text-center">
-                    <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{item.year}</div>
+        {/* Mission Statement */}
+        <div className={`mb-16 sm:mb-20 transform transition-all duration-1000 delay-100 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+          <div className="relative group max-w-5xl mx-auto">
+            <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 rounded-xl opacity-20 group-hover:opacity-30 blur-lg transition-all duration-300"></div>
+            <div className="relative p-8 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl border border-slate-200/50 dark:border-slate-700/50 shadow-xl">
+              <div className="text-center">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600/10 to-pink-600/10 backdrop-blur-sm border border-purple-600/20 rounded-full text-sm font-semibold text-purple-700 dark:text-purple-400 mb-6">
+                  <span className="text-lg">🎯</span>
+                  Our Mission
+                </div>
+
+                <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-6">
+                  Bridging Technology & Conservation
+                </h2>
+
+                <p className="text-lg text-slate-700 dark:text-slate-300 leading-relaxed mb-8 max-w-4xl mx-auto">
+                  To create accessible tools for biodiversity documentation and conservation education,
+                  bridging the gap between scientific research and public understanding through innovative technology.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                  <div className="p-4">
+                    <div className="text-2xl mb-2">🌱</div>
+                    <h3 className="font-bold text-slate-900 dark:text-white mb-1">Preserve</h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">Protect biodiversity through education</p>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed">{item.event}</p>
+                  <div className="p-4">
+                    <div className="text-2xl mb-2">🔬</div>
+                    <h3 className="font-bold text-slate-900 dark:text-white mb-1">Research</h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">Support scientific discovery and monitoring</p>
                   </div>
-                  <div className="flex-shrink-0 self-start sm:self-center">
-                    <div className={`w-3 h-3 rounded-full ${
-                      item.status === 'completed' ? 'bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/50' :
-                      item.status === 'current' ? 'bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/50 animate-pulse' :
-                      'bg-slate-400'
-                    }`}></div>
+                  <div className="p-4">
+                    <div className="text-2xl mb-2">🌍</div>
+                    <h3 className="font-bold text-slate-900 dark:text-white mb-1">Connect</h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">Build community and global partnerships</p>
                   </div>
                 </div>
               </div>
-            ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Timeline */}
+        <div className={`mb-16 sm:mb-20 transform transition-all duration-1000 delay-200 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-4 flex items-center justify-center gap-2">
+              <span className="text-2xl">📅</span>
+              Our Journey
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400">
+              From concept to conservation impact
+            </p>
+          </div>
+
+          <div className="relative max-w-4xl mx-auto">
+            {/* Timeline line */}
+            <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 via-purple-500 to-emerald-500"></div>
+
+            <div className="space-y-8">
+              {timeline.map((item, index) => (
+                <div key={index} className="relative flex items-start gap-6 group">
+                  {/* Timeline dot */}
+                  <div className={`relative z-10 w-16 h-16 rounded-full flex items-center justify-center text-2xl shadow-lg transition-all duration-300 ${
+                    item.status === 'completed' ? 'bg-gradient-to-br from-emerald-500 to-teal-500 shadow-emerald-500/50' :
+                    item.status === 'current' ? 'bg-gradient-to-br from-blue-500 to-cyan-500 shadow-blue-500/50 animate-pulse' :
+                    'bg-slate-400'
+                  }`}>
+                    {item.icon}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-6 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-lg transition-all duration-300 group-hover:border-blue-300 dark:group-hover:border-emerald-500/50">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                      <div className="flex-shrink-0">
+                        <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                          {item.year}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                          {item.event}
+                        </p>
+                      </div>
+                      <div className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold ${
+                        item.status === 'completed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' :
+                        item.status === 'current' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                        'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
+                      }`}>
+                        {item.status}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Meet the Team */}
-        <div className={`mb-12 sm:mb-16 transform transition-all duration-1000 delay-400 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-          <div className="text-center mb-8 sm:mb-12 px-4">
-            <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-3 flex items-center justify-center gap-2">
-              <span className="text-2xl sm:text-3xl">👥</span>
-              Meet the Team
-            </h3>
-            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">The people behind Mati ARBio</p>
+        <div className={`mb-16 sm:mb-20 transform transition-all duration-1000 delay-300 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-4 flex items-center justify-center gap-2">
+              <span className="text-2xl">👥</span>
+              Meet Our Team
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+              Passionate individuals dedicated to biodiversity conservation and technology innovation
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {teamMembers.map((member, index) => (
-              <div key={index} className="group">
-                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-slate-200 dark:border-slate-700">
+              <div key={index} className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 rounded-xl opacity-0 group-hover:opacity-100 blur transition-all duration-300"></div>
+                <div className="relative bg-white dark:bg-slate-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-slate-200 dark:border-slate-700 group-hover:border-blue-300 dark:group-hover:border-emerald-500/50">
+
                   {/* Professional Header with Photo */}
-                  <div className="relative">
-                    <div className="h-48 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center">
+                  <div className="relative overflow-hidden">
+                    <div className="h-48 bg-gradient-to-br from-slate-100 via-blue-50 to-slate-200 dark:from-slate-700 dark:via-slate-600 dark:to-slate-800 flex items-center justify-center transition-all duration-500 group-hover:scale-105">
                       {member.image ? (
                         <img
                           src={member.image}
                           alt={member.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             const fallback = e.currentTarget.parentElement?.querySelector('.fallback-avatar') as HTMLElement
@@ -203,36 +288,36 @@ const About = memo(function About() {
                       ) : null}
                       {/* Professional Avatar Fallback */}
                       <div
-                        className="fallback-avatar w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold shadow-lg border-4 border-white dark:border-slate-800"
+                        className="fallback-avatar w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold shadow-lg border-4 border-white dark:border-slate-800 transition-all duration-300 group-hover:scale-110"
                         style={{ display: member.image ? 'none' : 'flex' }}
                       >
                         {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                       </div>
                     </div>
-                    {/* Subtle overlay for better text contrast */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                    {/* Subtle overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
 
                   {/* Professional Content Section */}
                   <div className="p-6">
                     {/* Name and Title */}
                     <div className="text-center mb-4">
-                      <h4 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-emerald-400 transition-colors duration-300">
                         {member.name}
-                      </h4>
-                      <div className="inline-block px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-full">
+                      </h3>
+                      <div className="inline-block px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-slate-700 dark:to-slate-600 text-blue-700 dark:text-slate-300 text-sm font-medium rounded-full border border-blue-200 dark:border-slate-500">
                         {member.role}
                       </div>
                     </div>
 
                     {/* Description */}
-                    <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed text-center">
+                    <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed text-center mb-4">
                       {member.description}
                     </p>
 
                     {/* Professional accent line */}
-                    <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                      <div className="w-12 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mx-auto"></div>
+                    <div className="flex justify-center">
+                      <div className="w-16 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 rounded-full transition-all duration-300 group-hover:w-24"></div>
                     </div>
                   </div>
                 </div>
@@ -241,44 +326,66 @@ const About = memo(function About() {
           </div>
         </div>
 
-        {/* Impact Section */}
-        <div className={`mb-12 sm:mb-16 transform transition-all duration-1000 delay-500 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-          <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl opacity-20 group-hover:opacity-30 blur transition-opacity duration-300"></div>
-            <div className="relative bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 lg:p-8 border border-slate-200/50 dark:border-slate-700/50">
-              <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-6 sm:mb-8 text-center flex items-center justify-center gap-2 px-4">
-                <span className="text-2xl sm:text-3xl">📊</span>
-                Our Impact
-              </h3>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-                {impact.map((item, index) => (
-                  <div key={index} className="text-center p-3 sm:p-4 lg:p-6 bg-gradient-to-br from-emerald-50 to-teal-50/50 dark:from-slate-700/50 dark:to-slate-700/30 rounded-xl border border-emerald-200/50 dark:border-slate-600/50 transition-all duration-300 hover:shadow-xl hover:scale-105 sm:hover:scale-110">
-                    <div className="text-2xl sm:text-3xl lg:text-4xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-1 sm:mb-2">{item.metric}</div>
-                    <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-tight">{item.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+      </div>
 
-        {/* Mission Statement */}
-        <div className={`text-center transform transition-all duration-1000 delay-600 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-          <div className="relative group max-w-4xl mx-auto">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 rounded-xl opacity-20 group-hover:opacity-30 blur-lg transition-opacity duration-300"></div>
-            <div className="relative p-4 sm:p-6 lg:p-8 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-200/50 dark:border-slate-700/50">
-              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-purple-600/10 dark:bg-purple-500/10 backdrop-blur-sm border border-purple-600/20 dark:border-purple-500/20 rounded-full text-xs sm:text-sm font-semibold text-purple-700 dark:text-purple-400 mb-4 sm:mb-6">
-                <span className="text-lg sm:text-xl">🎯</span>
-                Our Mission
-              </div>
-              <p className="text-base sm:text-lg text-slate-700 dark:text-slate-300 leading-relaxed px-2 sm:px-0">
-                To create accessible tools for biodiversity documentation and conservation education,
-                bridging the gap between scientific research and public understanding through technology.
+      {/* Footer */}
+      <footer className="relative py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-200/50 dark:border-slate-700/50">
+        <div className="max-w-7xl 3xl:max-w-8xl 4xl:max-w-9xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            {/* About */}
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">
+                About Mati Biodiversity
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                A comprehensive platform for exploring and preserving the rich biodiversity of Mati City through technology and community engagement.
+              </p>
+            </div>
+
+            {/* Quick Links */}
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">
+                Quick Links
+              </h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="/gis" className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200">
+                    Interactive Map
+                  </a>
+                </li>
+                <li>
+                  <a href="/biodiversity" className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200">
+                    Species Database
+                  </a>
+                </li>
+                <li>
+                  <a href="/ar" className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200">
+                    AR Experience
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Connect */}
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">
+                Connect
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Join our conservation efforts and stay updated on biodiversity research and initiatives.
               </p>
             </div>
           </div>
+
+          {/* Copyright */}
+          <div className="pt-8 border-t border-slate-200/50 dark:border-slate-700/50 text-center">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              © 2025 Mati Biodiversity Platform. Conserving nature through technology.
+            </p>
+          </div>
         </div>
-      </div>
+      </footer>
+
     </div>
   )
 })

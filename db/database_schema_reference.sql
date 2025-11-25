@@ -144,6 +144,7 @@ CREATE TABLE public.species (
     ar_pattern_url TEXT,
     ar_marker_image_url TEXT,
     ar_viewer_html TEXT,
+    audio_url TEXT,
 
     -- Timestamps
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -157,6 +158,7 @@ CREATE INDEX idx_species_endemic ON public.species(endemic);
 CREATE INDEX idx_species_invasive ON public.species(invasive);
 CREATE INDEX idx_species_ar_model_url ON public.species(ar_model_url) WHERE ar_model_url IS NOT NULL;
 CREATE INDEX idx_species_ar_pattern_url ON public.species(ar_pattern_url) WHERE ar_pattern_url IS NOT NULL;
+CREATE INDEX idx_species_audio_url ON public.species(audio_url) WHERE audio_url IS NOT NULL;
 CREATE INDEX idx_species_image_urls ON public.species USING GIN(image_urls);
 CREATE INDEX idx_species_synonyms ON public.species USING GIN(synonyms);
 CREATE INDEX idx_species_threats ON public.species USING GIN(threats);
@@ -468,6 +470,7 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 VALUES
     ('species-models', 'species-models', true, 52428800, ARRAY['model/gltf-binary', 'application/octet-stream']),
     ('species-images', 'species-images', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp']),
+    ('species-audio', 'species-audio', true, 10485760, ARRAY['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg']),
     ('site-media', 'site-media', true, 10485760, ARRAY['image/jpeg', 'image/png', 'video/mp4']),
     ('ar-patterns', 'ar-patterns', true, 1024000, ARRAY['text/plain', 'application/octet-stream']),
     ('ar-markers', 'ar-markers', true, 2097152, ARRAY['image/jpeg', 'image/png', 'image/jpg'])
@@ -484,6 +487,12 @@ CREATE POLICY "Public can view species images" ON storage.objects FOR SELECT TO 
 CREATE POLICY "Authenticated users can upload species images" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'species-images');
 CREATE POLICY "Admins can delete species images" ON storage.objects FOR DELETE TO authenticated USING (
     bucket_id = 'species-images' AND EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
+);
+
+CREATE POLICY "Public can view species audio" ON storage.objects FOR SELECT TO public USING (bucket_id = 'species-audio');
+CREATE POLICY "Authenticated users can upload species audio" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'species-audio');
+CREATE POLICY "Admins can delete species audio" ON storage.objects FOR DELETE TO authenticated USING (
+    bucket_id = 'species-audio' AND EXISTS (SELECT 1 FROM public.admins WHERE id = auth.uid())
 );
 
 CREATE POLICY "Public can view site media" ON storage.objects FOR SELECT TO public USING (bucket_id = 'site-media');

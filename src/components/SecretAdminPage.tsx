@@ -5,7 +5,6 @@ import { useDeviceDetection } from '../context/DeviceContext'
 import AdminLogin from './AdminLogin'
 import AdminPanel from './AdminPanel'
 import UserManagement from './UserManagement'
-import AnalyticsDashboard from './AnalyticsDashboard'
 import AdminGISManager from './AdminGISManager'
 import AdminFeedbacksViewer from './AdminFeedbacksViewer'
 import { 
@@ -13,20 +12,15 @@ import {
   FaMap, 
   FaComments, 
   FaUsers, 
-  FaChartBar, 
-  FaFileExport, 
-  FaFileImport, 
-  FaRedo,
   FaSignOutAlt 
 } from 'react-icons/fa'
 
 export default function SecretAdminPage() {
   const { isAdmin, logout } = useAdmin()
-  const { species, resetToDefault, loading } = useData()
+  const { species, loading } = useData()
   const { isMobileView } = useDeviceDetection()
   const [showAdminPanel, setShowAdminPanel] = useState(false)
   const [showUserManagement, setShowUserManagement] = useState(false)
-  const [showAnalytics, setShowAnalytics] = useState(false)
   const [showGISManager, setShowGISManager] = useState(false)
   const [showFeedbacksViewer, setShowFeedbacksViewer] = useState(false)
 
@@ -58,57 +52,6 @@ export default function SecretAdminPage() {
         </div>
       </div>
     )
-  }
-
-  const handleResetData = () => {
-    if (confirm('⚠️ Are you sure you want to reset all species data to default?\n\nThis will permanently delete all your edits and cannot be undone!')) {
-      resetToDefault()
-      alert('✅ Species data has been reset to default!')
-    }
-  }
-
-  const handleExportData = () => {
-    try {
-      const dataStr = JSON.stringify(species, null, 2)
-      const dataBlob = new Blob([dataStr], { type: 'application/json' })
-      const url = URL.createObjectURL(dataBlob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `mati-species-${new Date().toISOString().split('T')[0]}.json`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-      alert('✅ Species data exported successfully!\n\n📝 To deploy changes:\n1. Copy the downloaded JSON content\n2. Replace MATI_SPECIES array in src/data/mati-hotspots.ts\n3. Commit and push to GitHub')
-    } catch (err) {
-      console.error('Export failed:', err)
-      alert('❌ Failed to export data')
-    }
-  }
-
-  const handleImportData = () => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = '.json'
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0]
-      if (!file) return
-      
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        try {
-          const importedData = JSON.parse(event.target?.result as string)
-          localStorage.setItem('mati-species-data:v1', JSON.stringify(importedData))
-          alert('✅ Data imported successfully! Refreshing page...')
-          window.location.reload()
-        } catch (err) {
-          console.error('Import failed:', err)
-          alert('❌ Failed to import data. Please check the JSON format.')
-        }
-      }
-      reader.readAsText(file)
-    }
-    input.click()
   }
 
   if (!isAdmin) {
@@ -236,7 +179,7 @@ export default function SecretAdminPage() {
               <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <FaMap className="text-white text-3xl" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">GIS Map Manager</h2>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">Interactive Map Manager</h2>
               <p className="text-gray-600 dark:text-gray-300">Add or remove markers on the conservation map</p>
               <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400 font-semibold">
                 <span>Manage Map</span>
@@ -286,113 +229,12 @@ export default function SecretAdminPage() {
               </div>
             </div>
           </div>
-
-          <div 
-            onClick={() => setShowAnalytics(true)}
-            className="group cursor-pointer relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 hover:rotate-1 overflow-hidden p-8"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <FaChartBar className="text-white text-3xl" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">Analytics</h2>
-              <p className="text-gray-600 dark:text-gray-300">Monitor website performance and user engagement</p>
-              <div className="mt-4 flex items-center text-indigo-600 dark:text-indigo-400 font-semibold">
-                <span>View Analytics</span>
-                <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div
-            onClick={handleExportData}
-            className="group cursor-pointer relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 hover:rotate-1 overflow-hidden p-8"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-indigo-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <FaFileExport className="text-white text-3xl" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">Export Data</h2>
-              <p className="text-gray-600 dark:text-gray-300">Download species data as JSON to deploy to production</p>
-              <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400 font-semibold">
-                <span>Export JSON</span>
-                <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div
-            onClick={handleImportData}
-            className="group cursor-pointer relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 hover:rotate-1 overflow-hidden p-8"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-indigo-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <FaFileImport className="text-white text-3xl" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">Import Data</h2>
-              <p className="text-gray-600 dark:text-gray-300">Upload species JSON data to restore or update</p>
-              <div className="mt-4 flex items-center text-purple-600 dark:text-purple-400 font-semibold">
-                <span>Import JSON</span>
-                <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div
-            onClick={handleResetData}
-            className="group cursor-pointer relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 hover:rotate-1 overflow-hidden p-8"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-red-500/20 to-yellow-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <FaRedo className="text-white text-3xl" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">Reset to Default</h2>
-              <p className="text-gray-600 dark:text-gray-300">Restore all species data to the original defaults</p>
-              <div className="mt-4 flex items-center text-orange-600 dark:text-orange-400 font-semibold">
-                <span>Reset Data</span>
-                <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className="group relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl opacity-60 cursor-not-allowed overflow-hidden p-8">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-violet-500/10 to-purple-500/10" />
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full flex items-center justify-center text-3xl mb-6">🗂️</div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">Media Library</h2>
-              <p className="text-gray-600 dark:text-gray-300">Manage images and media assets</p>
-              <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 font-medium">🚧 Under Development</div>
-            </div>
-          </div>
-
-          <div className="group relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl opacity-60 cursor-not-allowed overflow-hidden p-8">
-            <div className="absolute inset-0 bg-gradient-to-br from-rose-500/10 via-pink-500/10 to-fuchsia-500/10" />
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full flex items-center justify-center text-3xl mb-6">📋</div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">Content Review</h2>
-              <p className="text-gray-600 dark:text-gray-300">Review and moderate submitted content</p>
-              <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 font-medium">🚧 Under Development</div>
-            </div>
-          </div>
         </div>
         </div>
       </div>
 
       <AdminPanel isVisible={showAdminPanel} onClose={() => setShowAdminPanel(false)} />
       <UserManagement isVisible={showUserManagement} onClose={() => setShowUserManagement(false)} />
-      <AnalyticsDashboard isVisible={showAnalytics} onClose={() => setShowAnalytics(false)} />
       <AdminGISManager isVisible={showGISManager} onClose={() => setShowGISManager(false)} />
       <AdminFeedbacksViewer isVisible={showFeedbacksViewer} onClose={() => setShowFeedbacksViewer(false)} />
     </div>

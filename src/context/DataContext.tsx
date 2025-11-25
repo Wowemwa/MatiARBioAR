@@ -1,7 +1,6 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState, useCallback } from 'react'
 import { supabase } from '../supabaseClient'
 import { Hotspot, SpeciesDetail } from '../data/mati-hotspots'
-import { addActivityLog } from '../utils/activityLog'
 
 export interface TeamMember {
   id: string
@@ -452,30 +451,12 @@ export function DataProvider({ children }: DataProviderProps) {
   setSpecies(prev => [...prev, newSpecies])
   console.log('[DataContext] Species created successfully in Supabase')
 
-      // Log activity
-      await addActivityLog({
-        type: 'create',
-        entityType: 'species',
-        entityId: newSpecies.id,
-        entityName: newSpecies.commonName,
-        details: `Created ${newSpecies.category} species: ${newSpecies.scientificName}`
-      })
-
       return true
     } catch (err) {
       console.error('[DataContext] Failed to create species in Supabase:', err)
       // Fallback to local state only
       setSpecies(prev => [...prev, newSpecies])
       
-      // Log activity even on fallback
-      await addActivityLog({
-        type: 'create',
-        entityType: 'species',
-        entityId: newSpecies.id,
-        entityName: newSpecies.commonName,
-        details: `Created ${newSpecies.category} species: ${newSpecies.scientificName}`
-      })
-
       return false
     }
   }, [])
@@ -534,23 +515,6 @@ export function DataProvider({ children }: DataProviderProps) {
       ))
       console.log('[DataContext] Species updated successfully in Supabase')
 
-      // Log activity
-      const updatedSpecies = species.find(s => s.id === id)
-      if (updatedSpecies) {
-        const changeDetails = []
-        if (updates.commonName) changeDetails.push(`name to "${updates.commonName}"`)
-        if (updates.status) changeDetails.push(`status to ${updates.status}`)
-        if (updates.images) changeDetails.push(`images (${updates.images.length} total)`)
-        
-        addActivityLog({
-          type: 'update',
-          entityType: 'species',
-          entityId: id,
-          entityName: updates.commonName || updatedSpecies.commonName,
-          details: changeDetails.length > 0 ? `Updated ${changeDetails.join(', ')}` : 'Updated species information'
-        })
-      }
-
       return true
     } catch (err) {
       console.error('[DataContext] Failed to update species in Supabase:', err)
@@ -559,18 +523,6 @@ export function DataProvider({ children }: DataProviderProps) {
         s.id === id ? { ...s, ...updates } : s
       ))
       
-      // Log activity even on fallback
-      const updatedSpecies = species.find(s => s.id === id)
-      if (updatedSpecies) {
-        addActivityLog({
-          type: 'update',
-          entityType: 'species',
-          entityId: id,
-          entityName: updates.commonName || updatedSpecies.commonName,
-          details: 'Updated species information'
-        })
-      }
-
       return false
     }
   }, [species])
@@ -594,32 +546,10 @@ export function DataProvider({ children }: DataProviderProps) {
       setSpecies(prev => prev.filter(s => s.id !== id))
       console.log('[DataContext] Species deleted successfully from Supabase')
 
-      // Log activity
-      if (speciesItem) {
-        await addActivityLog({
-          type: 'delete',
-          entityType: 'species',
-          entityId: id,
-          entityName: speciesItem.commonName,
-          details: `Deleted ${speciesItem.category} species: ${speciesItem.scientificName}`
-        })
-      }
-
     } catch (err) {
       console.error('[DataContext] Failed to delete species from Supabase:', err)
       // Fallback to local state only
       setSpecies(prev => prev.filter(s => s.id !== id))
-      
-      // Log activity even on fallback
-      if (speciesItem) {
-        await addActivityLog({
-          type: 'delete',
-          entityType: 'species',
-          entityId: id,
-          entityName: speciesItem.commonName,
-          details: `Deleted ${speciesItem.category} species: ${speciesItem.scientificName}`
-        })
-      }
     }
   }, [species])
 
@@ -655,28 +585,10 @@ export function DataProvider({ children }: DataProviderProps) {
       setTeamMembers(prev => [...prev, createdMember])
       console.log('[DataContext] Team member created successfully in Supabase')
 
-      // Log activity
-      await addActivityLog({
-        type: 'create',
-        entityType: 'team_member',
-        entityId: createdMember.id,
-        entityName: createdMember.name,
-        details: `Created team member: ${createdMember.name} (${createdMember.role})`
-      })
-
     } catch (err) {
       console.error('[DataContext] Failed to create team member in Supabase:', err)
       // Fallback to local state only
       setTeamMembers(prev => [...prev, newMember])
-
-      // Log activity even on fallback
-      await addActivityLog({
-        type: 'create',
-        entityType: 'team_member',
-        entityId: newMember.id,
-        entityName: newMember.name,
-        details: `Created team member: ${newMember.name} (${newMember.role})`
-      })
     }
   }, [teamMembers.length])
 
@@ -703,42 +615,12 @@ export function DataProvider({ children }: DataProviderProps) {
       ))
       console.log('[DataContext] Team member updated successfully in Supabase')
 
-      // Log activity
-      const updatedMember = teamMembers.find(m => m.id === id)
-      if (updatedMember) {
-        const changeDetails = []
-        if (updates.name) changeDetails.push(`name to "${updates.name}"`)
-        if (updates.role) changeDetails.push(`role to "${updates.role}"`)
-        if (updates.description) changeDetails.push('description')
-        if (updates.image) changeDetails.push('image')
-
-        await addActivityLog({
-          type: 'update',
-          entityType: 'team_member',
-          entityId: id,
-          entityName: updates.name || updatedMember.name,
-          details: changeDetails.length > 0 ? `Updated ${changeDetails.join(', ')}` : 'Updated team member information'
-        })
-      }
-
     } catch (err) {
       console.error('[DataContext] Failed to update team member in Supabase:', err)
       // Fallback to local state only
       setTeamMembers(prev => prev.map(m =>
         m.id === id ? { ...m, ...updates } : m
       ))
-
-      // Log activity even on fallback
-      const updatedMember = teamMembers.find(m => m.id === id)
-      if (updatedMember) {
-        await addActivityLog({
-          type: 'update',
-          entityType: 'team_member',
-          entityId: id,
-          entityName: updates.name || updatedMember.name,
-          details: 'Updated team member information'
-        })
-      }
     }
   }, [])
 
@@ -757,34 +639,10 @@ export function DataProvider({ children }: DataProviderProps) {
       setTeamMembers(prev => prev.filter(m => m.id !== id))
       console.log('[DataContext] Team member deleted successfully from Supabase')
 
-      // Log activity
-      const deletedMember = teamMembers.find(m => m.id === id)
-      if (deletedMember) {
-        await addActivityLog({
-          type: 'delete',
-          entityType: 'team_member',
-          entityId: id,
-          entityName: deletedMember.name,
-          details: `Deleted team member: ${deletedMember.name} (${deletedMember.role})`
-        })
-      }
-
     } catch (err) {
       console.error('[DataContext] Failed to delete team member from Supabase:', err)
       // Fallback to local state only
       setTeamMembers(prev => prev.filter(m => m.id !== id))
-
-      // Log activity even on fallback
-      const deletedMember = teamMembers.find(m => m.id === id)
-      if (deletedMember) {
-        await addActivityLog({
-          type: 'delete',
-          entityType: 'team_member',
-          entityId: id,
-          entityName: deletedMember.name,
-          details: `Deleted team member: ${deletedMember.name} (${deletedMember.role})`
-        })
-      }
     }
   }, [])
 

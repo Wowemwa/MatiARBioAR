@@ -229,7 +229,8 @@ export default function ARQRViewer({ onClose }: ARQRViewerProps) {
       hasArModel: !!detectedSpecies.arModelUrl,
       arModelUrl: detectedSpecies.arModelUrl,
       hasImages: !!(detectedSpecies.images && detectedSpecies.images.length > 0),
-      firstImage: detectedSpecies.images?.[0]
+      firstImage: detectedSpecies.images?.[0],
+      category: detectedSpecies.category
     })
 
     // Check if we have something to display
@@ -365,6 +366,8 @@ function ARSceneRenderer({ species, onClose, onRescan }: {
           ;(scene as any).addEventListener('camera-error', (error: any) => {
             console.error('[ARQRViewer] Camera error:', error)
           })
+
+          console.log('[ARQRViewer] AR scene initialized successfully')
         }
       }, 100)
     }
@@ -439,11 +442,47 @@ function ARSceneRenderer({ species, onClose, onRescan }: {
           <strong>Point your camera at a HIRO marker</strong> to see the {species.commonName} in AR.
           {!species.arModelUrl && ' (Using fallback image - no 3D model available)'}
         </p>
+        
+        {/* Quick Actions */}
+        {species.category === 'fauna' && (
+          <div className="mt-4 pointer-events-auto">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-200 dark:border-slate-700">
+              <h4 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                Quick Actions
+              </h4>
+              <div className="space-y-2">
+                
+                <button className="w-full text-left p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 rounded-xl transition-all duration-200 border border-green-200 dark:border-green-800">
+                  <div className="flex items-center gap-3">
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <span className="text-sm font-medium text-green-700 dark:text-green-300">Download Marker Again</span>
+                  </div>
+                </button>
+                
+                <button className="w-full text-left p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 rounded-xl transition-all duration-200 border border-purple-200 dark:border-purple-800">
+                  <div className="flex items-center gap-3">
+                    <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <span className="text-sm font-medium text-purple-700 dark:text-purple-300">Capture</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <a 
           href="https://github.com/jeromeetienne/AR.js/blob/master/data/images/hiro.png" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="inline-block mt-2 text-blue-400 hover:text-blue-300 underline text-sm pointer-events-auto"
+          className="inline-block mt-4 text-blue-400 hover:text-blue-300 underline text-sm pointer-events-auto"
         >
           Download HIRO marker →
         </a>

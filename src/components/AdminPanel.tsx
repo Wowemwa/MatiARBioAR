@@ -42,7 +42,7 @@ const emptySpecies: SpeciesFormData = {
 }
 
 export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
-  const { species, createSpecies, updateSpecies, deleteSpecies } = useData()
+  const { species, createSpecies, updateSpecies, deleteSpecies, refresh } = useData()
   const [showFeedbacks, setShowFeedbacks] = useState(false)
   const [editingSpecies, setEditingSpecies] = useState<SpeciesFormData | null>(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -176,6 +176,8 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
         if (ok) {
           setEditingSpecies(null)
           setIsCreating(false)
+          // Refresh data to ensure newly created species is available
+          await refresh()
           alert('✅ Species saved successfully!')
         } else {
           alert('❌ Failed to save species. Check console for details.')
@@ -192,6 +194,8 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
         if (ok) {
           setEditingSpecies(null)
           setIsCreating(false)
+          // Refresh data to ensure updated species data is available
+          await refresh()
           alert('✅ Species updated successfully!')
         } else {
           alert('❌ Failed to update species. Check console for details.')
@@ -211,6 +215,8 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
   const confirmDelete = () => {
     if (speciesToDelete) {
       deleteSpecies(speciesToDelete.id)
+      // Refresh data to ensure deleted species is removed
+      refresh()
       alert('✅ Species deleted successfully!')
       setShowDeleteConfirm(false)
       setSpeciesToDelete(null)

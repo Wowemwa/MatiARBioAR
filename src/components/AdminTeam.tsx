@@ -178,7 +178,7 @@ export default function AdminTeam() {
                   const file = e.target.files?.[0]
                   if (file) {
                     // Store file temporarily for upload
-                    ;(editingMember as any).imageFile = file
+                    (editingMember as any).imageFile = file
                     // Create preview URL for immediate display
                     const previewUrl = URL.createObjectURL(file)
                     setEditingMember({ ...editingMember, image: previewUrl })
