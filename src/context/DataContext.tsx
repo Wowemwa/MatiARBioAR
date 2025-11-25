@@ -18,6 +18,7 @@ type DataContextValue = {
   loading: boolean
   error?: string
   refresh: () => Promise<void>
+  clearCache: () => Promise<void>
   // Admin CRUD operations
   createSpecies: (species: SpeciesDetail) => Promise<boolean>
   updateSpecies: (id: string, updates: Partial<SpeciesDetail>) => Promise<boolean>
@@ -68,8 +69,10 @@ interface DataProviderProps {
   children: ReactNode
 }
 
-const SPECIES_STORAGE_KEY = 'mati-species-data:v1'
-const TEAM_STORAGE_KEY = 'mati-team-data:v1'
+const SPECIES_STORAGE_KEY = 'mati-species-data:v2'
+const HOTSPOTS_STORAGE_KEY = 'mati-hotspots-data:v2'
+const TEAM_STORAGE_KEY = 'mati-team-data:v2'
+const CACHE_DURATION = 10 * 60 * 1000 // 10 minutes
 
 // Default team members
 const DEFAULT_TEAM_MEMBERS: TeamMember[] = [
@@ -103,22 +106,58 @@ export function DataProvider({ children }: DataProviderProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | undefined>(undefined)
   const [dataLoaded, setDataLoaded] = useState(false)
+  const [isHydrating, setIsHydrating] = useState(false)
 
   // Load data from Supabase
   const hydrate = useCallback(async (force = false) => {
-    // Always try to load fresh data on page load, but allow force refresh
-    if (!force && dataLoaded) {
-      // Check if data was loaded recently (within last 5 minutes)
-      const lastLoadTime = localStorage.getItem('mati-data-last-load')
-      const fiveMinutesAgo = Date.now() - (5 * 60 * 1000)
+    // Prevent duplicate hydration calls
+    if (isHydrating) {
+      console.log('[DataContext] Hydration already in progress, skipping...')
+      return
+    }
 
-      if (lastLoadTime && parseInt(lastLoadTime) > fiveMinutesAgo) {
-        console.log('[DataContext] Using cached data (loaded recently)')
-        return
+    // Try to load from cache first (unless force refresh)
+    if (!force) {
+      try {
+        const cachedSpecies = localStorage.getItem(SPECIES_STORAGE_KEY)
+        const cachedHotspots = localStorage.getItem(HOTSPOTS_STORAGE_KEY)
+        const cachedTeam = localStorage.getItem(TEAM_STORAGE_KEY)
+        const cacheTimestamp = localStorage.getItem('mati-data-cache-timestamp')
+
+        if (cachedSpecies && cachedHotspots && cachedTeam && cacheTimestamp) {
+          const cacheAge = Date.now() - parseInt(cacheTimestamp)
+          
+          if (cacheAge < CACHE_DURATION) {
+            console.log('[DataContext] Loading data from cache (age:', Math.round(cacheAge / 1000), 'seconds)')
+            
+            const speciesData = JSON.parse(cachedSpecies)
+            const hotspotsData = JSON.parse(cachedHotspots)
+            const teamData = JSON.parse(cachedTeam)
+            
+            setSpecies(speciesData)
+            setHotspots(hotspotsData)
+            setTeamMembers(teamData)
+            setDataLoaded(true)
+            setLoading(false)
+            
+            console.log('[DataContext] Data loaded from cache successfully')
+            return
+          } else {
+            console.log('[DataContext] Cache expired, loading fresh data')
+          }
+        }
+      } catch (cacheError) {
+        console.warn('[DataContext] Cache loading failed, will load fresh data:', cacheError)
+        // Clear corrupted cache
+        localStorage.removeItem(SPECIES_STORAGE_KEY)
+        localStorage.removeItem(HOTSPOTS_STORAGE_KEY)
+        localStorage.removeItem(TEAM_STORAGE_KEY)
+        localStorage.removeItem('mati-data-cache-timestamp')
       }
     }
 
     try {
+      setIsHydrating(true)
       setLoading(true)
       setError(undefined)
 
@@ -280,8 +319,17 @@ export function DataProvider({ children }: DataProviderProps) {
           setTeamMembers(transformedTeam)
           setDataLoaded(true)
 
-          // Store last load time
-          localStorage.setItem('mati-data-last-load', Date.now().toString())
+          // Cache the data
+          try {
+            localStorage.setItem(SPECIES_STORAGE_KEY, JSON.stringify(transformedSpecies))
+            localStorage.setItem(HOTSPOTS_STORAGE_KEY, JSON.stringify(updatedSites))
+            localStorage.setItem(TEAM_STORAGE_KEY, JSON.stringify(transformedTeam))
+            localStorage.setItem('mati-data-cache-timestamp', Date.now().toString())
+            console.log('[DataContext] Data cached successfully')
+          } catch (cacheError) {
+            console.warn('[DataContext] Failed to cache data:', cacheError)
+            // Continue without caching - data is still loaded
+          }
 
           console.log('[DataContext] Data loaded successfully from Supabase')
 
@@ -309,6 +357,24 @@ export function DataProvider({ children }: DataProviderProps) {
       console.error('[DataContext] failed to load data from Supabase', err)
       setError('Unable to load biodiversity data from database. Please check your internet connection and try refreshing the page.')
 
+      // Try to load from cache as fallback
+      try {
+        const cachedSpecies = localStorage.getItem(SPECIES_STORAGE_KEY)
+        const cachedHotspots = localStorage.getItem(HOTSPOTS_STORAGE_KEY)
+        const cachedTeam = localStorage.getItem(TEAM_STORAGE_KEY)
+
+        if (cachedSpecies && cachedHotspots && cachedTeam && !dataLoaded) {
+          console.log('[DataContext] Loading from cache as fallback after network error')
+          setSpecies(JSON.parse(cachedSpecies))
+          setHotspots(JSON.parse(cachedHotspots))
+          setTeamMembers(JSON.parse(cachedTeam))
+          setDataLoaded(true)
+          setError(undefined) // Clear error since we have cached data
+        }
+      } catch (cacheFallbackError) {
+        console.warn('[DataContext] Cache fallback also failed:', cacheFallbackError)
+      }
+
       // Don't set empty arrays if we already have data - keep existing data
       if (!dataLoaded) {
         setHotspots([])
@@ -317,8 +383,25 @@ export function DataProvider({ children }: DataProviderProps) {
       }
     } finally {
       setLoading(false)
+      setIsHydrating(false)
     }
-  }, [dataLoaded])
+  }, [])
+
+  // Clear cached data and force refresh
+  const clearCache = useCallback(async () => {
+    try {
+      localStorage.removeItem(SPECIES_STORAGE_KEY)
+      localStorage.removeItem(HOTSPOTS_STORAGE_KEY)
+      localStorage.removeItem(TEAM_STORAGE_KEY)
+      localStorage.removeItem('mati-data-cache-timestamp')
+      console.log('[DataContext] Cache cleared successfully')
+      
+      // Force refresh data
+      await hydrate(true)
+    } catch (error) {
+      console.error('[DataContext] Failed to clear cache:', error)
+    }
+  }, [hydrate])
 
   useEffect(() => {
     void hydrate()
@@ -664,6 +747,7 @@ export function DataProvider({ children }: DataProviderProps) {
       setDataLoaded(false)
       await hydrate(true)
     },
+    clearCache,
     createSpecies,
     updateSpecies,
     deleteSpecies,
@@ -671,7 +755,7 @@ export function DataProvider({ children }: DataProviderProps) {
     updateTeamMember,
     deleteTeamMember,
     resetToDefault,
-  }), [hotspots, species, teamMembers, loading, error, hydrate, createSpecies, updateSpecies, deleteSpecies, createTeamMember, updateTeamMember, deleteTeamMember, resetToDefault])
+  }), [hotspots, species, teamMembers, loading, error, hydrate, clearCache, createSpecies, updateSpecies, deleteSpecies, createTeamMember, updateTeamMember, deleteTeamMember, resetToDefault])
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>
 }
