@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import { useData } from '../context/DataContext'
 import { supabase } from '../supabaseClient'
 import { CancelIcon, SaveIcon, DeleteIcon } from './Icons'
+import { getEnhancedLocationInfo, suggestSiteType } from '../utils/geocoding'
 
 interface AdminGISManagerProps {
   isVisible: boolean
@@ -13,7 +14,6 @@ interface AdminGISManagerProps {
 interface NewHotspotData {
   name: string
   barangay: string
-  designation: string
   description: string
   areaHectares: number
   lat: number
@@ -36,7 +36,6 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
   const [newHotspotData, setNewHotspotData] = useState<NewHotspotData>({
     name: '',
     barangay: '',
-    designation: '',
     description: '',
     areaHectares: 0,
     lat: 0,
@@ -67,16 +66,20 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
     mapRef.current = map
 
     // Click handler for adding markers
-    map.on('click', (e: L.LeafletMouseEvent) => {
+    map.on('click', async (e: L.LeafletMouseEvent) => {
       if (tempMarker) {
         map.removeLayer(tempMarker)
       }
 
+      // Get enhanced location information from coordinates (with external API)
+      const locationInfo = await getEnhancedLocationInfo(e.latlng.lat, e.latlng.lng)
+      const suggestedType = suggestSiteType(e.latlng.lat, e.latlng.lng)
+
       const newMarker = L.marker(e.latlng, {
         icon: L.divIcon({
           html: `
-            <div class="marker-pulse ${markerType === 'marine' ? 'bg-blue-500' : 'bg-green-500'} animate-bounce">
-              <span class="text-2xl">${markerType === 'marine' ? '🌊' : '🏔️'}</span>
+            <div class="marker-pulse ${suggestedType === 'marine' ? 'bg-blue-500' : 'bg-green-500'} animate-bounce">
+              <span class="text-2xl">${suggestedType === 'marine' ? '🌊' : '🏔️'}</span>
             </div>
           `,
           className: 'custom-div-icon',
@@ -92,18 +95,39 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
         ...prev,
         lat: e.latlng.lat,
         lng: e.latlng.lng,
-        type: markerType
+        type: suggestedType,
+        barangay: locationInfo.barangay
       }))
       setShowMarkerForm(true)
 
       // Update position on drag
-      newMarker.on('dragend', () => {
+      newMarker.on('dragend', async () => {
         const pos = newMarker.getLatLng()
+        const newLocationInfo = await getEnhancedLocationInfo(pos.lat, pos.lng)
+        const newSuggestedType = suggestSiteType(pos.lat, pos.lng)
+        const currentType = newHotspotData.type
+
         setNewHotspotData(prev => ({
           ...prev,
           lat: pos.lat,
-          lng: pos.lng
+          lng: pos.lng,
+          type: newSuggestedType,
+          barangay: newLocationInfo.barangay
         }))
+
+        // Update marker icon if type changed
+        if (newSuggestedType !== currentType) {
+          newMarker.setIcon(L.divIcon({
+            html: `
+              <div class="marker-pulse ${newSuggestedType === 'marine' ? 'bg-blue-500' : 'bg-green-500'} animate-bounce">
+                <span class="text-2xl">${newSuggestedType === 'marine' ? '🌊' : '🏔️'}</span>
+              </div>
+            `,
+            className: 'custom-div-icon',
+            iconSize: [40, 40],
+            iconAnchor: [20, 40]
+          }))
+        }
       })
     })
 
@@ -207,7 +231,6 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
         barangay: newHotspotData.barangay || null,
         city: 'Mati City',
         province: 'Davao Oriental',
-        designation: newHotspotData.designation || null,
         area_hectares: newHotspotData.areaHectares || null,
         lat: newHotspotData.lat,
         lng: newHotspotData.lng,
@@ -259,7 +282,6 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
       setNewHotspotData({
         name: '',
         barangay: '',
-        designation: '',
         description: '',
         areaHectares: 0,
         lat: 0,
@@ -287,20 +309,26 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
     if (!confirm(`Are you sure you want to delete "${hotspot.name}"?`)) return
 
     try {
-      const { error } = await supabase
+      const { data, error, count } = await supabase
         .from('sites')
         .delete()
         .eq('id', selectedHotspot)
+        .select()
 
       if (error) {
         alert(`Error deleting site: ${error.message}`)
         return
       }
 
+      if (!data || data.length === 0) {
+        alert('❌ Failed to delete site: No matching site found or insufficient permissions')
+        return
+      }
+
       alert('✅ Site deleted successfully!')
       setSelectedHotspot(null)
       // Refresh the data instead of reloading the page
-      refresh()
+      await refresh()
     } catch (error) {
       console.error('Error deleting site:', error)
       alert(`Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -316,7 +344,6 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
     setNewHotspotData({
       name: '',
       barangay: '',
-      designation: '',
       description: '',
       areaHectares: 0,
       lat: 0,
@@ -377,11 +404,14 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
                     🏔️ Terrestrial
                   </button>
                 </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  💡 <strong>Auto-detected:</strong> Type is automatically suggested based on location
+                </p>
               </div>
 
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl p-4">
                 <p className="text-sm text-gray-700 dark:text-gray-300">
-                  💡 <strong>Tip:</strong> Click anywhere on the map to place a new marker. Drag to adjust position.
+                  💡 <strong>Smart Auto-fill:</strong> Click anywhere on the map to place a marker. Barangay and site type will be automatically detected and filled based on the location!
                 </p>
               </div>
 
@@ -465,25 +495,20 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block font-semibold mb-2">Barangay</label>
-                    <input
-                      type="text"
-                      value={newHotspotData.barangay}
-                      onChange={(e) => setNewHotspotData(prev => ({ ...prev, barangay: e.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-semibold mb-2">Designation</label>
-                    <input
-                      type="text"
-                      value={newHotspotData.designation}
-                      onChange={(e) => setNewHotspotData(prev => ({ ...prev, designation: e.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700"
-                    />
-                  </div>
+                <div>
+                  <label className="block font-semibold mb-2 flex items-center gap-2">
+                    Barangay
+                    <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded-full">
+                      Auto-filled
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newHotspotData.barangay}
+                    onChange={(e) => setNewHotspotData(prev => ({ ...prev, barangay: e.target.value }))}
+                    className="w-full px-4 py-2 border border-green-300 dark:border-green-600 rounded-lg bg-green-50 dark:bg-green-900/20"
+                    placeholder="Auto-detected barangay"
+                  />
                 </div>
 
                 <div>

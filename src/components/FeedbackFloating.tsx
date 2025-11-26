@@ -13,9 +13,31 @@ export default function FeedbackFloating() {
   const [hoverRating, setHoverRating] = useState<number | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [showGreeting, setShowGreeting] = useState(false)
+  const [currentGreeting, setCurrentGreeting] = useState('')
 
   // Hide feedback button when user is admin
   if (isAdmin) return null
+
+  // Determine greeting based on current time
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    const greetings = {
+      morning: ['Good morning! 🌅', 'Rise and shine! 🌞', 'Morning! ☕', 'Hello! 🌄'],
+      afternoon: ['Good afternoon! ☀️', 'Hello! 🌤️', 'Afternoon greetings! 🌞', 'Hi there! ☀️'],
+      evening: ['Good evening! 🌆', 'Evening! 🌙', 'Hello there! 🌃', 'Greetings! 🌆'],
+      night: ['Good night! 🌙', 'Sweet dreams! 😴', 'Night! 🌌', 'Sleep well! 🌙']
+    }
+
+    let key: keyof typeof greetings
+    if (hour < 12) key = 'morning'
+    else if (hour < 17) key = 'afternoon'
+    else if (hour < 21) key = 'evening'
+    else key = 'night'
+
+    const options = greetings[key]
+    return options[Math.floor(Math.random() * options.length)]
+  }
 
   const sendFeedback = async () => {
     if (!message.trim()) {
@@ -72,11 +94,25 @@ export default function FeedbackFloating() {
         </div>
 
         <div className="relative">
+          {/* Greeting popup */}
+          {showGreeting && (
+            <div className="absolute bottom-full mb-2 right-0 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 px-3 py-2 rounded-lg shadow-lg text-sm whitespace-nowrap animate-fadeIn">
+              {currentGreeting}
+              <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white dark:border-t-slate-800"></div>
+            </div>
+          )}
+
           {/* animated glow behind the button */}
           <div className="absolute left-0 top-0 w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-emerald-300 opacity-30 blur-xl animate-pulse" aria-hidden="true" />
           <button
             aria-label={open ? 'Close feedback' : 'Open feedback'}
             onClick={() => setOpen((s) => !s)}
+            onMouseEnter={() => {
+              setCurrentGreeting(getGreeting())
+              setShowGreeting(true)
+              setTimeout(() => setShowGreeting(false), 3000) // Hide after 3 seconds
+            }}
+            onMouseLeave={() => setShowGreeting(false)}
             className="relative z-10 flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-emerald-400 text-white shadow-2xl hover:scale-105 transform-gpu transition-transform focus:outline-none focus:ring-4 focus:ring-blue-300/50"
           >
             {open ? <X className="w-6 h-6 animate-[rotate_400ms_linear]" /> : <MessageCircle className="w-6 h-6" />}
@@ -232,6 +268,19 @@ export default function FeedbackFloating() {
         }
         .animate-slideUp {
           animation: slideUp 0.2s ease-out forwards;
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(5px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out forwards;
         }
       `}</style>
     </div>

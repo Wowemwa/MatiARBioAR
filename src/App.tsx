@@ -109,18 +109,16 @@ const ThemeToggle = memo(function ThemeToggle() {
   const { theme, toggleTheme, isMobile } = useTheme()
   
   const handleToggle = useCallback(() => {
-    if (!isMobile) {
-      toggleTheme()
-    }
-  }, [toggleTheme, isMobile])
+    toggleTheme()
+  }, [toggleTheme])
 
-  const Component = isMobile ? 'div' : 'button'
+  const Component = 'button'
   
   return (
     <Component
       onClick={handleToggle}
-      className={`group relative inline-flex items-center justify-center w-12 h-12 rounded-2xl border-2 border-white/40 dark:border-white/20 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl hover:scale-105 transition-all duration-300 ease-out shadow-lg hover:shadow-xl overflow-hidden ${isMobile ? '' : 'cursor-pointer'}`}
-      aria-label={isMobile ? "Auto theme (time-based)" : "Toggle dark mode"}
+      className={`group relative inline-flex items-center justify-center w-12 h-12 rounded-2xl border-2 border-white/40 dark:border-white/20 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl hover:scale-105 transition-all duration-300 ease-out cursor-pointer shadow-lg hover:shadow-xl overflow-hidden`}
+      aria-label={`Toggle dark mode`}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/20 via-orange-400/20 to-blue-600/20 dark:from-blue-600/20 dark:via-purple-600/20 dark:to-slate-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out" />
       <div className="relative z-10 transition-transform duration-300 ease-out group-hover:scale-105">
@@ -135,19 +133,9 @@ const ThemeToggle = memo(function ThemeToggle() {
         </div>
       </div>
       <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-semibold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-out pointer-events-none whitespace-nowrap">
-        {isMobile ? (
-          theme === 'dark' ? 'Auto: Night Mode' : 'Auto: Day Mode'
-        ) : (
-          theme === 'dark' ? 'Switch to Light' : 'Switch to Dark'
-        )}
+        {theme === 'dark' ? 'Switch to Light' : 'Switch to Dark'}
         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900 dark:bg-white"></div>
       </div>
-      {isMobile && (
-        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-out pointer-events-none whitespace-nowrap">
-          Auto Theme
-          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-blue-500"></div>
-        </div>
-      )}
     </Component>
   )
 })
@@ -161,9 +149,9 @@ const Navbar = memo(function Navbar() {
   const navigate = useNavigate()
   const { isMobileView, deviceInfo } = useDeviceDetection()
   const navItems = useMemo(() => [
-    { to: '/gis', label: 'Interactive Map', badge: <HiMapPin className="w-5 h-5" /> },
     { to: '/biodiversity', label: 'Biodiversity', badge: <GiButterfly className="w-5 h-5" /> },
     { to: '/ar', label: 'Augmented Reality', badge: <MdAutoAwesome className="w-5 h-5" /> },
+    { to: '/gis', label: 'Interactive Map', badge: <HiMapPin className="w-5 h-5" /> },
     ...(isAdmin ? [{ to: '/mati-secret-admin-2024', label: 'Admin', badge: '👑', adminOnly: true }] : []),
     { to: '/about', label: 'About', badge: <IoInformationCircle className="w-5 h-5" /> },
   ], [isAdmin])
@@ -228,7 +216,7 @@ const Navbar = memo(function Navbar() {
               </div>
             </Link>
 
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-3">
               <ThemeToggle />
               {isAdmin && (
                 <button
@@ -239,25 +227,13 @@ const Navbar = memo(function Navbar() {
                   Exit preview
                 </button>
               )}
-              <Link
-                to="/ar"
-                className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-500 via-teal-500 to-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-500 hover:scale-105 hover:shadow-xl hover:-translate-y-0.5"
-              >
-                {/* Shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 transform -skew-x-12 group-hover:translate-x-full" />
-                
-                <span className="relative z-10 flex items-center gap-2">
-                  <ARIcon className="h-4 w-4 group-hover:rotate-12 transition-transform duration-300" />
-                  <span>Launch AR</span>
-                </span>
-              </Link>
             </div>
 
             <button
               aria-label="Toggle menu"
               aria-expanded={open}
               onClick={() => setOpen((prev) => !prev)}
-              className={`md:hidden inline-flex h-11 w-11 items-center justify-center rounded-2xl border-2 transition-all duration-500 ${
+              className={`lg:hidden inline-flex h-11 w-11 items-center justify-center rounded-2xl border-2 transition-all duration-500 ${
                 open
                   ? 'bg-gradient-to-r from-green-500 to-blue-500 border-transparent text-white shadow-xl scale-110'
                   : 'border-slate-300/70 text-gray-700 hover:bg-white/80 hover:shadow-lg hover:scale-105 dark:border-slate-600/50 dark:text-gray-200 dark:hover:bg-slate-800/80'
@@ -333,7 +309,7 @@ const Navbar = memo(function Navbar() {
             </div>
           </div>
 
-          <div className={`md:hidden overflow-hidden transition-[max-height,opacity] duration-500 ease-out ${open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className={`lg:hidden overflow-hidden transition-[max-height,opacity] duration-500 ease-out ${open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
             <div className={`space-y-3 rounded-2xl border border-slate-200/70 bg-white/95 p-4 shadow-2xl backdrop-blur-2xl dark:border-slate-700/50 dark:bg-slate-900/95 ${isMobileView ? 'rounded-xl p-3 space-y-2' : ''}`}>
               {navItems.map((item) => {
                 return (
@@ -372,17 +348,20 @@ const Navbar = memo(function Navbar() {
                 )
               })}
 
-              <Link
-                to="/ar"
-                onClick={() => setOpen(false)}
-                className="group flex items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 py-3 text-sm font-semibold text-white shadow-xl transition-all duration-500 hover:shadow-2xl hover:scale-105 relative overflow-hidden"
-              >
-                {/* Shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 transform -skew-x-12 cursor-pointer" onClick={() => navigate('/ar')} />
-                
-                <ARIcon className="relative h-4 w-4 group-hover:rotate-12 transition-transform duration-300" /> 
-                <span className="relative">Try AR Demo</span>
-              </Link>
+              <div className="flex items-center justify-between gap-3 py-2">
+                <ThemeToggle />
+                <Link
+                  to="/ar"
+                  onClick={() => setOpen(false)}
+                  className="group flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 py-2 px-4 text-sm font-semibold text-white shadow-xl transition-all duration-500 hover:shadow-2xl hover:scale-105 relative overflow-hidden flex-1"
+                >
+                  {/* Shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 transform -skew-x-12 cursor-pointer" onClick={() => navigate('/ar')} />
+                  
+                  <ARIcon className="relative h-4 w-4 group-hover:rotate-12 transition-transform duration-300" /> 
+                  <span className="relative">Try AR Demo</span>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -1677,7 +1656,7 @@ const ARDemo = memo(function ARDemo() {
             </h1>
             
             <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed">
-              Explore our interactive species gallery. Click any species to reveal its unique QR code and experience it in stunning 3D augmented reality.
+              Explore our interactive species gallery. Click any species to reveal its unique Marker and experience it in stunning 3D augmented reality.
             </p>
           </div>
         </div>
