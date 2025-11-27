@@ -77,6 +77,9 @@ export default function SpeciesDetailModal({ species, isOpen, onClose }: Species
                     alt={species.media[0].caption || species.commonName}
                     className="w-full h-full object-cover"
                     loading="lazy"
+                    onError={(e) => {
+                      console.error('SpeciesDetailModal image failed to load:', species.media[0].url, 'for species:', species.commonName)
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                   <div className="absolute bottom-4 left-4 right-4">

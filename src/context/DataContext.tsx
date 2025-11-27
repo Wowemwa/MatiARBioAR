@@ -44,23 +44,31 @@ export interface UnifiedSpecies {
 }
 
 function buildUnifiedSpecies({ species }: { species: SpeciesDetail[] }): UnifiedSpecies[] {
-  return species.map((record) => ({
-    id: record.id,
-    commonName: record.commonName,
-    scientificName: record.scientificName,
-    status: record.status,
-    type: record.category,
-    description: record.blurb,
-    habitats: record.habitat ? [record.habitat] : [],
-    siteIds: record.siteIds ?? [],
-    endemic: undefined,
-    media: record.images ? record.images.map(url => ({
+  return species.map((record) => {
+    const media = record.images ? record.images.map(url => ({
       type: 'image' as const,
       url,
       caption: `${record.commonName} (${record.scientificName})`,
       credit: 'Wikimedia Commons'
-    })) : undefined,
-  }))
+    })) : undefined;
+    
+    if (record.images && record.images.length > 0) {
+      console.log('Building media for species:', record.commonName, 'images:', record.images, 'media:', media);
+    }
+    
+    return {
+      id: record.id,
+      commonName: record.commonName,
+      scientificName: record.scientificName,
+      status: record.status,
+      type: record.category,
+      description: record.blurb,
+      habitats: record.habitat ? [record.habitat] : [],
+      siteIds: record.siteIds ?? [],
+      endemic: undefined,
+      media: media,
+    };
+  });
 }
 
 const DataContext = createContext<DataContextValue | undefined>(undefined)
@@ -552,21 +560,28 @@ export function DataProvider({ children }: DataProviderProps) {
       // Update in Supabase species table - only send defined fields
       const supabaseUpdates: any = {}
       
-      // Required fields
-      if (updates.category !== undefined) supabaseUpdates.category = updates.category
-      if (updates.commonName !== undefined) supabaseUpdates.common_name = updates.commonName
-      if (updates.scientificName !== undefined) supabaseUpdates.scientific_name = updates.scientificName
-      if (updates.status !== undefined) supabaseUpdates.conservation_status = updates.status
-      if (updates.blurb !== undefined) supabaseUpdates.description = updates.blurb
-      if (updates.habitat !== undefined) supabaseUpdates.habitat = updates.habitat
+      // Required fields - only update if they have valid values
+      if (updates.category !== undefined && updates.category !== null) supabaseUpdates.category = updates.category
+      if (updates.commonName !== undefined && updates.commonName !== null && updates.commonName.trim() !== '') supabaseUpdates.common_name = updates.commonName
+      if (updates.scientificName !== undefined && updates.scientificName !== null && updates.scientificName.trim() !== '') supabaseUpdates.scientific_name = updates.scientificName
+      if (updates.status !== undefined && updates.status !== null) supabaseUpdates.conservation_status = updates.status
+      if (updates.blurb !== undefined && updates.blurb !== null && updates.blurb.trim() !== '') supabaseUpdates.description = updates.blurb
+      if (updates.habitat !== undefined && updates.habitat !== null && updates.habitat.trim() !== '') supabaseUpdates.habitat = updates.habitat
       
-      // Array fields
-      if (updates.highlights !== undefined) supabaseUpdates.key_facts = updates.highlights
-      if (updates.images !== undefined) supabaseUpdates.image_urls = updates.images
+      // Array fields - filter out empty strings
+      if (updates.highlights !== undefined && Array.isArray(updates.highlights)) {
+        const filteredHighlights = updates.highlights.filter(h => h && h.trim() !== '')
+        if (filteredHighlights.length > 0) supabaseUpdates.key_facts = filteredHighlights
+      }
+      if (updates.images !== undefined && Array.isArray(updates.images)) {
+        const filteredImages = updates.images.filter(img => img && img.trim() !== '')
+        if (filteredImages.length > 0) supabaseUpdates.image_urls = filteredImages
+        console.log('[DataContext] Filtered images:', filteredImages, 'from:', updates.images)
+      }
       
       // AR fields
-      if (updates.arExperienceUrl !== undefined) supabaseUpdates.ar_model_url = updates.arExperienceUrl
-      if (updates.arMarkerImageUrl !== undefined) supabaseUpdates.ar_marker_image_url = updates.arMarkerImageUrl
+      if (updates.arExperienceUrl !== undefined && updates.arExperienceUrl !== null && updates.arExperienceUrl.trim() !== '') supabaseUpdates.ar_model_url = updates.arExperienceUrl
+      if (updates.arMarkerImageUrl !== undefined && updates.arMarkerImageUrl !== null && updates.arMarkerImageUrl.trim() !== '') supabaseUpdates.ar_marker_image_url = updates.arMarkerImageUrl
 
       // Add other fields if they exist in updates, but skip client-only keys
       // const skipKeys = ['commonName', 'scientificName', 'status', 'blurb', 'habitat', 'highlights', 'images', 'arModelUrl', 'arPatternUrl', 'arModelScale', 'arModelRotation', 'arViewerHtml', 'arMarkerImageUrl', 'arExperienceUrl', 'category', 'siteIds', 'id', 'marker']
@@ -577,6 +592,16 @@ export function DataProvider({ children }: DataProviderProps) {
       // })
 
       console.log('[DataContext] Supabase updates object:', supabaseUpdates)
+
+      // Only proceed if we have something to update
+      if (Object.keys(supabaseUpdates).length === 0) {
+        console.log('[DataContext] No valid fields to update, skipping database operation')
+        // Still update local state
+        setSpecies(prev => prev.map(s =>
+          s.id === id ? { ...s, ...updates } : s
+        ))
+        return true
+      }
 
       // Check authentication
       const { data: { user } } = await supabase.auth.getUser()

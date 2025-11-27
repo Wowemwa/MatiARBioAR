@@ -4,6 +4,7 @@ import { PlusIcon, EditIcon, DeleteIcon, SaveIcon, CancelIcon, EyeIcon } from '.
 import { SpeciesDetail } from '../data/mati-hotspots'
 import { useData } from '../context/DataContext'
 import { supabase } from '../supabaseClient'
+import { uploadImageToStorage, isValidImageFile } from '../utils/imageUpload'
 
 interface AdminPanelProps {
   isVisible: boolean
@@ -42,7 +43,7 @@ const emptySpecies: SpeciesFormData = {
 }
 
 export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
-  const { species, createSpecies, updateSpecies, deleteSpecies, refresh } = useData()
+  const { species, createSpecies, updateSpecies, deleteSpecies, refresh, clearCache, hotspots } = useData()
   const [showFeedbacks, setShowFeedbacks] = useState(false)
   const [editingSpecies, setEditingSpecies] = useState<SpeciesFormData | null>(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -54,6 +55,11 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
   const [showImageModal, setShowImageModal] = useState(false)
   const [imageModalUrl, setImageModalUrl] = useState('')
   const [imageModalFile, setImageModalFile] = useState<File | null>(null)
+
+  // Create site options from hotspots
+  const siteOptions = useMemo(() => {
+    return hotspots.map(hotspot => hotspot.id)
+  }, [hotspots])
 
   const filteredSpecies = useMemo(() => {
     return species.filter(s => {
@@ -73,20 +79,375 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
     { value: 'CR', label: 'Critically Endangered', color: 'red' }
   ]
 
-  const siteOptions = [
-    'mount-hamiguitan-sanctuary',
-    'pujada-bay-protected-seascape',
-    'dahican-beach-mayo-bay',
-    'sleeping-dinosaur-island',
-    'guang-guang-mangrove-reserve',
-    'mati-protected-landscape'
-  ]
+  // Helper function to generate unique species ID with new format: MAB-{first letter common}{first letter scientific}-{sequential number}
+  const generateUniqueSpeciesId = (commonName: string, scientificName: string, category: 'flora' | 'fauna'): string => {
+    // Get first letters
+    const commonFirst = commonName.charAt(0).toUpperCase()
+    const scientificFirst = scientificName.charAt(0).toUpperCase()
+    
+    // Count existing species in this category
+    const categorySpecies = species.filter(s => s.category === category)
+    const nextNumber = (categorySpecies.length + 1).toString().padStart(4, '0')
+    
+    // Format: MAB-{commonFirst}{scientificFirst}-{nextNumber}
+    const baseId = `MAB-${commonFirst}${scientificFirst}-${nextNumber}`
+    
+    // Ensure uniqueness (though should be unique by design)
+    const existingIds = species.map(s => s.id)
+    if (!existingIds.includes(baseId)) {
+      return baseId
+    }
+    
+    // If somehow not unique, append a suffix
+    let counter = 1
+    let uniqueId = baseId
+    while (existingIds.includes(uniqueId)) {
+      uniqueId = `${baseId}-${counter}`
+      counter++
+    }
+    
+    return uniqueId
+  }
+
+  const handleAutofill = async () => {
+    if (!editingSpecies?.commonName.trim()) {
+      alert('Please enter a common name first')
+      return
+    }
+
+    try {
+      const commonName = editingSpecies.commonName.trim()
+      console.log('[AdminPanel] Starting autofill for:', commonName)
+
+      // Step 1: Try GBIF API first for accurate scientific names
+      let scientificName = ''
+      let gbifData = null
+
+      try {
+        const gbifResponse = await fetch(`https://api.gbif.org/v1/species/search?q=${encodeURIComponent(commonName)}&rank=SPECIES&limit=5`)
+
+        if (gbifResponse.ok) {
+          const gbifResults = await gbifResponse.json()
+          console.log('[AdminPanel] GBIF results:', gbifResults)
+
+          // Find the most relevant result
+          if (gbifResults.results && gbifResults.results.length > 0) {
+            // Look for exact matches or high confidence results
+            let bestMatch = gbifResults.results[0]
+
+            // Try to find exact common name match
+            for (const result of gbifResults.results) {
+              if (result.vernacularNames) {
+                const commonNames = result.vernacularNames.map(vn => vn.vernacularName?.toLowerCase())
+                if (commonNames.includes(commonName.toLowerCase())) {
+                  bestMatch = result
+                  break
+                }
+              }
+            }
+
+            if (bestMatch.scientificName) {
+              scientificName = bestMatch.scientificName
+              gbifData = bestMatch
+              console.log('[AdminPanel] Found scientific name from GBIF:', scientificName)
+            }
+          }
+        }
+      } catch (gbifError) {
+        console.warn('[AdminPanel] GBIF API failed:', gbifError)
+      }
+
+      // Step 2: If GBIF didn't work, try iNaturalist API
+      if (!scientificName) {
+        try {
+          const inatResponse = await fetch(`https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(commonName)}&rank=species&per_page=5`)
+
+          if (inatResponse.ok) {
+            const inatResults = await inatResponse.json()
+            console.log('[AdminPanel] iNaturalist results:', inatResults)
+
+            if (inatResults.results && inatResults.results.length > 0) {
+              const bestMatch = inatResults.results[0]
+              if (bestMatch.name) {
+                scientificName = bestMatch.name
+                console.log('[AdminPanel] Found scientific name from iNaturalist:', scientificName)
+              }
+            }
+          }
+        } catch (inatError) {
+          console.warn('[AdminPanel] iNaturalist API failed:', inatError)
+        }
+      }
+
+      // Step 3: Fallback to DuckDuckGo search with improved parsing
+      if (!scientificName) {
+        const duckResponse = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(commonName + ' scientific name binomial nomenclature')}&format=json&no_html=1&skip_disambig=1`)
+
+        if (duckResponse.ok) {
+          const duckData = await duckResponse.json()
+          console.log('[AdminPanel] DuckDuckGo results:', duckData)
+
+          const searchText = (duckData.Abstract || '') + ' ' + (duckData.Answer || '') + ' ' +
+                           (duckData.RelatedTopics || []).map(t => t.Text || '').join(' ')
+
+          // More sophisticated scientific name extraction
+          const scientificPatterns = [
+            /\b([A-Z][a-z]+ [a-z]+(?: subsp\. [a-z]+| var\. [a-z]+)?)\b/g,  // Genus species subsp/var
+            /\b([A-Z][a-z]+ [a-z]+ [a-z]+)\b/g,  // Genus species subspecies
+            /\b([A-Z][a-z]+\s+[a-z]+)\b/g  // Basic Genus species
+          ]
+
+          for (const pattern of scientificPatterns) {
+            const matches = searchText.match(pattern)
+            if (matches) {
+              // Filter out common false positives
+              const validMatches = matches.filter(match =>
+                !match.toLowerCase().includes('the') &&
+                !match.toLowerCase().includes('and') &&
+                !match.toLowerCase().includes('for') &&
+                match.length > 3 &&
+                match.split(' ').length >= 2
+              )
+
+              if (validMatches.length > 0) {
+                scientificName = validMatches[0]
+                console.log('[AdminPanel] Found scientific name from DuckDuckGo:', scientificName)
+                break
+              }
+            }
+          }
+        }
+      }
+
+      // Step 4: Determine category and habitat
+      let category: 'flora' | 'fauna' = 'fauna'
+      let habitat = 'Various habitats in Mati City'
+
+      // Use GBIF data if available
+      if (gbifData) {
+        if (gbifData.kingdom === 'Plantae' || gbifData.kingdom === 'Fungi') {
+          category = 'flora'
+        } else {
+          category = 'fauna'
+        }
+
+        // Try to extract habitat from GBIF data
+        if (gbifData.habitats && gbifData.habitats.length > 0) {
+          habitat = gbifData.habitats[0]
+        }
+      } else {
+        // Fallback category detection from search
+        const searchText = `${commonName} ${scientificName}`.toLowerCase()
+        if (searchText.includes('plant') || searchText.includes('tree') || searchText.includes('flower') ||
+            searchText.includes('grass') || searchText.includes('shrub') || searchText.includes('flora')) {
+          category = 'flora'
+        }
+
+        // Habitat detection
+        const habitatKeywords = {
+          'Tropical rainforests': ['tropical', 'rainforest', 'equatorial'],
+          'Forests and woodlands': ['forest', 'woodland', 'temperate forest'],
+          'Mountainous regions': ['mountain', 'alpine', 'highland'],
+          'Coastal areas': ['coastal', 'marine', 'beach', 'shore'],
+          'Wetlands and marshes': ['wetland', 'marsh', 'swamp', 'mangrove'],
+          'Grasslands and savannas': ['grassland', 'savanna', 'prairie'],
+          'Desert regions': ['desert', 'arid', 'dry'],
+          'Freshwater habitats': ['freshwater', 'river', 'lake', 'stream']
+        }
+
+        for (const [habitatName, keywords] of Object.entries(habitatKeywords)) {
+          if (keywords.some(keyword => searchText.includes(keyword))) {
+            habitat = habitatName
+            break
+          }
+        }
+      }
+
+      // Fallback scientific name if still not found
+      if (!scientificName) {
+        scientificName = `${commonName.charAt(0).toUpperCase() + commonName.slice(1).toLowerCase()} sp.`
+        console.log('[AdminPanel] Using fallback scientific name:', scientificName)
+      }
+
+      // Step 5: Search for Mati City-specific information
+      let matiSpecificInfo = ''
+      let conservationStatus = 'LC' // Default to Least Concern
+
+      try {
+        console.log('[AdminPanel] Searching for Mati City-specific information...')
+
+        // Search for species in Mati City/Davao Oriental
+        const matiSearchQueries = [
+          `${commonName} ${scientificName} Mati City Davao Oriental Philippines`,
+          `${commonName} conservation status Philippines`,
+          `${commonName} habitat Davao Oriental`,
+          `${scientificName} distribution Philippines`,
+          `${commonName} population status Mindanao`
+        ]
+
+        for (const query of matiSearchQueries) {
+          try {
+            const matiResponse = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`)
+
+            if (matiResponse.ok) {
+              const matiData = await matiResponse.json()
+              const matiText = (matiData.Abstract || '') + ' ' + (matiData.Answer || '') + ' ' +
+                             (matiData.RelatedTopics || []).map(t => t.Text || '').join(' ')
+
+              // Extract conservation status
+              const statusPatterns = {
+                'CR': /\b(critically endangered|CR)\b/gi,
+                'EN': /\b(endangered|EN)\b/gi,
+                'VU': /\b(vulnerable|VU)\b/gi,
+                'NT': /\b(near threatened|NT)\b/gi,
+                'LC': /\b(least concern|LC|not threatened)\b/gi,
+                'DD': /\b(data deficient|DD)\b/gi
+              }
+
+              for (const [status, pattern] of Object.entries(statusPatterns)) {
+                if (pattern.test(matiText)) {
+                  conservationStatus = status as any
+                  console.log('[AdminPanel] Found conservation status:', conservationStatus)
+                  break
+                }
+              }
+
+              // Extract Mati City-specific information
+              const matiKeywords = ['Mati City', 'Davao Oriental', 'Mindanao', 'Philippines', 'conservation', 'protected', 'endemic', 'population', 'habitat']
+              const matiSentences = matiText.split(/[.!?]+/).filter(sentence =>
+                matiKeywords.some(keyword => sentence.toLowerCase().includes(keyword.toLowerCase())) &&
+                sentence.length > 20
+              )
+
+              if (matiSentences.length > 0) {
+                matiSpecificInfo = matiSentences.slice(0, 2).join('. ') + '.'
+                console.log('[AdminPanel] Found Mati City-specific info:', matiSpecificInfo)
+                break // Use the first relevant result
+              }
+            }
+          } catch (queryError) {
+            console.warn('[AdminPanel] Failed to search query:', query, queryError)
+            continue
+          }
+        }
+      } catch (matiError) {
+        console.warn('[AdminPanel] Mati City search failed:', matiError)
+      }
+
+      // Step 6: Create comprehensive description
+      let comprehensiveDescription = ''
+
+      if (matiSpecificInfo) {
+        // Use Mati City-specific information as the foundation
+        comprehensiveDescription = `${commonName} (${scientificName}) is a ${category === 'flora' ? 'plant' : 'animal'} species with specific significance in Mati City, Davao Oriental, Philippines. ${matiSpecificInfo}`
+
+        // Add general information if available from GBIF
+        if (gbifData?.description) {
+          comprehensiveDescription += ` ${gbifData.description.split('.')[0]}.`
+        }
+
+        // Add habitat context
+        comprehensiveDescription += ` This species inhabits ${habitat.toLowerCase()} and plays an important role in the local ecosystem and biodiversity conservation efforts in Mati City.`
+      } else {
+        // Fallback to general description with Mati City context
+        const baseDescription = gbifData?.description || `${commonName} (${scientificName}) is a ${category === 'flora' ? 'plant' : 'animal'} species found in various habitats.`
+
+        comprehensiveDescription = `${baseDescription.split('.')[0]}. This species contributes to the rich biodiversity of Mati City, Davao Oriental, Philippines, and is part of the local conservation efforts in the region. It inhabits ${habitat.toLowerCase()} and represents the natural heritage of Mindanao.`
+      }
+
+      // Step 7: Generate the new format species ID
+      const speciesId = generateUniqueSpeciesId(commonName, scientificName, category)
+
+      // Update the form with comprehensive information
+      setEditingSpecies({
+        ...editingSpecies,
+        id: speciesId,
+        category: category,
+        scientificName,
+        status: conservationStatus,
+        habitat,
+        blurb: comprehensiveDescription
+      })
+
+      console.log('[AdminPanel] Autofill completed:', {
+        speciesId,
+        scientificName,
+        category,
+        habitat,
+        conservationStatus,
+        hasMatiInfo: !!matiSpecificInfo,
+        source: gbifData ? 'GBIF + Local Search' : 'Internet Search'
+      })
+
+      alert(`✅ Species information autofilled successfully!\nScientific name: ${scientificName}\nConservation status: ${conservationStatus}\n${matiSpecificInfo ? '✅ Found Mati City-specific information!' : '⚠️ Using general information - verify local details'}`)
+
+    } catch (error) {
+      console.error('Autofill error:', error)
+
+      // Enhanced fallback with Mati City search
+      const commonName = editingSpecies.commonName.trim()
+      const fallbackScientific = `${commonName.charAt(0).toUpperCase() + commonName.slice(1).toLowerCase()} sp.`
+      const speciesId = generateUniqueSpeciesId(commonName, fallbackScientific, 'fauna')
+
+      // Try to get at least some Mati City information even in fallback
+      let fallbackDescription = `${commonName} is a species that contributes to the biodiversity of Mati City, Davao Oriental.`
+      let fallbackStatus = 'DD' // Data Deficient as fallback
+
+      try {
+        const fallbackSearch = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(commonName + ' Philippines conservation status')}&format=json&no_html=1&skip_disambig=1`)
+
+        if (fallbackSearch.ok) {
+          const fallbackData = await fallbackSearch.json()
+          const fallbackText = (fallbackData.Abstract || '') + ' ' + (fallbackData.Answer || '')
+
+          // Extract conservation status even in fallback
+          const statusPatterns = {
+            'CR': /\b(critically endangered|CR)\b/gi,
+            'EN': /\b(endangered|EN)\b/gi,
+            'VU': /\b(vulnerable|VU)\b/gi,
+            'NT': /\b(near threatened|NT)\b/gi,
+            'LC': /\b(least concern|LC|not threatened)\b/gi,
+            'DD': /\b(data deficient|DD)\b/gi
+          }
+
+          for (const [status, pattern] of Object.entries(statusPatterns)) {
+            if (pattern.test(fallbackText)) {
+              fallbackStatus = status as any
+              break
+            }
+          }
+
+          // Try to get a better description
+          if (fallbackText.length > 50) {
+            const firstSentence = fallbackText.split('.')[0]
+            if (firstSentence.length > 20) {
+              fallbackDescription = `${firstSentence}. This species is part of Mati City's rich biodiversity and conservation efforts in Davao Oriental, Philippines.`
+            }
+          }
+        }
+      } catch (fallbackError) {
+        console.warn('[AdminPanel] Fallback search failed:', fallbackError)
+      }
+
+      setEditingSpecies({
+        ...editingSpecies,
+        id: speciesId,
+        category: 'fauna',
+        scientificName: fallbackScientific,
+        status: fallbackStatus,
+        habitat: 'Various habitats in Mati City',
+        blurb: fallbackDescription + ' Scientific name verification recommended.'
+      })
+
+      alert('⚠️ Could not fetch detailed information from scientific databases. Basic autofill applied with placeholder scientific name and local conservation context. Please verify and update the scientific name manually.')
+    }
+  }
 
   const handleCreate = () => {
-    // Generate a unique ID immediately for file uploads
-    const newId = `species-${Date.now()}`
+    // Generate a temporary ID for file uploads - will be updated by autofill
+    const tempId = `temp-${Date.now()}`
     setIsCreating(true)
-    setEditingSpecies({ ...emptySpecies, id: newId })
+    setEditingSpecies({ ...emptySpecies, id: tempId })
   }
 
   const handleEdit = (speciesItem: SpeciesDetail) => {
@@ -189,12 +550,17 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
           highlights: editingSpecies.highlights.filter(h => h.trim()),
           arMarkerImageUrl: markerUrl
         }
+        // Remove marker property as it's not part of SpeciesDetail interface
+        delete (updates as any).marker
+        
         console.log('[AdminPanel] Updating species:', editingSpecies.id)
+        console.log('[AdminPanel] Images being saved:', updates.images)
         const ok = await updateSpecies(editingSpecies.id, updates)
         if (ok) {
           setEditingSpecies(null)
           setIsCreating(false)
-          // Refresh data to ensure updated species data is available
+          // Clear cache and refresh data to ensure updated species data is available
+          await clearCache()
           await refresh()
           alert('✅ Species updated successfully!')
         } else {
@@ -215,7 +581,8 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
   const confirmDelete = () => {
     if (speciesToDelete) {
       deleteSpecies(speciesToDelete.id)
-      // Refresh data to ensure deleted species is removed
+      // Clear cache and refresh data to ensure deleted species is removed
+      clearCache()
       refresh()
       alert('✅ Species deleted successfully!')
       setShowDeleteConfirm(false)
@@ -261,26 +628,31 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
     if (!editingSpecies) return
 
     if (imageModalFile) {
-      // Handle file upload
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const result = e.target?.result as string
-        if (result) {
+      if (!isValidImageFile(imageModalFile)) {
+        alert('Please select a valid image file (JPEG, PNG, WebP) under 5MB.')
+        return
+      }
+
+      // Show loading state
+      setImageModalFile(null) // Clear file input
+      setShowImageModal(false)
+      setImageModalUrl('')
+
+      uploadImageToStorage(imageModalFile)
+        .then((imageUrl) => {
+          console.log('Image uploaded successfully:', imageUrl);
           setEditingSpecies({
             ...editingSpecies,
-            images: [...editingSpecies.images, result]
+            images: [...editingSpecies.images, imageUrl]
           })
-        }
-        setShowImageModal(false)
-        setImageModalUrl('')
-        setImageModalFile(null)
-      }
-      reader.onerror = () => {
-        alert('Failed to read image file.')
-      }
-      reader.readAsDataURL(imageModalFile)
+          console.log('Updated editingSpecies.images:', [...editingSpecies.images, imageUrl]);
+        })
+        .catch((error) => {
+          console.error('Failed to upload image:', error)
+          alert(`Failed to upload image: ${error.message}`)
+        })
     } else if (imageModalUrl.trim()) {
-      // Handle URL
+      // Handle URL directly
       setEditingSpecies({
         ...editingSpecies,
         images: [...editingSpecies.images, imageModalUrl.trim()]
@@ -338,6 +710,18 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                 <span className="ml-2 inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500 text-white text-xs">{(() => {
                   try { const raw = localStorage.getItem('mati-feedback:v1'); return raw ? JSON.parse(raw).length : 0 } catch { return 0 }
                 })()}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  await clearCache()
+                  await refresh()
+                  alert('✅ Cache cleared and data refreshed!')
+                }}
+                className="px-3 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-semibold"
+              >
+                🔄 Clear Cache
               </button>
 
               <button
@@ -542,13 +926,23 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                         </svg>
                         Common Name
                       </label>
-                      <input
-                        type="text"
-                        value={editingSpecies.commonName}
-                        onChange={(e) => setEditingSpecies({...editingSpecies, commonName: e.target.value})}
-                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all group-hover:border-blue-300 dark:group-hover:border-blue-700"
-                        placeholder="e.g., Philippine Eagle"
-                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={editingSpecies.commonName}
+                          onChange={(e) => setEditingSpecies({...editingSpecies, commonName: e.target.value})}
+                          className="flex-1 px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all group-hover:border-blue-300 dark:group-hover:border-blue-700"
+                          placeholder="e.g., Philippine Eagle"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAutofill}
+                          className="px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 whitespace-nowrap"
+                          title="Search internet for species information and generate ID"
+                        >
+                          ✨ Autofill
+                        </button>
+                      </div>
                     </div>
                     <div className="group">
                       <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">

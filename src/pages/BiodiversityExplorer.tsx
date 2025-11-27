@@ -251,6 +251,9 @@ export default function BiodiversityExplorer() {
                       alt={s.media[0].caption || s.commonName}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       loading="lazy"
+                      onError={(e) => {
+                        console.error('Image failed to load:', s.media[0].url, 'for species:', s.commonName)
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
                     <div className="absolute top-3 right-3">
