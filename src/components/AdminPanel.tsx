@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import AdminFeedbacks from './AdminFeedbacks'
 import { PlusIcon, EditIcon, DeleteIcon, SaveIcon, CancelIcon, EyeIcon } from './Icons'
-import { SpeciesDetail } from '../data/mati-hotspots'
+import { SpeciesDetail, SpeciesStatus } from '../data/mati-hotspots'
 import { useData } from '../context/DataContext'
 import { supabase } from '../supabaseClient'
 import { uploadImageToStorage, isValidImageFile } from '../utils/imageUpload'
@@ -138,7 +138,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
             // Try to find exact common name match
             for (const result of gbifResults.results) {
               if (result.vernacularNames) {
-                const commonNames = result.vernacularNames.map(vn => vn.vernacularName?.toLowerCase())
+                const commonNames = result.vernacularNames.map((vn: any) => vn.vernacularName?.toLowerCase())
                 if (commonNames.includes(commonName.toLowerCase())) {
                   bestMatch = result
                   break
@@ -188,9 +188,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
           console.log('[AdminPanel] DuckDuckGo results:', duckData)
 
           const searchText = (duckData.Abstract || '') + ' ' + (duckData.Answer || '') + ' ' +
-                           (duckData.RelatedTopics || []).map(t => t.Text || '').join(' ')
-
-          // More sophisticated scientific name extraction
+                         (duckData.RelatedTopics || []).map((t: any) => t.Text || '').join(' ')          // More sophisticated scientific name extraction
           const scientificPatterns = [
             /\b([A-Z][a-z]+ [a-z]+(?: subsp\. [a-z]+| var\. [a-z]+)?)\b/g,  // Genus species subsp/var
             /\b([A-Z][a-z]+ [a-z]+ [a-z]+)\b/g,  // Genus species subspecies
@@ -292,7 +290,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
             if (matiResponse.ok) {
               const matiData = await matiResponse.json()
               const matiText = (matiData.Abstract || '') + ' ' + (matiData.Answer || '') + ' ' +
-                             (matiData.RelatedTopics || []).map(t => t.Text || '').join(' ')
+                             (matiData.RelatedTopics || []).map((t: any) => t.Text || '').join(' ')
 
               // Extract conservation status
               const statusPatterns = {
@@ -364,7 +362,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
         id: speciesId,
         category: category,
         scientificName,
-        status: conservationStatus,
+        status: conservationStatus as SpeciesStatus,
         habitat,
         blurb: comprehensiveDescription
       })
@@ -412,7 +410,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
 
           for (const [status, pattern] of Object.entries(statusPatterns)) {
             if (pattern.test(fallbackText)) {
-              fallbackStatus = status as any
+              fallbackStatus = status
               break
             }
           }
@@ -434,7 +432,7 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
         id: speciesId,
         category: 'fauna',
         scientificName: fallbackScientific,
-        status: fallbackStatus,
+        status: fallbackStatus as SpeciesStatus,
         habitat: 'Various habitats in Mati City',
         blurb: fallbackDescription + ' Scientific name verification recommended.'
       })

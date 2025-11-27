@@ -252,7 +252,7 @@ export default function BiodiversityExplorer() {
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       loading="lazy"
                       onError={(e) => {
-                        console.error('Image failed to load:', s.media[0].url, 'for species:', s.commonName)
+                        console.error('Image failed to load:', s.media?.[0]?.url, 'for species:', s.commonName)
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
@@ -283,7 +283,7 @@ export default function BiodiversityExplorer() {
                     
                     <div className="flex flex-col items-end gap-2">
                       {/* Only show type badge here if there's no image */}
-                      {(!s.media || s.media.length === 0 || s.media[0].type !== 'image') && (
+                      {(!s.media || s.media.length === 0 || s.media[0]?.type !== 'image') && (
                         <span className={`px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${
                           s.type === 'flora' 
                             ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' 
