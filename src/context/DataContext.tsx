@@ -81,6 +81,16 @@ const SPECIES_STORAGE_KEY = 'mati-species-data:v2'
 const HOTSPOTS_STORAGE_KEY = 'mati-hotspots-data:v2'
 const TEAM_STORAGE_KEY = 'mati-team-data:v2'
 const CACHE_DURATION = 10 * 60 * 1000 // 10 minutes
+// Configurable DB/network timeouts and retry behavior (use Vite env vars)
+const DB_TIMEOUT_MS = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_DB_TIMEOUT_MS)
+  ? parseInt(String(import.meta.env.VITE_DB_TIMEOUT_MS))
+  : 30000
+const DB_MAX_ATTEMPTS = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_DB_MAX_ATTEMPTS)
+  ? parseInt(String(import.meta.env.VITE_DB_MAX_ATTEMPTS))
+  : 3
+const DB_BACKOFF_BASE_MS = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_DB_BACKOFF_BASE_MS)
+  ? parseInt(String(import.meta.env.VITE_DB_BACKOFF_BASE_MS))
+  : 500
 
 // Default team members
 const DEFAULT_TEAM_MEMBERS: TeamMember[] = [
@@ -173,15 +183,16 @@ export function DataProvider({ children }: DataProviderProps) {
 
       // Retry logic for database connection issues
       let attempts = 0
-      const maxAttempts = 3
+      const maxAttempts = DB_MAX_ATTEMPTS
       let lastError: Error | null = null
 
       while (attempts < maxAttempts) {
         try {
-          // Load all data in parallel for better performance with increased timeout
-          const timeout = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Database connection timeout after 30 seconds')), 30000)
-          )
+          // Load all data in parallel for better performance with configurable timeout
+          let timeoutId: number | undefined
+          const timeout = new Promise((_, reject) => {
+            timeoutId = window.setTimeout(() => reject(new Error(`Database connection timeout after ${DB_TIMEOUT_MS}ms`)), DB_TIMEOUT_MS)
+          })
 
           const dataPromise = Promise.all([
             supabase.from('sites').select('*').order('name'),
@@ -189,9 +200,14 @@ export function DataProvider({ children }: DataProviderProps) {
             supabase.from('species_sites').select('*'),
             supabase.from('team_members').select('*').order('sort_order')
           ])
+          let results: any
+          try {
+            results = await Promise.race([dataPromise, timeout])
+          } finally {
+            // Clear timeout if dataPromise resolved first
+            if (typeof timeoutId !== 'undefined') window.clearTimeout(timeoutId)
+          }
 
-          const results = await Promise.race([dataPromise, timeout])
-          
           if (!Array.isArray(results)) {
             throw new Error('Database query timeout')
           }
@@ -348,11 +364,11 @@ export function DataProvider({ children }: DataProviderProps) {
           attempts++
           lastError = attemptError as Error
           console.warn(`[DataContext] Database load attempt ${attempts} failed:`, attemptError)
-          
+
           if (attempts < maxAttempts) {
-            // Wait before retrying (exponential backoff)
-            const delay = Math.min(1000 * Math.pow(2, attempts - 1), 5000)
-            console.log(`[DataContext] Retrying in ${delay}ms...`)
+            // Exponential backoff with configurable base
+            const delay = Math.min(DB_BACKOFF_BASE_MS * Math.pow(2, attempts - 1), 10000)
+            console.log(`[DataContext] Retrying in ${delay}ms (attempt ${attempts + 1}/${maxAttempts})...`)
             await new Promise(resolve => setTimeout(resolve, delay))
           }
         }
