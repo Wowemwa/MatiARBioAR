@@ -327,82 +327,18 @@ const About = memo(function About() {
               </ul>
             </div>
 
-            {/* Connect */}
-            <div>
-              <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Built With</h4>
-              <div className="flex flex-wrap gap-4">
-                {/* React */}
-                <div className="flex flex-col items-center gap-2 p-2 bg-white/50 dark:bg-slate-700/50 rounded-lg hover:bg-white/70 dark:hover:bg-slate-700/70 transition-colors">
-                  <svg viewBox="0 0 100 100" className="w-8 h-8">
-                    <circle cx="50" cy="50" r="8" fill="#61DAFB"/>
-                    <path d="M50 8C27.9 8 10 25.9 10 48s17.9 40 40 40 40-17.9 40-40S72.1 8 50 8zm0 72c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32z" fill="#61DAFB"/>
-                    <path d="M50 28c-11 0-20 9-20 20s9 20 20 20 20-9 20-20-9-20-20-20zm0 32c-7.7 0-14-6.3-14-14s6.3-14 14-14 14 6.3 14 14-6.3 14-14 14z" fill="#61DAFB"/>
-                    <ellipse cx="35" cy="48" rx="3" ry="12" fill="#61DAFB"/>
-                    <ellipse cx="65" cy="48" rx="3" ry="12" fill="#61DAFB"/>
-                  </svg>
-                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">React</span>
-                </div>
-
-                {/* TypeScript */}
-                <div className="flex flex-col items-center gap-2 p-2 bg-white/50 dark:bg-slate-700/50 rounded-lg hover:bg-white/70 dark:hover:bg-slate-700/70 transition-colors">
-                  <svg viewBox="0 0 24 24" className="w-8 h-8" fill="#3178C6">
-                    <path d="M1.125 0C.502 0 0 .502 0 1.125v21.75C0 23.498.502 24 1.125 24h21.75c.623 0 1.125-.502 1.125-1.125V1.125C24 .502 23.498 0 22.875 0zm17.363 9.02c.117-.103.233-.215.338-.327.678-.677 1.231-1.521 1.231-2.502 0-1.739-1.407-3.156-3.146-3.156-.866 0-1.658.345-2.249.938-.591.593-.938 1.384-.938 2.25 0 .966.549 1.81 1.227 2.487.11.112.226.224.343.336L12 17.438l-4.688-8.438c.117-.112.233-.224.343-.336.678-.677 1.231-1.521 1.231-2.502 0-1.739-1.407-3.156-3.146-3.156C4.216 3.02 3.424 3.365 2.833 3.958.944 5.847.944 9.02.944 9.02c0 1.98.552 3.824 1.23 4.501.11.112.226.224.343.336L12 21.438l8.482-12.438z"/>
-                  </svg>
-                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">TypeScript</span>
-                </div>
-
-                {/* Vite */}
-                <div className="flex flex-col items-center gap-2 p-2 bg-white/50 dark:bg-slate-700/50 rounded-lg hover:bg-white/70 dark:hover:bg-slate-700/70 transition-colors">
-                  <svg viewBox="0 0 32 32" className="w-8 h-8" fill="#646CFF">
-                    <path d="M29.883 13.2c-.624-.455-1.377-.718-2.16-.718-.783 0-1.536.263-2.16.718L16 22.345 6.437 13.2c-.624-.455-1.377-.718-2.16-.718-.783 0-1.536.263-2.16.718L0 15.2c.624.455 1.377.718 2.16.718.783 0 1.536-.263 2.16-.718L16 9.655l11.68 5.545c.624.455 1.377.718 2.16.718.783 0 1.536-.263 2.16-.718l-2.117-2z"/>
-                    <path d="M29.883 18.8c-.624-.455-1.377-.718-2.16-.718-.783 0-1.536.263-2.16.718L16 27.945 6.437 18.8c-.624-.455-1.377-.718-2.16-.718-.783 0-1.536.263-2.16.718L0 20.8c.624.455 1.377.718 2.16.718.783 0 1.536-.263 2.16-.718L16 15.255l11.68 5.545c.624.455 1.377.718 2.16.718.783 0 1.536-.263 2.16-.718l-2.117-2z"/>
-                  </svg>
-                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">Vite</span>
-                </div>
-
-                {/* Supabase */}
-                <div className="flex flex-col items-center gap-2 p-2 bg-white/50 dark:bg-slate-700/50 rounded-lg hover:bg-white/70 dark:hover:bg-slate-700/70 transition-colors">
-                  <svg viewBox="0 0 109 113" className="w-8 h-8" fill="#3ECF8E">
-                    <path d="M63.568 38.808c-.28-.14-.616-.14-.896 0l-8.32 4.16c-.28.14-.448.42-.448.728v8.32c0 .308.168.588.448.728l8.32 4.16c.28.14.616.14.896 0l8.32-4.16c.28-.14.448-.42.448-.728v-8.32c0-.308-.168-.588-.448-.728l-8.32-4.16zM54.104 47.128c-.28-.14-.616-.14-.896 0l-8.32 4.16c-.28.14-.448.42-.448.728v8.32c0 .308.168.588.448.728l8.32 4.16c.28.14.616.14.896 0l8.32-4.16c.28-.14.448-.42.448-.728v-8.32c0-.308-.168-.588-.448-.728l-8.32-4.16z"/>
-                    <path d="M21.568 57.808c-.28-.14-.616-.14-.896 0l-8.32 4.16c-.28.14-.448.42-.448.728v8.32c0 .308.168.588.448.728l8.32 4.16c.28.14.616.14.896 0l8.32-4.16c.28-.14.448-.42.448-.728v-8.32c0-.308-.168-.588-.448-.728l-8.32-4.16z"/>
-                    <path d="M87.568 47.128c-.28-.14-.616-.14-.896 0l-8.32 4.16c-.28.14-.448.42-.448.728v8.32c0 .308.168.588.448.728l8.32 4.16c.28.14.616.14.896 0l8.32-4.16c.28-.14.448-.42.448-.728v-8.32c0-.308-.168-.588-.448-.728l-8.32-4.16z"/>
-                  </svg>
-                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">Supabase</span>
-                </div>
-
-                {/* Tailwind */}
-                <div className="flex flex-col items-center gap-2 p-2 bg-white/50 dark:bg-slate-700/50 rounded-lg hover:bg-white/70 dark:hover:bg-slate-700/70 transition-colors">
-                  <svg viewBox="0 0 54 33" className="w-8 h-8" fill="#06B6D4">
-                    <path d="M27 0c-7.2 0-11.7 3.6-13.5 10.8 2.7-3.6 5.85-4.95 9.45-4.05 2.054.513 3.522 2.004 5.147 3.653C30.744 13.09 33.808 16.2 40.5 16.2c7.2 0 11.7-3.6 13.5-10.8-2.7 3.6-5.85 4.95-9.45 4.05-2.054-.513-3.522-2.004-5.147-3.653C23.256 2.31 20.192-.8 13.5-.8c-7.2 0-11.7 3.6-13.5 10.8 2.7-3.6 5.85-4.95 9.45-4.05 2.054.513 3.522 2.004 5.147 3.653C6.744 9.69 3.68 12.8 0 12.8c-7.2 0-11.7-3.6-13.5-10.8C-10.8 9 2.35 12.6 9.45 12.6c2.7 0 5.55-.9 8.55-2.85C21.3 6.75 25.35 4.05 27 0z"/>
-                  </svg>
-                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">Tailwind</span>
-                </div>
-
-                {/* A-Frame */}
-                <div className="flex flex-col items-center gap-2 p-2 bg-white/50 dark:bg-slate-700/50 rounded-lg hover:bg-white/70 dark:hover:bg-slate-700/70 transition-colors">
-                  <svg viewBox="0 0 24 24" className="w-8 h-8" fill="#EF2D5E">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                  </svg>
-                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">A-Frame</span>
-                </div>
-
-                {/* AR.js */}
-                <div className="flex flex-col items-center gap-2 p-2 bg-white/50 dark:bg-slate-700/50 rounded-lg hover:bg-white/70 dark:hover:bg-slate-700/70 transition-colors">
-                  <svg viewBox="0 0 100 100" className="w-8 h-8" fill="#000000">
-                    <text x="50" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#000">AR</text>
-                    <text x="50" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#666">.js</text>
-                  </svg>
-                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">AR.js</span>
+            {/* Logo */}
+            <div className="flex flex-col gap-4 justify-center md:justify-start">
+              <div className="group inline-block">
+                <div className="relative text-4xl font-black">
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
+                  <span className="relative bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 bg-clip-text text-transparent group-hover:from-green-500 group-hover:via-blue-500 group-hover:to-purple-500 transition-all duration-500">Mati</span>
+                  <span className="relative ml-1 bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent group-hover:from-green-400 group-hover:to-emerald-400 transition-all duration-500">AR</span>
+                  <span className="relative bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent group-hover:from-blue-500 group-hover:to-cyan-500 transition-all duration-500">Bio</span>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Copyright */}
-          <div className="pt-8 border-t border-slate-200/50 dark:border-slate-700/50 text-center">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                © 2025 Mati Biodiversity Platform. Conserving nature through technology.
+              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs">
+                © 2025 Mati Biodiversity Platform. All rights reserved.
               </p>
               <div className="flex gap-6 text-sm text-slate-500 dark:text-slate-400">
                 <button 
