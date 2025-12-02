@@ -796,7 +796,7 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
                                   </svg>
                                 </div>
                                 <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full">
-                                  {idx + 1}/{selectedSpeciesData.images.length}
+                                  {idx + 1}/{selectedSpeciesData.images?.length || 0}
                                 </div>
                               </div>
                             ))}
