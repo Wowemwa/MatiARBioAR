@@ -12,11 +12,11 @@ const ModernHome = memo(function ModernHome() {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
-      {/* Enhanced background with animated gradients */}
+      {/* Enhanced background with animated gradients - disabled on mobile to prevent flicker */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-cyan-400/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-br from-emerald-400/20 to-teal-400/10 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-purple-400/5 via-transparent to-pink-400/5 rounded-full blur-3xl animate-pulse delay-500" />
+        <div className="hidden md:block absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-cyan-400/10 rounded-full blur-3xl will-change-opacity" style={{ animation: 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
+        <div className="hidden md:block absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-br from-emerald-400/20 to-teal-400/10 rounded-full blur-3xl will-change-opacity" style={{ animation: 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) 1s infinite' }} />
+        <div className="hidden md:block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-purple-400/5 via-transparent to-pink-400/5 rounded-full blur-3xl will-change-opacity" style={{ animation: 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) 0.5s infinite' }} />
       </div>
 
       <div className="relative">

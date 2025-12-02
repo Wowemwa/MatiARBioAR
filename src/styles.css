@@ -10,13 +10,42 @@
   html.dark {
     color-scheme: dark;
   }
-  
-  /* Disable transitions on page load to prevent flicker */
-  html.disable-transitions *,
-  html.disable-transitions *::before,
-  html.disable-transitions *::after {
-    transition: none !important;
-    animation: none !important;
+}
+
+/* Smoothen animations on mobile for better performance */
+@media (max-width: 768px) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Use smooth, optimized animations on mobile */
+    * {
+      animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    
+    /* Optimize pulse and bounce with smoother, slower animations */
+    .animate-pulse,
+    [style*="animation: pulse"] {
+      animation-duration: 3s !important;
+      animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1) !important;
+    }
+    
+    .animate-bounce,
+    [style*="animation: bounce"] {
+      animation-duration: 2s !important;
+      animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    
+    /* Smooth, fast transitions for interactive elements */
+    button, a, [role="button"] {
+      transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+                  color 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+                  transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    }
+    
+    /* Smooth backdrop filters */
+    [class*="backdrop-blur"],
+    [class*="glass"] {
+      transition: backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
   }
 }
 
@@ -980,4 +1009,37 @@ a:focus {
 .animate-gradient {
   background-size: 200% 200%;
   animation: animate-gradient 15s ease infinite;
+}
+
+/* Prevent mobile menu flickering and layout shifts */
+@layer utilities {
+  .touch-action-manipulation {
+    touch-action: manipulation;
+  }
+  
+  /* Optimize mobile interactions */
+  @media (max-width: 768px) {
+    button, a {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    
+    /* Prevent double-tap zoom */
+    * {
+      touch-action: pan-y;
+    }
+    
+    input, textarea, select {
+      touch-action: auto;
+    }
+  }
+}
+
+/* Hardware acceleration for smooth animations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
 }

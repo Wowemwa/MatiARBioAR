@@ -121,26 +121,37 @@ const ModernNav = memo(function ModernNav() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden relative p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors duration-300"
+              className="md:hidden relative p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors duration-200"
               aria-label="Toggle menu"
             >
-              {isOpen ? (
-                <X className="w-6 h-6 text-slate-700 dark:text-slate-200" />
-              ) : (
-                <Menu className="w-6 h-6 text-slate-700 dark:text-slate-200" />
-              )}
+              <div className="w-6 h-6 relative">
+                <Menu 
+                  className={`w-6 h-6 text-slate-700 dark:text-slate-200 absolute inset-0 transition-all duration-200 ${
+                    isOpen ? 'opacity-0 rotate-90 scale-0' : 'opacity-100 rotate-0 scale-100'
+                  }`} 
+                />
+                <X 
+                  className={`w-6 h-6 text-slate-700 dark:text-slate-200 absolute inset-0 transition-all duration-200 ${
+                    isOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-0'
+                  }`} 
+                />
+              </div>
             </button>
           </div>
         </div>
 
         {/* Mobile Menu */}
         <div
-          className={`md:hidden overflow-hidden transition-all duration-500 ${
-            isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          className={`md:hidden transition-all duration-300 ${
+            isOpen ? 'translate-y-0 opacity-100 visible' : '-translate-y-4 opacity-0 invisible'
           }`}
+          style={{
+            transitionProperty: 'transform, opacity, visibility',
+            transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
         >
-          <div className="px-4 pt-2 pb-6 space-y-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border-t border-slate-200/50 dark:border-slate-700/50">
-            {navLinks.map((link) => {
+          <div className="px-4 pt-2 pb-6 space-y-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border-t border-slate-200/50 dark:border-slate-700/50 shadow-lg">
+            {navLinks.map((link, index) => {
               const Icon = link.icon
               const active = isActive(link.to)
               return (
@@ -150,8 +161,12 @@ const ModernNav = memo(function ModernNav() {
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 ${
                     active
                       ? 'bg-gradient-to-r from-blue-600 to-emerald-600 text-white shadow-lg'
-                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95'
                   }`}
+                  style={{
+                    transitionDelay: isOpen ? `${index * 50}ms` : '0ms',
+                    transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  }}
                 >
                   <Icon className="w-5 h-5" />
                   {link.label}
@@ -161,7 +176,11 @@ const ModernNav = memo(function ModernNav() {
             
             <button
               onClick={toggleTheme}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300 active:scale-95"
+              style={{
+                transitionDelay: isOpen ? `${navLinks.length * 50}ms` : '0ms',
+                transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+              }}
             >
               {theme === 'dark' ? (
                 <>

@@ -18,6 +18,8 @@ export default function SpeciesDetail() {
   
   useEffect(() => {
     setIsVisible(true)
+    // Smooth scroll to top on mount
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
 
   if (!record) {

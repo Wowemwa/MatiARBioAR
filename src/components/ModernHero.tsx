@@ -41,14 +41,15 @@ const ModernHero = memo(function ModernHero() {
     }`}>
       {/* Enhanced Subtle overlay - works with main app background */}
       <div className="absolute inset-0">
-        {/* Multi-layered gradient overlays */}
-        <div className="absolute top-10 left-10 w-96 h-96 bg-gradient-to-br from-blue-400/15 to-cyan-400/8 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-gradient-to-br from-emerald-400/15 to-teal-400/8 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-purple-400/5 via-transparent to-pink-400/5 rounded-full blur-3xl animate-pulse delay-500" />
+        {/* Multi-layered gradient overlays - hidden on mobile to prevent flicker */}
+        <div className="hidden md:block absolute top-10 left-10 w-96 h-96 bg-gradient-to-br from-blue-400/15 to-cyan-400/8 rounded-full blur-3xl will-change-opacity" style={{ animation: 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
+        <div className="hidden md:block absolute bottom-10 right-10 w-[500px] h-[500px] bg-gradient-to-br from-emerald-400/15 to-teal-400/8 rounded-full blur-3xl will-change-opacity" style={{ animation: 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) 1s infinite' }} />
+        <div className="hidden md:block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-purple-400/5 via-transparent to-pink-400/5 rounded-full blur-3xl will-change-opacity" style={{ animation: 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) 0.5s infinite' }} />
 
-        {/* Animated mesh pattern */}
+        {/* Animated mesh pattern - static on mobile */}
         <div className="absolute inset-0 opacity-20">
-          <div className="absolute inset-0 animate-pulse" style={{
+          <div className="absolute inset-0 hidden md:block will-change-opacity" style={{
+            animation: 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M50 50c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10zm-10-30c5.5 0 10 4.5 10 10s-4.5 10-10 10-10-4.5-10-10 4.5-10 10-10z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
             backgroundSize: '80px 80px'
           }}></div>
@@ -70,10 +71,10 @@ const ModernHero = memo(function ModernHero() {
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}>
             <span className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500/10 via-emerald-500/10 to-purple-500/10 backdrop-blur-xl border border-blue-500/20 dark:border-emerald-500/20 rounded-full text-sm font-bold text-blue-700 dark:text-emerald-400 shadow-lg">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-green-500 to-blue-500 animate-pulse"></div>
-                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 animate-pulse delay-150"></div>
-                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-500 to-emerald-500 animate-pulse delay-300"></div>
+              <div className="hidden md:flex gap-1">
+                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-green-500 to-blue-500 will-change-opacity" style={{ animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
+                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 will-change-opacity" style={{ animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 0.15s infinite' }}></div>
+                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-500 to-emerald-500 will-change-opacity" style={{ animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 0.3s infinite' }}></div>
               </div>
               Mati City Biodiversity Platform
             </span>
@@ -89,13 +90,13 @@ const ModernHero = memo(function ModernHero() {
             <span className="block text-slate-900 dark:text-white drop-shadow-sm font-black">
               Discover Mati
             </span>
-            <span className="block mt-0 md:mt-1 relative z-40 bg-gradient-to-r from-blue-600 via-emerald-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent drop-shadow-sm animate-gradient-x font-extrabold leading-tight">
+            <span className="block mt-0 md:mt-1 relative z-40 bg-gradient-to-r from-blue-600 via-emerald-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent drop-shadow-sm md:animate-gradient-x font-extrabold leading-tight">
               Through Technology
             </span>
 
             {/* Floating accent elements */}
-            <div className="absolute -top-4 -right-4 w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full opacity-60 animate-bounce delay-500"></div>
-            <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full opacity-60 animate-bounce delay-1000"></div>
+            <div className="hidden md:block absolute -top-4 -right-4 w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full opacity-60 will-change-transform" style={{ animation: 'bounce 2s ease-in-out 0.5s infinite' }}></div>
+            <div className="hidden md:block absolute -bottom-2 -left-2 w-6 h-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full opacity-60 will-change-transform" style={{ animation: 'bounce 2s ease-in-out 1s infinite' }}></div>
           </h1>
 
           {/* Enhanced Subtitle */}

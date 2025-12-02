@@ -35,8 +35,16 @@
     <script>
       (function() {
         try {
-          // Disable transitions during initial load
-          document.documentElement.classList.add('disable-transitions');
+          // Apply smooth transitions after initial render
+          const style = document.createElement('style');
+          style.innerHTML = `
+            *, *::before, *::after {
+              animation-play-state: paused !important;
+              transition-duration: 0s !important;
+            }
+          `;
+          style.id = 'smooth-init';
+          document.head.appendChild(style);
           
           const theme = localStorage.getItem('theme');
           const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -44,11 +52,22 @@
             document.documentElement.classList.add('dark');
           }
           
-          // Re-enable transitions after a brief moment
-          window.addEventListener('load', function() {
+          // Gradually enable smooth animations after render
+          window.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {
-              document.documentElement.classList.remove('disable-transitions');
-            }, 100);
+              const styleTag = document.getElementById('smooth-init');
+              if (styleTag) {
+                styleTag.innerHTML = `
+                  * {
+                    animation-play-state: running !important;
+                    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+                  }
+                `;
+                setTimeout(function() {
+                  styleTag.remove();
+                }, 100);
+              }
+            }, 200);
           });
         } catch (e) {}
       })();
