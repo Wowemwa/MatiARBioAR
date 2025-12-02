@@ -9,6 +9,11 @@ export default function useTheme() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window === 'undefined') return 'light'
     
+    // Check if dark class is already applied (from inline script)
+    if (document.documentElement.classList.contains('dark')) {
+      return 'dark'
+    }
+    
     // Check stored preference first (for all devices)
     const stored = window.localStorage.getItem('theme') as 'light' | 'dark' | null
     if (stored) return stored
@@ -18,16 +23,21 @@ export default function useTheme() {
     return prefersDark ? 'dark' : 'light'
   })
 
-  // Apply class to <html>
+  // Apply class to <html> - only update if needed to prevent flicker
   useEffect(() => {
     if (typeof document === 'undefined') return
     const root = document.documentElement
-    if (theme === 'dark') {
-      root.classList.add('dark')
-      document.body.classList.add('dark')
-    } else {
-      root.classList.remove('dark')
-      document.body.classList.remove('dark')
+    const hasClass = root.classList.contains('dark')
+    const shouldHaveClass = theme === 'dark'
+    
+    if (hasClass !== shouldHaveClass) {
+      if (shouldHaveClass) {
+        root.classList.add('dark')
+        document.body.classList.add('dark')
+      } else {
+        root.classList.remove('dark')
+        document.body.classList.remove('dark')
+      }
     }
     
     // Save to localStorage for all devices

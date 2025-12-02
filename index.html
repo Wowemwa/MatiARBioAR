@@ -30,6 +30,29 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Prevent theme flicker by applying dark mode before render -->
+    <script>
+      (function() {
+        try {
+          // Disable transitions during initial load
+          document.documentElement.classList.add('disable-transitions');
+          
+          const theme = localStorage.getItem('theme');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (theme === 'dark' || (!theme && prefersDark)) {
+            document.documentElement.classList.add('dark');
+          }
+          
+          // Re-enable transitions after a brief moment
+          window.addEventListener('load', function() {
+            setTimeout(function() {
+              document.documentElement.classList.remove('disable-transitions');
+            }, 100);
+          });
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

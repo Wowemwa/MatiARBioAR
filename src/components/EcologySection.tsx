@@ -78,30 +78,30 @@ export default function EcologySection({
   const LinkWrapper = isModal ? 'div' : Link
 
   return (
-    <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-white/40 dark:border-white/20 p-8 shadow-lg">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-3">
-        <SpeciesIcon className="w-6 h-6 text-emerald-500" />
+    <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-xl sm:rounded-2xl border border-white/40 dark:border-white/20 p-3 sm:p-4 md:p-6 lg:p-8 shadow-lg">
+      <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4 lg:mb-6 flex items-center gap-1.5 sm:gap-2 lg:gap-3">
+        <SpeciesIcon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-emerald-500" />
         Ecological Information
         {loading && (
           <div className="ml-auto">
-            <div className="animate-spin rounded-full h-5 w-5 border-2 border-emerald-500 border-t-transparent"></div>
+            <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-emerald-500 border-t-transparent"></div>
           </div>
         )}
       </h2>
       
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
         {/* Left Column */}
-        <div className="space-y-6">
+        <div className="space-y-3 sm:space-y-4 md:space-y-5 lg:space-y-6">
           {/* Habitat */}
-          <div className="p-6 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-200/50 dark:border-emerald-700/30">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-              <span className="text-emerald-500">🏡</span>
+          <div className="p-3 sm:p-4 md:p-5 lg:p-6 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg sm:rounded-xl lg:rounded-2xl border border-emerald-200/50 dark:border-emerald-700/30">
+            <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+              <span className="text-emerald-500 text-sm sm:text-base">🏡</span>
               Habitat
             </h3>
-            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{habitat}</p>
+            <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{habitat}</p>
             {nativeRange && (
-              <div className="mt-3 pt-3 border-t border-emerald-200/50 dark:border-emerald-700/30">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+              <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-emerald-200/50 dark:border-emerald-700/30">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                   <span className="font-semibold">Native Range:</span> {nativeRange}
                 </p>
               </div>
@@ -110,33 +110,33 @@ export default function EcologySection({
 
           {/* Diet (for fauna) */}
           {diet && category === 'fauna' && (
-            <div className="p-6 bg-orange-50 dark:bg-orange-900/20 rounded-2xl border border-orange-200/50 dark:border-orange-700/30">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                <span className="text-orange-500">🍽️</span>
+            <div className="p-3 sm:p-4 md:p-5 lg:p-6 bg-orange-50 dark:bg-orange-900/20 rounded-lg sm:rounded-xl lg:rounded-2xl border border-orange-200/50 dark:border-orange-700/30">
+              <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+                <span className="text-orange-500 text-sm sm:text-base">🍽️</span>
                 Diet
               </h3>
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed capitalize">{diet}</p>
+              <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed capitalize">{diet}</p>
             </div>
           )}
           
           {/* Distribution Range */}
-          <div className="p-6 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-200/50 dark:border-blue-700/30">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-              <span className="text-blue-500">📍</span>
+          <div className="p-3 sm:p-4 md:p-5 lg:p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg sm:rounded-xl lg:rounded-2xl border border-blue-200/50 dark:border-blue-700/30">
+            <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+              <span className="text-blue-500 text-sm sm:text-base">📍</span>
               Distribution Range
             </h3>
             
             {/* Observation Count */}
             {loading ? (
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-3">
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
-                <span className="text-sm">Loading observations...</span>
+              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-2 sm:mb-3">
+                <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-blue-500 border-t-transparent"></div>
+                <span className="text-xs sm:text-sm">Loading observations...</span>
               </div>
             ) : observationCount > 0 ? (
-              <div className="mb-3 p-3 bg-white/60 dark:bg-slate-800/60 rounded-xl border border-blue-200/50 dark:border-blue-700/30">
+              <div className="mb-2 sm:mb-3 p-2.5 sm:p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg sm:rounded-xl border border-blue-200/50 dark:border-blue-700/30">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Recorded Observations</span>
-                  <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">{observationCount}</span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Recorded Observations</span>
+                  <span className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">{observationCount}</span>
                 </div>
                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                   Total observations in Mati City area
@@ -147,13 +147,13 @@ export default function EcologySection({
             {/* Local Conservation Sites */}
             {sites.length > 0 && (
               <>
-                <p className="text-gray-700 dark:text-gray-300 mb-2">Found across {sites.length} conservation site{sites.length !== 1 ? 's' : ''} in Mati City</p>
-                <div className="flex flex-wrap gap-2">
+                <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 mb-2">Found across {sites.length} conservation site{sites.length !== 1 ? 's' : ''} in Mati City</p>
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {sites.slice(0, 3).map((site: any) => (
                     isModal ? (
                       <div
                         key={site.id}
-                        className="px-3 py-1 bg-white/80 dark:bg-slate-700/80 rounded-full text-sm font-medium text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-700/30"
+                        className="px-2 py-0.5 sm:px-3 sm:py-1 bg-white/80 dark:bg-slate-700/80 rounded-full text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-700/30"
                       >
                         {site.name}
                       </div>
@@ -161,14 +161,14 @@ export default function EcologySection({
                       <Link
                         key={site.id}
                         to={`/site/${site.id}`}
-                        className="px-3 py-1 bg-white/80 dark:bg-slate-700/80 rounded-full text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors border border-blue-200/50 dark:border-blue-700/30"
+                        className="px-2 py-0.5 sm:px-3 sm:py-1 bg-white/80 dark:bg-slate-700/80 rounded-full text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors border border-blue-200/50 dark:border-blue-700/30"
                       >
                         {site.name}
                       </Link>
                     )
                   ))}
                   {sites.length > 3 && (
-                    <span className="px-3 py-1 bg-gray-100 dark:bg-slate-700 rounded-full text-sm text-gray-600 dark:text-gray-400">
+                    <span className="px-2 py-0.5 sm:px-3 sm:py-1 bg-gray-100 dark:bg-slate-700 rounded-full text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                       +{sites.length - 3} more
                     </span>
                   )}
@@ -179,14 +179,14 @@ export default function EcologySection({
         </div>
         
         {/* Right Column */}
-        <div className="space-y-6">
+        <div className="space-y-3 sm:space-y-4 md:space-y-5 lg:space-y-6">
           {/* Conservation Status */}
-          <div className="p-6 bg-purple-50 dark:bg-purple-900/20 rounded-2xl border border-purple-200/50 dark:border-purple-700/30">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-              <span className="text-purple-500">🎯</span>
+          <div className="p-3 sm:p-4 md:p-5 lg:p-6 bg-purple-50 dark:bg-purple-900/20 rounded-lg sm:rounded-xl lg:rounded-2xl border border-purple-200/50 dark:border-purple-700/30">
+            <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+              <span className="text-purple-500 text-sm sm:text-base">🎯</span>
               Conservation Status
             </h3>
-            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl ${status.bg} ${status.text} border ${status.border}`}>
+            <div className={`inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 lg:px-4 lg:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm ${status.bg} ${status.text} border ${status.border}`}>
               <span className="font-bold">{existingStatus}</span>
               <span>•</span>
               <span>{status.label}</span>
@@ -199,12 +199,12 @@ export default function EcologySection({
           </div>
           
           {/* Taxonomy */}
-          <div className="p-6 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-200/50 dark:border-amber-700/30">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-              <span className="text-amber-500">🔬</span>
+          <div className="p-3 sm:p-4 md:p-5 lg:p-6 bg-amber-50 dark:bg-amber-900/20 rounded-lg sm:rounded-xl lg:rounded-2xl border border-amber-200/50 dark:border-amber-700/30">
+            <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+              <span className="text-amber-500 text-sm sm:text-base">🔬</span>
               Taxonomy
             </h3>
-            <div className="space-y-2 text-sm">
+            <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
               {taxonomy?.kingdom && (
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Kingdom:</span>
@@ -248,12 +248,12 @@ export default function EcologySection({
 
           {/* Physical Description */}
           {ecologicalInfo?.physicalDescription && (
-            <div className="p-6 bg-teal-50 dark:bg-teal-900/20 rounded-2xl border border-teal-200/50 dark:border-teal-700/30">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                <span className="text-teal-500">📝</span>
+            <div className="p-3 sm:p-4 md:p-5 lg:p-6 bg-teal-50 dark:bg-teal-900/20 rounded-lg sm:rounded-xl lg:rounded-2xl border border-teal-200/50 dark:border-teal-700/30">
+              <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+                <span className="text-teal-500 text-sm sm:text-base">📝</span>
                 Description
               </h3>
-              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed line-clamp-4">
+              <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed line-clamp-4">
                 {ecologicalInfo.physicalDescription}
               </p>
             </div>
@@ -263,10 +263,10 @@ export default function EcologySection({
 
       {/* Wikipedia Reference */}
       {wikipediaUrl && (
-        <div className="mt-6 bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-800/50 dark:to-gray-800/50 rounded-xl p-4 border border-slate-200/50 dark:border-slate-700/30">
-          <div className="flex items-start gap-3">
+        <div className="mt-3 sm:mt-4 lg:mt-6 bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-800/50 dark:to-gray-800/50 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-slate-200/50 dark:border-slate-700/30">
+          <div className="flex items-start gap-2 sm:gap-3">
             <div className="flex-shrink-0">
-              <svg className="w-6 h-6 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
