@@ -26,6 +26,8 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
   const [panelOpen, setPanelOpen] = useState(false)
   const [showGallery, setShowGallery] = useState(false)
   const [selectedSpeciesId, setSelectedSpeciesId] = useState<string | null>(null)
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isMapReady, setIsMapReady] = useState(false)
   const [activeMarkers, setActiveMarkers] = useState<Map<string, L.Marker>>(new Map())
   const [currentLayer, setCurrentLayer] = useState<'street' | 'satellite' | 'topo'>('street')
@@ -782,13 +784,19 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
                               <div 
                                 key={idx} 
                                 className="relative group aspect-square overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800 shadow-md cursor-pointer"
-                                onClick={() => window.open(url, '_blank')}
+                                onClick={() => {
+                                  setSelectedImageUrl(url)
+                                  setCurrentImageIndex(idx)
+                                }}
                               >
                                 <img src={url} alt={`${selectedSpeciesData.commonName} ${idx + 1}`} className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300" />
                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                                   <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                                   </svg>
+                                </div>
+                                <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full">
+                                  {idx + 1}/{selectedSpeciesData.images.length}
                                 </div>
                               </div>
                             ))}
@@ -915,6 +923,116 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
           Map data © OpenStreetMap contributors.
         </p>
       </div>
+
+      {/* Full-Screen Image Modal with Slideshow */}
+      {selectedImageUrl && selectedSpeciesData && selectedSpeciesData.images && (
+        <div 
+          className="fixed inset-0 bg-black/95 backdrop-blur-sm z-[1300] flex items-center justify-center p-4"
+          onClick={() => {
+            setSelectedImageUrl(null)
+            setCurrentImageIndex(0)
+          }}
+        >
+          {/* Close Button */}
+          <button
+            onClick={() => {
+              setSelectedImageUrl(null)
+              setCurrentImageIndex(0)
+            }}
+            className="absolute top-4 right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md transition-all z-10"
+            aria-label="Close image"
+          >
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* Previous Button */}
+          {selectedSpeciesData.images.length > 1 && currentImageIndex > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setCurrentImageIndex(prev => prev - 1)
+                setSelectedImageUrl(selectedSpeciesData.images![currentImageIndex - 1])
+              }}
+              className="absolute left-4 p-3 bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md transition-all z-10"
+              aria-label="Previous image"
+            >
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
+
+          {/* Next Button */}
+          {selectedSpeciesData.images.length > 1 && currentImageIndex < selectedSpeciesData.images.length - 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setCurrentImageIndex(prev => prev + 1)
+                setSelectedImageUrl(selectedSpeciesData.images![currentImageIndex + 1])
+              }}
+              className="absolute right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md transition-all z-10"
+              aria-label="Next image"
+            >
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
+
+          {/* Image Container */}
+          <div 
+            className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={selectedImageUrl}
+              alt={`${selectedSpeciesData.commonName} - Image ${currentImageIndex + 1}`}
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in fade-in zoom-in duration-300"
+            />
+          </div>
+
+          {/* Image Counter and Info */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+            <div className="bg-black/70 backdrop-blur-md px-4 py-2 rounded-full">
+              <span className="text-white font-semibold text-sm">
+                {currentImageIndex + 1} / {selectedSpeciesData.images.length}
+              </span>
+            </div>
+            <div className="text-white/80 text-sm bg-black/50 px-4 py-2 rounded-full backdrop-blur-md">
+              {selectedSpeciesData.images.length > 1 ? 'Use arrow buttons or click outside to close' : 'Click anywhere to close'}
+            </div>
+          </div>
+
+          {/* Thumbnail Strip */}
+          {selectedSpeciesData.images.length > 1 && (
+            <div className="absolute top-20 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/50 backdrop-blur-md rounded-full max-w-[90vw] overflow-x-auto">
+              {selectedSpeciesData.images.map((url, idx) => (
+                <button
+                  key={idx}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setCurrentImageIndex(idx)
+                    setSelectedImageUrl(url)
+                  }}
+                  className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                    idx === currentImageIndex 
+                      ? 'border-white scale-110 shadow-lg' 
+                      : 'border-white/30 hover:border-white/60'
+                  }`}
+                >
+                  <img
+                    src={url}
+                    alt={`Thumbnail ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
