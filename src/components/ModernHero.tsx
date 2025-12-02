@@ -81,7 +81,7 @@ const ModernHero = memo(function ModernHero() {
 
           {/* Enhanced Main Heading */}
           <h1
-            className={`relative z-10 text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight leading-relaxed transition-opacity duration-1000 delay-100 ${
+            className={`relative z-10 text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight leading-tight transition-opacity duration-1000 delay-100 ${
               isVisible ? 'opacity-100' : 'opacity-0'
             }`}
             style={{ transform: 'none', backfaceVisibility: 'hidden', WebkitFontSmoothing: 'antialiased' }}
@@ -89,7 +89,7 @@ const ModernHero = memo(function ModernHero() {
             <span className="block text-slate-900 dark:text-white drop-shadow-sm font-black">
               Discover Mati
             </span>
-            <span className="block mt-2 md:mt-4 relative z-40 bg-gradient-to-r from-blue-600 via-emerald-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent drop-shadow-sm animate-gradient-x font-extrabold leading-normal">
+            <span className="block mt-0 md:mt-1 relative z-40 bg-gradient-to-r from-blue-600 via-emerald-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent drop-shadow-sm animate-gradient-x font-extrabold leading-tight">
               Through Technology
             </span>
 

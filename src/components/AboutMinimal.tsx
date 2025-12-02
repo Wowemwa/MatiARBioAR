@@ -2,6 +2,9 @@ import { useEffect, useState, memo, useRef } from 'react'
 import { useData } from '../context/DataContext'
 import { supabase } from '../supabaseClient'
 import FeedbackFloating from './FeedbackFloating'
+import { HiMapPin, HiSparkles, HiDocumentText, HiAcademicCap, HiLightBulb, HiGlobeAlt, HiUsers } from 'react-icons/hi2'
+import { BiLeaf, BiWorld } from 'react-icons/bi'
+import { GiMicroscope } from 'react-icons/gi'
 
 const About = memo(function About() {
   const [isVisible, setIsVisible] = useState(false)
@@ -137,15 +140,15 @@ const About = memo(function About() {
 
           <div className="flex flex-wrap justify-center gap-4 text-sm text-slate-500 dark:text-slate-400">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+              <HiSparkles className="w-4 h-4 text-emerald-500" />
               Augmented Reality
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+              <HiDocumentText className="w-4 h-4 text-blue-500" />
               Biodiversity Data
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+              <HiAcademicCap className="w-4 h-4 text-purple-500" />
               Conservation Education
             </div>
           </div>
@@ -158,7 +161,7 @@ const About = memo(function About() {
             <div className="relative p-8 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl border border-slate-200/50 dark:border-slate-700/50 shadow-xl">
               <div className="text-center">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600/10 to-pink-600/10 backdrop-blur-sm border border-purple-600/20 rounded-full text-sm font-semibold text-purple-700 dark:text-purple-400 mb-6">
-                  <span className="text-lg">🎯</span>
+                  <HiLightBulb className="w-5 h-5" />
                   Our Mission
                 </div>
 
@@ -173,17 +176,17 @@ const About = memo(function About() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                   <div className="p-4">
-                    <div className="text-2xl mb-2">🌱</div>
+                    <BiLeaf className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
                     <h3 className="font-bold text-slate-900 dark:text-white mb-1">Preserve</h3>
                     <p className="text-sm text-slate-600 dark:text-slate-400">Protect biodiversity through education</p>
                   </div>
                   <div className="p-4">
-                    <div className="text-2xl mb-2">🔬</div>
+                    <GiMicroscope className="w-8 h-8 text-blue-500 mx-auto mb-3" />
                     <h3 className="font-bold text-slate-900 dark:text-white mb-1">Research</h3>
                     <p className="text-sm text-slate-600 dark:text-slate-400">Support scientific discovery and monitoring</p>
                   </div>
                   <div className="p-4">
-                    <div className="text-2xl mb-2">🌍</div>
+                    <BiWorld className="w-8 h-8 text-purple-500 mx-auto mb-3" />
                     <h3 className="font-bold text-slate-900 dark:text-white mb-1">Connect</h3>
                     <p className="text-sm text-slate-600 dark:text-slate-400">Build community and global partnerships</p>
                   </div>
@@ -197,7 +200,7 @@ const About = memo(function About() {
         <div className={`mb-16 sm:mb-20 transform transition-all duration-1000 delay-300 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
           <div className="text-center mb-12">
             <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-4 flex items-center justify-center gap-2">
-              <span className="text-2xl">👥</span>
+              <HiUsers className="w-8 h-8 text-blue-500" />
               Meet Our Team
             </h2>
             <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">

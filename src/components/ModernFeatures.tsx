@@ -47,7 +47,7 @@ const ModernFeatures = memo(function ModernFeatures() {
     {
       icon: Sparkles,
       title: 'Conservation Tools',
-      description: 'Track conservation efforts, monitor endangered species, and contribute to preservation initiatives.',
+      description: 'Track conservation efforts, monitor endangered species, and be educated with preservation initiatives.',
       gradient: 'from-amber-500 to-orange-500',
       link: '/biodiversity',
       emoji: '🛡️'

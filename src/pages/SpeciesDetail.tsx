@@ -2,6 +2,9 @@ import { useParams, Link } from 'react-router-dom'
 import { useState, useEffect, useMemo } from 'react'
 import { findSpeciesById, findSiteById, getUnifiedSpecies } from '../data/adapters'
 import AnimatedText from '../components/AnimatedText'
+import INaturalistMap from '../components/INaturalistMap'
+import EcologySection from '../components/EcologySection'
+import ConservationSection from '../components/ConservationSection'
 import { WaveIcon, MountainIcon, SpeciesIcon, MapIcon, InfoIcon, ConservationIcon, TargetIcon } from '../components/Icons'
 
 export default function SpeciesDetail() {
@@ -138,47 +141,6 @@ export default function SpeciesDetail() {
                   {record.blurb}
                 </p>
               </div>
-
-              {/* Quick Stats */}
-              <div className="bg-white/90 dark:bg-slate-800/90 rounded-2xl border border-white/60 dark:border-white/20 backdrop-blur-xl p-6 space-y-4 lg:min-w-[300px]">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                  <TargetIcon className="w-5 h-5 text-blue-500" />
-                  Quick Facts
-                </h3>
-                
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Category:</span>
-                    <span className="font-semibold text-gray-900 dark:text-gray-100 capitalize">{record.category}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Status:</span>
-                    <span className={`font-semibold ${status.text}`}>{record.status}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Habitat:</span>
-                    <span className="font-semibold text-gray-900 dark:text-gray-100">{record.habitat}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Sites found:</span>
-                    <span className="font-semibold text-gray-900 dark:text-gray-100">{sites.length}</span>
-                  </div>
-                </div>
-                
-                {record.highlights && record.highlights.length > 0 && (
-                  <div className="pt-4 border-t border-white/40 dark:border-white/20">
-                    <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Key Highlights:</div>
-                    <ul className="text-sm space-y-1">
-                      {record.highlights.slice(0, 3).map((highlight: string, i: number) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <span className="text-emerald-500 mt-0.5">•</span>
-                          <span className="text-gray-700 dark:text-gray-300">{highlight}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </header>
@@ -238,79 +200,15 @@ export default function SpeciesDetail() {
           )}
 
           {activeTab === 'ecology' && (
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-white/40 dark:border-white/20 p-8 shadow-lg">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-3">
-                <SpeciesIcon className="w-6 h-6 text-emerald-500" />
-                Ecological Information
-              </h2>
-              
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <div className="p-6 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-200/50 dark:border-emerald-700/30">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                      <span className="text-emerald-500">🏡</span>
-                      Habitat
-                    </h3>
-                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{record.habitat}</p>
-                  </div>
-                  
-                  <div className="p-6 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-200/50 dark:border-blue-700/30">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                      <span className="text-blue-500">📍</span>
-                      Distribution Range
-                    </h3>
-                    <p className="text-gray-700 dark:text-gray-300">Found across {sites.length} conservation site{sites.length !== 1 ? 's' : ''} in Mati City</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {sites.slice(0, 3).map((site: any) => (
-                        <Link
-                          key={site.id}
-                          to={`/site/${site.id}`}
-                          className="px-3 py-1 bg-white/80 dark:bg-slate-700/80 rounded-full text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors border border-blue-200/50 dark:border-blue-700/30"
-                        >
-                          {site.name}
-                        </Link>
-                      ))}
-                      {sites.length > 3 && (
-                        <span className="px-3 py-1 bg-gray-100 dark:bg-slate-700 rounded-full text-sm text-gray-600 dark:text-gray-400">
-                          +{sites.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-6">
-                  <div className="p-6 bg-purple-50 dark:bg-purple-900/20 rounded-2xl border border-purple-200/50 dark:border-purple-700/30">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                      <span className="text-purple-500">🎯</span>
-                      Conservation Status
-                    </h3>
-                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl ${status.bg} ${status.text} border ${status.border}`}>
-                      <span className="font-bold">{record.status}</span>
-                      <span>•</span>
-                      <span>{status.label}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="p-6 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-200/50 dark:border-amber-700/30">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                      <span className="text-amber-500">🔬</span>
-                      Taxonomy
-                    </h3>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Scientific Name:</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-100 italic">{record.scientificName}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Category:</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-100 capitalize">{record.category}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <EcologySection 
+              scientificName={record.scientificName}
+              commonName={record.commonName}
+              existingHabitat={record.habitat}
+              existingStatus={record.status}
+              sites={sites}
+              status={status}
+              category={record.category}
+            />
           )}
 
           {activeTab === 'distribution' && (
@@ -320,170 +218,76 @@ export default function SpeciesDetail() {
                 Geographic Distribution
               </h2>
               
-              {sites.length > 0 ? (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {sites.map((site: any) => (
-                    <Link
-                      key={site.id}
-                      to={`/site/${site.id}`}
-                      className="group p-6 bg-gradient-to-br from-white to-gray-50 dark:from-slate-800 dark:to-slate-700 rounded-2xl border border-white/60 dark:border-white/20 hover:shadow-lg hover:scale-105 transition-all duration-300"
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          {site.type === 'marine' ? (
-                            <WaveIcon className="w-5 h-5 text-blue-500" />
-                          ) : (
-                            <MountainIcon className="w-5 h-5 text-emerald-500" />
-                          )}
-                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            site.type === 'marine' 
-                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                              : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-                          }`}>
-                            {site.type}
-                          </span>
+              {/* iNaturalist Distribution Map */}
+              <div className="mb-8">
+                <INaturalistMap 
+                  scientificName={record.scientificName}
+                  commonName={record.commonName}
+                />
+              </div>
+
+              {/* Local Conservation Sites */}
+              {sites.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <MountainIcon className="w-5 h-5 text-emerald-500" />
+                    Found in Mati City Conservation Sites
+                  </h3>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {sites.map((site: any) => (
+                      <Link
+                        key={site.id}
+                        to={`/site/${site.id}`}
+                        className="group p-6 bg-gradient-to-br from-white to-gray-50 dark:from-slate-800 dark:to-slate-700 rounded-2xl border border-white/60 dark:border-white/20 hover:shadow-lg hover:scale-105 transition-all duration-300"
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            {site.type === 'marine' ? (
+                              <WaveIcon className="w-5 h-5 text-blue-500" />
+                            ) : (
+                              <MountainIcon className="w-5 h-5 text-emerald-500" />
+                            )}
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                              site.type === 'marine' 
+                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                                : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                            }`}>
+                              {site.type}
+                            </span>
+                          </div>
+                          <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                          </svg>
                         </div>
-                        <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                        </svg>
-                      </div>
-                      
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2">
-                        {site.name}
-                      </h3>
-                      
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
-                        {site.description}
-                      </p>
-                      
-                      <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-                        <span>📍 {site.coordinates.lat.toFixed(3)}°, {site.coordinates.lng.toFixed(3)}°</span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <MapIcon className="w-8 h-8 text-gray-400" />
+                        
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2">
+                          {site.name}
+                        </h3>
+                        
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                          {site.description}
+                        </p>
+                        
+                        <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                          <span>📍 {site.coordinates.lat.toFixed(3)}°, {site.coordinates.lng.toFixed(3)}°</span>
+                        </div>
+                      </Link>
+                    ))}
                   </div>
-                  <p className="text-gray-600 dark:text-gray-400">No distribution data available for this species.</p>
                 </div>
               )}
             </div>
           )}
 
           {activeTab === 'conservation' && (
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-white/40 dark:border-white/20 p-8 shadow-lg">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-3">
-                <ConservationIcon className="w-6 h-6 text-purple-500" />
-                Conservation Status & Efforts
-              </h2>
-              
-              <div className="grid lg:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <div className={`p-6 rounded-2xl border ${status.bg} ${status.border}`}>
-                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                      <span className="text-2xl">⚠️</span>
-                      Current Status
-                    </h3>
-                    <div className="space-y-3">
-                      <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold ${status.text}`}>
-                        <span>{record.status}</span>
-                        <span>•</span>
-                        <span>{status.label}</span>
-                      </div>
-                      <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                        This species is classified as <strong>{status.label}</strong> according to conservation assessments. 
-                        Regular monitoring and protection efforts are essential for its continued survival.
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="p-6 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-200/50 dark:border-blue-700/30">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                      <span className="text-blue-500">🏛️</span>
-                      Protected Areas
-                    </h3>
-                    <p className="text-gray-700 dark:text-gray-300 mb-3">
-                      This species is found in {sites.length} protected conservation site{sites.length !== 1 ? 's' : ''} within Mati City&apos;s biodiversity network.
-                    </p>
-                    <div className="space-y-2">
-                      {sites.map((site: any) => (
-                        <Link
-                          key={site.id}
-                          to={`/site/${site.id}`}
-                          className="block p-3 bg-white/80 dark:bg-slate-700/80 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors border border-blue-200/50 dark:border-blue-700/30"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium text-gray-900 dark:text-gray-100">{site.name}</span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                              site.type === 'marine' 
-                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
-                                : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'
-                            }`}>
-                              {site.type}
-                            </span>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-6">
-                  <div className="p-6 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-200/50 dark:border-emerald-700/30">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                      <span className="text-emerald-500">🌱</span>
-                      Conservation Actions
-                    </h3>
-                    <ul className="space-y-3 text-sm">
-                      <li className="flex items-start gap-3">
-                        <span className="text-emerald-500 mt-0.5">•</span>
-                        <span className="text-gray-700 dark:text-gray-300">Habitat protection through designated conservation areas</span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <span className="text-emerald-500 mt-0.5">•</span>
-                        <span className="text-gray-700 dark:text-gray-300">Regular monitoring and population assessments</span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <span className="text-emerald-500 mt-0.5">•</span>
-                        <span className="text-gray-700 dark:text-gray-300">Community education and awareness programs</span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <span className="text-emerald-500 mt-0.5">•</span>
-                        <span className="text-gray-700 dark:text-gray-300">Research and data collection initiatives</span>
-                      </li>
-                    </ul>
-                  </div>
-                  
-                  <div className="p-6 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-200/50 dark:border-amber-700/30">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                      <span className="text-amber-500">🤝</span>
-                      How You Can Help
-                    </h3>
-                    <ul className="space-y-3 text-sm">
-                      <li className="flex items-start gap-3">
-                        <span className="text-amber-500 mt-0.5">•</span>
-                        <span className="text-gray-700 dark:text-gray-300">Support responsible eco-tourism in Mati City</span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <span className="text-amber-500 mt-0.5">•</span>
-                        <span className="text-gray-700 dark:text-gray-300">Participate in citizen science programs</span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <span className="text-amber-500 mt-0.5">•</span>
-                        <span className="text-gray-700 dark:text-gray-300">Share educational content about biodiversity</span>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <span className="text-amber-500 mt-0.5">•</span>
-                        <span className="text-gray-700 dark:text-gray-300">Respect protected areas and wildlife guidelines</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <ConservationSection 
+              scientificName={record.scientificName}
+              commonName={record.commonName}
+              category={record.category}
+              status={status}
+              statusCode={record.status}
+              sites={sites}
+            />
           )}
         </div>
 

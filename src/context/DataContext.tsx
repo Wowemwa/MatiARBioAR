@@ -43,33 +43,43 @@ export interface UnifiedSpecies {
   media?: { type: 'image', url: string, caption?: string, credit?: string }[]
 }
 
-function buildUnifiedSpecies({ species }: { species: SpeciesDetail[] }): UnifiedSpecies[] {
-  return species.map((record) => {
-    const media = record.images ? record.images.map(url => ({
-      type: 'image' as const,
-      url,
-      caption: `${record.commonName} (${record.scientificName})`,
-      credit: 'Wikimedia Commons'
-    })) : undefined;
-    
-    if (record.images && record.images.length > 0) {
-      console.log('Building media for species:', record.commonName, 'images:', record.images, 'media:', media);
+// Memoized species transformation to avoid recalculating on every render
+const buildUnifiedSpecies = (() => {
+  let lastSpecies: SpeciesDetail[] | null = null;
+  let lastResult: UnifiedSpecies[] | null = null;
+
+  return ({ species }: { species: SpeciesDetail[] }): UnifiedSpecies[] => {
+    // Return cached result if species array hasn't changed
+    if (lastSpecies === species && lastResult) {
+      return lastResult;
     }
-    
-    return {
-      id: record.id,
-      commonName: record.commonName,
-      scientificName: record.scientificName,
-      status: record.status,
-      type: record.category,
-      description: record.blurb,
-      habitats: record.habitat ? [record.habitat] : [],
-      siteIds: record.siteIds ?? [],
-      endemic: undefined,
-      media: media,
-    };
-  });
-}
+
+    lastResult = species.map((record) => {
+      const media = record.images ? record.images.map(url => ({
+        type: 'image' as const,
+        url,
+        caption: `${record.commonName} (${record.scientificName})`,
+        credit: 'Wikimedia Commons'
+      })) : undefined;
+      
+      return {
+        id: record.id,
+        commonName: record.commonName,
+        scientificName: record.scientificName,
+        status: record.status,
+        type: record.category,
+        description: record.blurb,
+        habitats: record.habitat ? [record.habitat] : [],
+        siteIds: record.siteIds ?? [],
+        endemic: undefined,
+        media: media,
+      };
+    });
+
+    lastSpecies = species;
+    return lastResult;
+  };
+})();
 
 const DataContext = createContext<DataContextValue | undefined>(undefined)
 

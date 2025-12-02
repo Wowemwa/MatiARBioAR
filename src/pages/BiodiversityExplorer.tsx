@@ -1,15 +1,32 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect, useCallback, useTransition } from 'react'
 import Fuse from 'fuse.js'
 import { useData } from '../context/DataContext'
 import { MountainIcon, SpeciesIcon } from '../components/Icons'
 import SpeciesDetailModal from './SpeciesDetailModal'
 
 const STATUS_ORDER = ['CR','EN','VU','NT','LC','DD']
+const ITEMS_PER_PAGE = 50
+
+// Debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value)
+  
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+    
+    return () => clearTimeout(handler)
+  }, [value, delay])
+  
+  return debouncedValue
+}
 
 export default function BiodiversityExplorer() {
   const { unifiedSpecies: allSpecies, hotspots } = useData()
   const sites = useMemo(()=>hotspots, [hotspots])
   const [query, setQuery] = useState('')
+  const debouncedQuery = useDebounce(query, 300)
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<'all'|'flora'|'fauna'>('all')
   const [siteFilter, setSiteFilter] = useState<string>('all')
@@ -17,6 +34,8 @@ export default function BiodiversityExplorer() {
   const [selectedSpecies, setSelectedSpecies] = useState<any>(null)
   const [showSpeciesModal, setShowSpeciesModal] = useState(false)
   const [isOpeningModal, setIsOpeningModal] = useState(false)
+  const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE)
+  const [isPending, startTransition] = useTransition()
 
   const handleViewDetails = (species: any) => {
     setIsOpeningModal(true)
@@ -30,14 +49,30 @@ export default function BiodiversityExplorer() {
   }
 
   const fuse = useMemo(()=>new Fuse(allSpecies, { keys: ['commonName','scientificName','description','habitats'], threshold: 0.36 }),[allSpecies])
-  const results = useMemo(()=>{
-    let base = query.trim() ? fuse.search(query).map(r=>r.item) : allSpecies
+  
+  const allResults = useMemo(()=>{
+    let base = debouncedQuery.trim() ? fuse.search(debouncedQuery).map(r=>r.item) : allSpecies
     if (statusFilter !== 'all') base = base.filter(s => s.status === statusFilter)
     if (typeFilter !== 'all') base = base.filter(s => s.type === typeFilter)
     if (siteFilter !== 'all') base = base.filter(s => s.siteIds.includes(siteFilter))
     if (endemicOnly) base = base.filter(s => s.endemic)
     return base.sort((a,b)=> STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status))
-  },[query,fuse,statusFilter,typeFilter,siteFilter,endemicOnly,allSpecies])
+  },[debouncedQuery,fuse,statusFilter,typeFilter,siteFilter,endemicOnly,allSpecies])
+  
+  const results = useMemo(() => allResults.slice(0, displayCount), [allResults, displayCount])
+  
+  const hasMore = displayCount < allResults.length
+  
+  const loadMore = useCallback(() => {
+    startTransition(() => {
+      setDisplayCount(prev => prev + ITEMS_PER_PAGE)
+    })
+  }, [])
+  
+  // Reset display count when filters change
+  useEffect(() => {
+    setDisplayCount(ITEMS_PER_PAGE)
+  }, [debouncedQuery, statusFilter, typeFilter, siteFilter, endemicOnly])
 
   return (
     <div className="min-h-screen relative">
@@ -380,6 +415,38 @@ export default function BiodiversityExplorer() {
                   Clear All Filters
                 </button>
               )}
+            </div>
+          )}
+          
+          {/* Load More Button */}
+          {hasMore && (
+            <div className="flex justify-center mt-12">
+              <button
+                onClick={loadMore}
+                disabled={isPending}
+                className="group relative px-8 py-4 bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/10 to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="relative flex items-center gap-3">
+                  {isPending ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Loading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Load More Species</span>
+                      <span className="text-sm opacity-80">({allResults.length - displayCount} remaining)</span>
+                      <svg className="w-5 h-5 transition-transform group-hover:translate-y-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </>
+                  )}
+                </div>
+              </button>
             </div>
           )}
         </div>
