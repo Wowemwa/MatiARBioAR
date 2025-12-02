@@ -6,7 +6,7 @@ import AnimatedText from './components/AnimatedText'
 import Atmosphere from './components/Atmosphere'
 import ModernHome from './components/ModernHome'
 import { WaveIcon, MountainIcon, SpeciesIcon, ARIcon, InfoIcon, MapIcon, EducationIcon, TechIcon, ConservationIcon, LeafIcon } from './components/Icons'
-import { HiMapPin } from 'react-icons/hi2'
+import { HiMapPin, HiShieldCheck } from 'react-icons/hi2'
 import { GiButterfly } from 'react-icons/gi'
 import { MdAutoAwesome, MdWbSunny, MdNightlight } from 'react-icons/md'
 import { IoInformationCircle } from 'react-icons/io5'
@@ -152,7 +152,7 @@ const Navbar = memo(function Navbar() {
     { to: '/biodiversity', label: 'Biodiversity', badge: <GiButterfly className="w-5 h-5" /> },
     { to: '/ar', label: 'Augmented Reality', badge: <MdAutoAwesome className="w-5 h-5" /> },
     { to: '/gis', label: 'Interactive Map', badge: <HiMapPin className="w-5 h-5" /> },
-    ...(isAdmin ? [{ to: '/mati-secret-admin-2024', label: 'Admin', badge: '👑', adminOnly: true }] : []),
+    ...(isAdmin ? [{ to: '/mati-secret-admin-2024', label: 'Admin', badge: <HiShieldCheck className="w-5 h-5" />, adminOnly: true }] : []),
     { to: '/about', label: 'About', badge: <IoInformationCircle className="w-5 h-5" /> },
   ], [isAdmin])
 

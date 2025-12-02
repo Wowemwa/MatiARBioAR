@@ -698,30 +698,6 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
               <p className="text-white/90 text-lg">Manage biodiversity data for Mati City&apos;s natural heritage</p>
             </div>
             <div className="flex items-center gap-2">
-              {/* Feedback toggle - only visible to admins since AdminPanel is admin-only */}
-              <button
-                type="button"
-                onClick={() => setShowFeedbacks(s => !s)}
-                className="px-3 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-semibold"
-              >
-                Feedback
-                <span className="ml-2 inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500 text-white text-xs">{(() => {
-                  try { const raw = localStorage.getItem('mati-feedback:v1'); return raw ? JSON.parse(raw).length : 0 } catch { return 0 }
-                })()}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={async () => {
-                  await clearCache()
-                  await refresh()
-                  alert('✅ Cache cleared and data refreshed!')
-                }}
-                className="px-3 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-semibold"
-              >
-                🔄 Clear Cache
-              </button>
-
               <button
                 type="button"
                 onClick={onClose}

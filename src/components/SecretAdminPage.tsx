@@ -12,8 +12,13 @@ import {
   FaMap, 
   FaComments, 
   FaUsers, 
-  FaSignOutAlt 
+  FaSignOutAlt,
+  FaChartLine,
+  FaPaw,
+  FaSeedling,
+  FaExclamationTriangle
 } from 'react-icons/fa'
+import { HiSparkles, HiShieldCheck, HiExclamationTriangle, HiHome, HiArrowRight } from 'react-icons/hi2'
 
 export default function SecretAdminPage() {
   const { isAdmin, logout } = useAdmin()
@@ -31,12 +36,10 @@ export default function SecretAdminPage() {
         <div className="max-w-md mx-auto text-center">
           <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-8 border border-gray-200 dark:border-gray-700">
             <div className="w-20 h-20 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
+              <HiExclamationTriangle className="w-12 h-12 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              🚫 Admin Access Restricted
+              <HiShieldCheck className="inline w-6 h-6 mr-2" />Admin Access Restricted
             </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
               For security and optimal performance, the admin panel is only accessible from desktop computers. 
@@ -44,8 +47,9 @@ export default function SecretAdminPage() {
             </p>
             <button
               onClick={() => window.location.href = '/'}
-              className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-2xl transition-all duration-300 hover:scale-105 shadow-lg"
+              className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-2xl transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center gap-2"
             >
+              <HiHome className="w-5 h-5" />
               Return to Home
             </button>
           </div>
@@ -69,46 +73,42 @@ export default function SecretAdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-white to-emerald-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 p-4">
+      <div className="max-w-7xl mx-auto">
         {/* Header Card */}
-        <div className="group relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-2xl mb-8 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          <div className="relative z-10 p-8">
-            <div className="flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md mb-6 p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 bg-emerald-500 rounded-lg flex items-center justify-center">
+                <HiShieldCheck className="w-7 h-7 text-white" />
+              </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 bg-clip-text text-transparent mb-3">
-                  🔒 Admin Dashboard
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  Admin Dashboard
                 </h1>
-                <p className="text-gray-600 dark:text-gray-300 text-lg">
-                  Secure biodiversity management system for Mati City
-                </p>
+              </div>
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 flex items-center gap-2 ml-15">
+              <FaLeaf className="w-4 h-4 text-emerald-500" />
+              Biodiversity management system for Mati City
+            </p>
                 {loading && (
-                  <div className="mt-4 flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                  <div className="mt-3 flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm ml-15">
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
-                    <span className="text-sm font-medium">Loading biodiversity data...</span>
+                    <span>Loading data...</span>
                   </div>
                 )}
-              </div>
-              <button
-                onClick={() => logout()}
-                className="group relative overflow-hidden bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold px-6 py-3 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-110 hover:-rotate-1 active:scale-95 flex items-center gap-2"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <FaSignOutAlt className="relative z-10 w-5 h-5" />
-                <span className="relative z-10">Logout</span>
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Dashboard Grid */}
-        <div className="grid gap-6 mb-8">
+        <div className="grid gap-4 mb-6">
           {/* Stats Row */}
-          <div className="grid gap-6 md:grid-cols-4">
-            <div className="relative rounded-2xl backdrop-blur-xl bg-gradient-to-br from-emerald-500/20 to-green-500/20 border border-emerald-500/30 shadow-xl p-6">
-              <div className="text-emerald-600 dark:text-emerald-300 text-sm font-semibold mb-2">Total Species</div>
-              <div className="text-4xl font-black text-gray-900 dark:text-white">
+          <div className="grid gap-4 md:grid-cols-4">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-5 border-l-4 border-emerald-500">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-emerald-600 dark:text-emerald-400 text-xs font-semibold uppercase">Total Species</div>
+                <FaChartLine className="text-emerald-500 text-lg" />
+              </div>
+              <div className="text-3xl font-bold text-gray-900 dark:text-white">
                 {loading ? (
                   <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-16 rounded"></div>
                 ) : (
@@ -116,9 +116,12 @@ export default function SecretAdminPage() {
                 )}
               </div>
             </div>
-            <div className="relative rounded-2xl backdrop-blur-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 shadow-xl p-6">
-              <div className="text-blue-600 dark:text-blue-300 text-sm font-semibold mb-2">Fauna</div>
-              <div className="text-4xl font-black text-gray-900 dark:text-white">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-5 border-l-4 border-blue-500">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-blue-600 dark:text-blue-400 text-xs font-semibold uppercase">Fauna</div>
+                <FaPaw className="text-blue-500 text-lg" />
+              </div>
+              <div className="text-3xl font-bold text-gray-900 dark:text-white">
                 {loading ? (
                   <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
                 ) : (
@@ -126,9 +129,12 @@ export default function SecretAdminPage() {
                 )}
               </div>
             </div>
-            <div className="relative rounded-2xl backdrop-blur-xl bg-gradient-to-br from-green-500/20 to-teal-500/20 border border-green-500/30 shadow-xl p-6">
-              <div className="text-green-600 dark:text-green-300 text-sm font-semibold mb-2">Flora</div>
-              <div className="text-4xl font-black text-gray-900 dark:text-white">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-5 border-l-4 border-green-500">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-green-600 dark:text-green-400 text-xs font-semibold uppercase">Flora</div>
+                <FaSeedling className="text-green-500 text-lg" />
+              </div>
+              <div className="text-3xl font-bold text-gray-900 dark:text-white">
                 {loading ? (
                   <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
                 ) : (
@@ -136,9 +142,12 @@ export default function SecretAdminPage() {
                 )}
               </div>
             </div>
-            <div className="relative rounded-2xl backdrop-blur-xl bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-red-500/30 shadow-xl p-6">
-              <div className="text-red-600 dark:text-red-300 text-sm font-semibold mb-2">At Risk</div>
-              <div className="text-4xl font-black text-gray-900 dark:text-white">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-5 border-l-4 border-red-500">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-red-600 dark:text-red-400 text-xs font-semibold uppercase">At Risk</div>
+                <FaExclamationTriangle className="text-red-500 text-lg" />
+              </div>
+              <div className="text-3xl font-bold text-gray-900 dark:text-white">
                 {loading ? (
                   <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-12 rounded"></div>
                 ) : (
@@ -149,84 +158,55 @@ export default function SecretAdminPage() {
           </div>
 
           {/* Action Cards */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div 
             onClick={() => setShowAdminPanel(true)}
-            className="group cursor-pointer relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 hover:rotate-1 overflow-hidden p-8"
+            className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-emerald-500"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-blue-500/20 to-green-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <FaLeaf className="text-white text-3xl" />
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-emerald-500 rounded-lg flex items-center justify-center">
+                <FaLeaf className="text-white text-xl" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">Species Management</h2>
-              <p className="text-gray-600 dark:text-gray-300">Add, edit, and manage biodiversity data with comprehensive CRUD operations</p>
-              <div className="mt-4 flex items-center text-emerald-600 dark:text-emerald-400 font-semibold">
-                <span>Manage Species</span>
-                <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Species Management</h2>
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">Add, edit, and manage biodiversity data</p>
+            <div className="flex items-center text-emerald-600 dark:text-emerald-400 text-sm font-semibold">
+              <span>Manage Species</span>
+              <HiArrowRight className="w-4 h-4 ml-1" />
             </div>
           </div>
 
           <div 
             onClick={() => setShowGISManager(true)}
-            className="group cursor-pointer relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 hover:rotate-1 overflow-hidden p-8"
+            className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-blue-500"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-cyan-500/20 to-teal-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <FaMap className="text-white text-3xl" />
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                <FaMap className="text-white text-xl" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">Interactive Map Manager</h2>
-              <p className="text-gray-600 dark:text-gray-300">Add or remove markers on the conservation map</p>
-              <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400 font-semibold">
-                <span>Manage Map</span>
-                <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Map Manager</h2>
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">Add or remove conservation map markers</p>
+            <div className="flex items-center text-blue-600 dark:text-blue-400 text-sm font-semibold">
+              <span>Manage Map</span>
+              <HiArrowRight className="w-4 h-4 ml-1" />
             </div>
           </div>
 
           <div 
             onClick={() => setShowFeedbacksViewer(true)}
-            className="group cursor-pointer relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 hover:rotate-1 overflow-hidden p-8"
+            className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-purple-500"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-rose-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <FaComments className="text-white text-3xl" />
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
+                <FaComments className="text-white text-xl" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">User Feedbacks</h2>
-              <p className="text-gray-600 dark:text-gray-300">View and manage feedback submissions from users</p>
-              <div className="mt-4 flex items-center text-purple-600 dark:text-purple-400 font-semibold">
-                <span>View Feedbacks</span>
-                <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">User Feedbacks</h2>
             </div>
-          </div>
-
-          <div 
-            onClick={() => setShowUserManagement(true)}
-            className="group cursor-pointer relative rounded-3xl backdrop-blur-xl bg-white/85 dark:bg-slate-800/75 border border-white/40 dark:border-white/20 shadow-xl hover:shadow-2xl transition-all duration-700 hover:-translate-y-2 hover:rotate-1 overflow-hidden p-8"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-blue-500/20 to-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <FaUsers className="text-white text-3xl" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">User Management</h2>
-              <p className="text-gray-600 dark:text-gray-300">Manage team members displayed on the About page</p>
-              <div className="mt-4 flex items-center text-cyan-600 dark:text-cyan-400 font-semibold">
-                <span>Manage Team</span>
-                <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </div>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">View and manage user feedback submissions</p>
+            <div className="flex items-center text-purple-600 dark:text-purple-400 text-sm font-semibold">
+              <span>View Feedbacks</span>
+              <HiArrowRight className="w-4 h-4 ml-1" />
             </div>
           </div>
         </div>

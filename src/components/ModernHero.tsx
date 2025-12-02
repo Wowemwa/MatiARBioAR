@@ -105,48 +105,6 @@ const ModernHero = memo(function ModernHero() {
             Explore Mati&apos;s rich biodiversity through <span className="text-emerald-600 dark:text-emerald-400 font-bold">interactive maps</span>, <span className="text-blue-600 dark:text-blue-400 font-bold">AR experiences</span>, and <span className="text-purple-600 dark:text-purple-400 font-bold">comprehensive species data</span>.
           </p>
 
-          {/* Enhanced CTA Buttons */}
-          <div className={`flex flex-col sm:flex-row items-center justify-center gap-6 transition-all duration-1000 delay-300 ${
-            isVisible ? 'opacity-100' : 'opacity-0'
-          }`}>
-            <button
-              onClick={() => navigate('/gis')}
-              className="group relative px-10 py-5 bg-gradient-to-r from-emerald-500 via-blue-500 via-purple-500 to-cyan-500 hover:from-emerald-600 hover:via-blue-600 hover:via-purple-600 hover:to-cyan-600 text-white font-bold text-xl rounded-3xl shadow-2xl hover:shadow-3xl hover:shadow-emerald-500/50 transition-all duration-700 ease-out transform hover:scale-110 hover:shadow-2xl hover:-rotate-1 hover:-translate-y-2 xl:px-14 xl:py-6 xl:text-2xl rounded-3xl overflow-hidden"
-            >
-              {/* Enhanced button visual effects */}
-              <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-white/15 to-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
-              <div className="absolute inset-0 bg-[conic-gradient(from_0deg,rgba(255,255,255,0.3),transparent,rgba(255,255,255,0.3))] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-
-              {/* Enhanced Glow effect */}
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-emerald-400 to-blue-400 blur-xl opacity-0 group-hover:opacity-60 transition-opacity duration-500" />
-
-              <span className="relative flex items-center justify-center gap-4">
-                <span className="text-3xl group-hover:scale-110 transition-transform duration-300">🌊</span>
-                <span>Explore Interactive Map</span>
-                <svg className="w-6 h-6 xl:w-7 xl:h-7 transform group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </span>
-            </button>
-
-            <Link
-              to="/biodiversity"
-              className="group relative px-10 py-5 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl text-slate-800 dark:text-white font-bold text-xl rounded-3xl border-2 border-slate-300 dark:border-slate-600 hover:border-emerald-500 dark:hover:border-emerald-400 shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden transform hover:scale-110 hover:-translate-y-2 xl:px-14 xl:py-6 xl:text-2xl"
-            >
-              {/* Enhanced animated gradient background */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 via-emerald-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[length:200%_100%] animate-gradient" />
-
-              <span className="relative flex items-center justify-center gap-4">
-                <span className="text-3xl group-hover:scale-110 transition-transform duration-300">🦋</span>
-                <span>Browse Species</span>
-                <svg className="w-6 h-6 xl:w-7 xl:h-7 transform group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </span>
-            </Link>
-          </div>
-
           {/* Enhanced Stats Grid */}
           <div className={`grid grid-cols-1 sm:grid-cols-2 gap-8 mt-20 md:mt-24 transition-all duration-1000 delay-400 ${
             isVisible ? 'opacity-100' : 'opacity-0'

@@ -210,9 +210,9 @@ const About = memo(function About() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {teamMembers.map((member, index) => (
-              <div key={index} className="group relative">
+              <div key={index} className="group relative h-full">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 rounded-xl opacity-0 group-hover:opacity-100 blur transition-all duration-300"></div>
-                <div className="relative bg-white dark:bg-slate-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-slate-200 dark:border-slate-700 group-hover:border-blue-300 dark:group-hover:border-emerald-500/50">
+                <div className="relative bg-white dark:bg-slate-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-slate-200 dark:border-slate-700 group-hover:border-blue-300 dark:group-hover:border-emerald-500/50 h-full flex flex-col">
 
                   {/* Professional Header with Photo */}
                   <div className="relative overflow-hidden">
@@ -242,7 +242,7 @@ const About = memo(function About() {
                   </div>
 
                   {/* Professional Content Section */}
-                  <div className="p-6">
+                  <div className="p-6 flex-1 flex flex-col">
                     {/* Name and Title */}
                     <div className="text-center mb-4">
                       <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-emerald-400 transition-colors duration-300">
@@ -254,7 +254,7 @@ const About = memo(function About() {
                     </div>
 
                     {/* Description */}
-                    <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed text-center mb-4">
+                    <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed text-center mb-4 flex-1">
                       {member.description}
                     </p>
 
