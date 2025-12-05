@@ -238,19 +238,6 @@ We welcome contributions! Please follow these steps:
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
-## 📚 Documentation
-
-### **Data Dictionary**
-For a comprehensive overview of all data entities, attributes, and relationships in the system, see our detailed [Data Dictionary](DATA_DICTIONARY.md).
-
-The data dictionary includes:
-- Complete entity definitions (Species, Hotspots, Media, Users, AR Markers)
-- Field specifications with data types and validation rules
-- IUCN conservation status codes
-- Data relationships and storage architecture
-- Search configuration and filter operations
-- API endpoint documentation
-
 ## 📞 Contact & Support
 
 **Project Maintainer**: Wowemwa  
@@ -259,7 +246,6 @@ The data dictionary includes:
 
 ### **Support**
 - **Documentation**: Check this README and inline code comments
-- **Data Dictionary**: See [DATA_DICTIONARY.md](DATA_DICTIONARY.md) for data structures
 - **Issues**: Open a GitHub issue for bugs or feature requests
 - **Discussions**: Use GitHub Discussions for questions
 
