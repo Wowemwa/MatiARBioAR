@@ -1,235 +1,320 @@
-# DATA DICTIONARY
+# DATA DICTIONARY (Tabular)
 
 The data dictionary provides a detailed description of the tables and fields in the database. It also summarizes indexes, relationships, constraints, row-level security (RLS) policies, storage buckets, and utility functions. This document is derived from the Supabase PostgreSQL schema in `db/database_schema_reference.sql` (Generated: November 21, 2025).
 
 **Database Overview**
 - Type: PostgreSQL (Supabase)
-- Naming: All application tables are under the `public` schema
-- IDs: Primarily `UUID` for identity tables; some domain tables use `TEXT` IDs
-- Timestamps: Most tables include `created_at` and `updated_at`; `updated_at` maintained by triggers
-- RLS: Enabled on all tables with policies for public, authenticated, and admin access
-
-**Conventions**
-- `NOT NULL`: Field must have a value
-- `DEFAULT`: Value set when not provided
-- `CHECK`: Constraint limiting allowed values
-- Arrays are `TEXT[]` unless noted
-- JSON data stored as `JSONB`
+- Schema: `public`
+- IDs: `UUID` for identities; `TEXT` for domain keys
+- Timestamps: `created_at`, `updated_at` with trigger-maintained updates
+- RLS: Enabled on all tables
 
 ---
 
-**Table: `public.admins` — Administrative user accounts**
-- `id` (UUID, PK, references `auth.users(id)`, on delete cascade)
-- `email` (TEXT, not null, unique)
-- `role` (TEXT, not null, default `'admin'`, check in `['super_admin','admin','moderator']`)
-- `last_login_at` (TIMESTAMPTZ)
-- `created_at` (TIMESTAMPTZ, not null, default `now()`)
-- `updated_at` (TIMESTAMPTZ, not null, default `now()`)
-- Indexes: `idx_admins_email`, `idx_admins_role`
-- RLS: Users can view own record; super admins can manage all
+**public.admins**
 
-**Table: `public.profiles` — Extended user profile**
-- `id` (UUID, PK, references `auth.users(id)`, on delete cascade)
-- `username` (TEXT, unique)
-- `full_name` (TEXT)
-- `bio` (TEXT)
-- `avatar_url` (TEXT)
-- `is_admin` (BOOLEAN, not null, default `false`)
-- `created_at` (TIMESTAMPTZ, not null, default `now()`)
-- `updated_at` (TIMESTAMPTZ, not null, default `now()`)
-- Indexes: `idx_profiles_username`, `idx_profiles_is_admin`
-- RLS: Authenticated can view all; users can update own; admins can manage all
+| Column | Type | Constraints | Default | Description |
+|--------|------|-------------|---------|-------------|
+| id | UUID | PK, FK `auth.users(id)`, ON DELETE CASCADE |  | Admin user ID |
+| email | TEXT | NOT NULL, UNIQUE |  | Admin email |
+| role | TEXT | NOT NULL, CHECK IN ('super_admin','admin','moderator') | 'admin' | Role |
+| last_login_at | TIMESTAMPTZ |  |  | Last login timestamp |
+| created_at | TIMESTAMPTZ | NOT NULL | now() | Creation timestamp |
+| updated_at | TIMESTAMPTZ | NOT NULL | now() | Update timestamp |
 
-**Table: `public.sites` — Biodiversity hotspot locations**
-- `id` (TEXT, PK)
-- `name` (TEXT, not null)
-- `type` (TEXT, not null, check in `['marine','terrestrial','freshwater','coastal']`)
-- `barangay` (TEXT)
-- `city` (TEXT, not null)
-- `province` (TEXT, not null)
-- `designation` (TEXT, not null)
-- `area_hectares` (DECIMAL)
-- `lat` (DECIMAL(10,8), not null)
-- `lng` (DECIMAL(11,8), not null)
-- `elevation_range_meters` (INT4RANGE)
-- `summary` (TEXT, not null)
-- `description` (TEXT, not null)
-- `features` (TEXT[], not null, default `{}`)
-- `stewardship` (TEXT, not null)
-- `image_url` (TEXT)
-- `tags` (TEXT[], not null, default `{}`)
-- `visitor_notes` (TEXT)
-- `created_at` (TIMESTAMPTZ, not null, default `now()`)
-- `updated_at` (TIMESTAMPTZ, not null, default `now()`)
-- Indexes: `idx_sites_type`, `idx_sites_city`, `idx_sites_province`, `idx_sites_lat_lng`, `idx_sites_tags` (GIN)
-- RLS: Public read; admins manage
+Indexes: `idx_admins_email`, `idx_admins_role` — RLS: self-view; super admin manage
 
-**Table: `public.species` — Species info with AR support**
-- `id` (TEXT, PK)
-- `category` (TEXT, not null, check in `['flora','fauna']`)
-- `common_name` (TEXT, not null)
-- `scientific_name` (TEXT, not null)
-- Taxonomy: `kingdom`, `phylum`, `class`, `taxonomic_order`, `family`, `genus`, `species`, `authorship` (all TEXT), `synonyms` (TEXT[])
-- Conservation: `conservation_status` (TEXT, check in `['CR','EN','VU','NT','LC','DD']`), `endemic` (BOOLEAN, default `false`), `invasive` (BOOLEAN, default `false`)
-- Basics: `description` (TEXT, not null), `key_facts` (TEXT[])
-- Ecology: `habitat`, `diet`, `behavior`, `reproduction` (TEXT), `ecosystem_services` (TEXT[]), `phenology` (TEXT), `interactions` (TEXT[])
-- Plant-specific: `growth_form`, `leaf_type`, `flowering_period` (TEXT), `ethnobotanical_uses` (TEXT[])
-- Animal-specific: `mobility`, `activity_pattern`, `size`, `weight`, `lifespan` (TEXT)
-- Population: `population_trend` (TEXT), `threats` (TEXT[]), `conservation_actions` (TEXT[]), `legal_protection` (TEXT[]), `reference_sources` (TEXT[])
-- Media: `image_urls` (TEXT[], not null, default `{}`)
-- AR: `ar_model_url` (TEXT), `ar_model_scale` (DECIMAL, default `1.0`), `ar_model_rotation` (JSONB, default `{x:0,y:0,z:0}`), `ar_pattern_url` (TEXT), `ar_marker_image_url` (TEXT), `ar_viewer_html` (TEXT), `audio_url` (TEXT)
-- Timestamps: `created_at` (TIMESTAMPTZ, not null, default `now()`), `updated_at` (TIMESTAMPTZ, not null, default `now()`)
-- Indexes: category, conservation_status, endemic, invasive, `ar_model_url` (partial), `ar_pattern_url` (partial), `audio_url` (partial), `image_urls` (GIN), `synonyms` (GIN), `threats` (GIN)
-- RLS: Public read; admins manage
+---
 
-**Table: `public.species_sites` — Species ↔ Sites link (M:N)**
-- `id` (UUID, PK, default `gen_random_uuid()`)
-- `species_id` (TEXT, not null, references `public.species(id)`, on delete cascade)
-- `site_id` (TEXT, not null, references `public.sites(id)`, on delete cascade)
-- `highlight` (BOOLEAN, not null, default `false`)
-- `created_at` (TIMESTAMPTZ, not null, default `now()`)
-- Constraints: `UNIQUE(species_id, site_id)`
-- Indexes: `idx_species_sites_species_id`, `idx_species_sites_site_id`, `idx_species_sites_highlight`
-- RLS: Public read; admins manage
+**public.profiles**
 
-**Table: `public.distribution_records` — Observations**
-- `id` (UUID, PK, default `gen_random_uuid()`)
-- `species_id` (TEXT, not null, references `public.species(id)`, on delete cascade)
-- `site_id` (TEXT, references `public.sites(id)`, on delete set null)
-- `observer_name` (TEXT), `observer_email` (TEXT)
-- `observation_date` (DATE, not null)
-- `latitude` (DECIMAL(10,8)), `longitude` (DECIMAL(11,8))
-- `abundance_estimate` (TEXT)
-- `notes` (TEXT)
-- `media_urls` (TEXT[], default `{}`)
-- `verified` (BOOLEAN, not null, default `false`)
-- `created_at` (TIMESTAMPTZ, not null, default `now()`), `updated_at` (TIMESTAMPTZ, not null, default `now()`)
-- Indexes: species_id, site_id, observation_date, verified, lat+lng
-- RLS: Public can view verified; authenticated can insert; admins manage
+| Column | Type | Constraints | Default | Description |
+|--------|------|-------------|---------|-------------|
+| id | UUID | PK, FK `auth.users(id)`, ON DELETE CASCADE |  | User ID |
+| username | TEXT | UNIQUE |  | Handle |
+| full_name | TEXT |  |  | Full name |
+| bio | TEXT |  |  | Bio |
+| avatar_url | TEXT |  |  | Avatar URL |
+| is_admin | BOOLEAN | NOT NULL | false | Admin flag |
+| created_at | TIMESTAMPTZ | NOT NULL | now() | Creation timestamp |
+| updated_at | TIMESTAMPTZ | NOT NULL | now() | Update timestamp |
 
-**Table: `public.media_assets` — Centralized media**
-- `id` (UUID, PK, default `gen_random_uuid()`)
-- `filename` (TEXT, not null), `original_filename` (TEXT, not null)
-- `file_path` (TEXT, not null), `file_url` (TEXT, not null)
-- `file_size` (BIGINT, not null)
-- `mime_type` (TEXT, not null)
-- `media_type` (TEXT, not null, check in `['image','video','audio','model','document']`)
-- `alt_text` (TEXT), `caption` (TEXT)
-- `species_id` (TEXT, references `public.species(id)`, on delete set null)
-- `site_id` (TEXT, references `public.sites(id)`, on delete set null)
-- `uploaded_by` (UUID, references `auth.users(id)`, on delete set null)
-- `is_public` (BOOLEAN, not null, default `true`)
-- `created_at` (TIMESTAMPTZ, not null, default `now()`), `updated_at` (TIMESTAMPTZ, not null, default `now()`)
-- Indexes: species_id, site_id, uploaded_by, media_type, is_public
-- RLS: Public view where `is_public=true`; authenticated can insert; owner update; admins manage
+Indexes: `idx_profiles_username`, `idx_profiles_is_admin` — RLS: auth read; self update; admin manage
 
-**Table: `public.feedback` — User feedback**
-- `id` (UUID, PK, default `gen_random_uuid()`)
-- `user_id` (UUID, references `auth.users(id)`, on delete set null)
-- `email` (TEXT)
-- `message` (TEXT, not null)
-- `user_agent` (TEXT), `url` (TEXT), `ip_address` (INET)
-- `is_read` (BOOLEAN, not null, default `false`)
-- `created_at` (TIMESTAMPTZ, not null, default `now()`)
-- Indexes: user_id, email, is_read, created_at
-- RLS: Anyone can insert; admins manage
+---
 
-**Table: `public.analytics_events` — Usage analytics**
-- `id` (UUID, PK, default `gen_random_uuid()`)
-- `event_type` (TEXT, not null)
-- `event_data` (JSONB)
-- `user_id` (UUID, references `auth.users(id)`, on delete set null)
-- `session_id` (TEXT)
-- `url` (TEXT), `user_agent` (TEXT), `ip_address` (INET)
-- `created_at` (TIMESTAMPTZ, not null, default `now()`)
-- Indexes: event_type, user_id, session_id, created_at, `event_data` (GIN)
-- RLS: Admins manage only
+**public.sites**
 
-**Table: `public.performance_metrics` — App performance**
-- `id` (UUID, PK, default `gen_random_uuid()`)
-- `metric_type` (TEXT, not null)
-- `value` (DECIMAL, not null)
-- `metadata` (JSONB)
-- `url` (TEXT), `user_agent` (TEXT)
-- `created_at` (TIMESTAMPTZ, not null, default `now()`)
-- Indexes: metric_type, created_at, `metadata` (GIN)
-- RLS: Admins manage only
+| Column | Type | Constraints | Default | Description |
+|--------|------|-------------|---------|-------------|
+| id | TEXT | PK |  | Site ID |
+| name | TEXT | NOT NULL |  | Site name |
+| type | TEXT | NOT NULL, CHECK IN ('marine','terrestrial','freshwater','coastal') |  | Site type |
+| barangay | TEXT |  |  | Barangay |
+| city | TEXT | NOT NULL |  | City |
+| province | TEXT | NOT NULL |  | Province |
+| designation | TEXT | NOT NULL |  | Protection designation |
+| area_hectares | DECIMAL |  |  | Area (ha) |
+| lat | DECIMAL(10,8) | NOT NULL |  | Latitude |
+| lng | DECIMAL(11,8) | NOT NULL |  | Longitude |
+| elevation_range_meters | INT4RANGE |  |  | Elevation range (m) |
+| summary | TEXT | NOT NULL |  | Summary |
+| description | TEXT | NOT NULL |  | Description |
+| features | TEXT[] | NOT NULL | {} | Key features |
+| stewardship | TEXT | NOT NULL |  | Stewardship info |
+| image_url | TEXT |  |  | Image URL |
+| tags | TEXT[] | NOT NULL | {} | Tags |
+| visitor_notes | TEXT |  |  | Visitor notes |
+| created_at | TIMESTAMPTZ | NOT NULL | now() | Creation timestamp |
+| updated_at | TIMESTAMPTZ | NOT NULL | now() | Update timestamp |
 
-**Table: `public.team_members` — Team profiles**
-- `id` (UUID, PK, default `gen_random_uuid()`)
-- `name` (TEXT, not null)
-- `role` (TEXT, not null)
-- `bio` (TEXT)
-- `email` (TEXT)
-- `avatar_url` (TEXT)
-- `social_links` (JSONB)
-- `is_active` (BOOLEAN, not null, default `true`)
-- `sort_order` (INTEGER, not null, default `0`)
-- `created_at` (TIMESTAMPTZ, not null, default `now()`), `updated_at` (TIMESTAMPTZ, not null, default `now()`)
-- Indexes: is_active, sort_order
-- RLS: Public can view active; admins manage
+Indexes: `idx_sites_type`, `idx_sites_city`, `idx_sites_province`, `idx_sites_lat_lng`, `idx_sites_tags` (GIN) — RLS: public read; admin manage
 
-**Table: `public.activity_log` — Admin audit trail**
-- `id` (UUID, PK, default `gen_random_uuid()`)
-- `admin_id` (UUID, references `public.admins(id)`, on delete set null)
-- `action_type` (TEXT, not null)
-- `entity_type` (TEXT, not null)
-- `entity_id` (TEXT)
-- `action_details` (JSONB)
-- `ip_address` (INET), `user_agent` (TEXT)
-- `created_at` (TIMESTAMPTZ, not null, default `now()`)
-- Indexes: admin_id, action_type, entity_type, created_at
-- RLS: Admins can view; system/authenticated can insert
+---
+
+**public.species**
+
+| Column | Type | Constraints | Default | Description |
+|--------|------|-------------|---------|-------------|
+| id | TEXT | PK |  | Species ID |
+| category | TEXT | NOT NULL, CHECK IN ('flora','fauna') |  | Category |
+| common_name | TEXT | NOT NULL |  | Common name |
+| scientific_name | TEXT | NOT NULL |  | Scientific name |
+| kingdom | TEXT |  |  | Taxonomy |
+| phylum | TEXT |  |  | Taxonomy |
+| class | TEXT |  |  | Taxonomy |
+| taxonomic_order | TEXT |  |  | Taxonomy |
+| family | TEXT |  |  | Taxonomy |
+| genus | TEXT |  |  | Taxonomy |
+| species | TEXT |  |  | Taxonomy |
+| authorship | TEXT |  |  | Taxonomic authorship |
+| synonyms | TEXT[] |  |  | Alternative names |
+| conservation_status | TEXT | CHECK IN ('CR','EN','VU','NT','LC','DD') |  | IUCN status |
+| endemic | BOOLEAN | NOT NULL | false | Endemic flag |
+| invasive | BOOLEAN | NOT NULL | false | Invasive flag |
+| description | TEXT | NOT NULL |  | Description |
+| key_facts | TEXT[] |  |  | Key facts |
+| habitat | TEXT |  |  | Habitat |
+| diet | TEXT |  |  | Diet |
+| behavior | TEXT |  |  | Behavior |
+| reproduction | TEXT |  |  | Reproduction |
+| ecosystem_services | TEXT[] |  |  | Ecosystem services |
+| phenology | TEXT |  |  | Phenology |
+| interactions | TEXT[] |  |  | Interactions |
+| growth_form | TEXT |  |  | Plant growth form |
+| leaf_type | TEXT |  |  | Leaf type |
+| flowering_period | TEXT |  |  | Flowering period |
+| ethnobotanical_uses | TEXT[] |  |  | Uses |
+| mobility | TEXT |  |  | Mobility |
+| activity_pattern | TEXT |  |  | Activity pattern |
+| size | TEXT |  |  | Size |
+| weight | TEXT |  |  | Weight |
+| lifespan | TEXT |  |  | Lifespan |
+| population_trend | TEXT |  |  | Trend |
+| threats | TEXT[] |  |  | Threats |
+| conservation_actions | TEXT[] |  |  | Actions |
+| legal_protection | TEXT[] |  |  | Legal protection |
+| reference_sources | TEXT[] |  |  | References |
+| image_urls | TEXT[] | NOT NULL | {} | Images |
+| ar_model_url | TEXT |  |  | AR model URL |
+| ar_model_scale | DECIMAL | NOT NULL | 1.0 | AR model scale |
+| ar_model_rotation | JSONB | NOT NULL | {"x":0,"y":0,"z":0} | AR rotation |
+| ar_pattern_url | TEXT |  |  | AR pattern URL |
+| ar_marker_image_url | TEXT |  |  | AR marker image |
+| ar_viewer_html | TEXT |  |  | AR viewer HTML |
+| audio_url | TEXT |  |  | Audio URL |
+| created_at | TIMESTAMPTZ | NOT NULL | now() | Creation timestamp |
+| updated_at | TIMESTAMPTZ | NOT NULL | now() | Update timestamp |
+
+Indexes: category, conservation_status, endemic, invasive, partial on AR fields, GIN on `image_urls`, `synonyms`, `threats` — RLS: public read; admin manage
+
+---
+
+**public.species_sites**
+
+| Column | Type | Constraints | Default | Description |
+|--------|------|-------------|---------|-------------|
+| id | UUID | PK | gen_random_uuid() | Link ID |
+| species_id | TEXT | NOT NULL, FK `public.species(id)`, ON DELETE CASCADE |  | Species ID |
+| site_id | TEXT | NOT NULL, FK `public.sites(id)`, ON DELETE CASCADE |  | Site ID |
+| highlight | BOOLEAN | NOT NULL | false | Highlight flag |
+| created_at | TIMESTAMPTZ | NOT NULL | now() | Creation timestamp |
+
+Constraints: UNIQUE(species_id, site_id) — Indexes: species_id, site_id, highlight — RLS: public read; admin manage
+
+---
+
+**public.distribution_records**
+
+| Column | Type | Constraints | Default | Description |
+|--------|------|-------------|---------|-------------|
+| id | UUID | PK | gen_random_uuid() | Record ID |
+| species_id | TEXT | NOT NULL, FK `public.species(id)`, ON DELETE CASCADE |  | Species ID |
+| site_id | TEXT | FK `public.sites(id)`, ON DELETE SET NULL |  | Site ID |
+| observer_name | TEXT |  |  | Observer name |
+| observer_email | TEXT |  |  | Observer email |
+| observation_date | DATE | NOT NULL |  | Observation date |
+| latitude | DECIMAL(10,8) |  |  | Latitude |
+| longitude | DECIMAL(11,8) |  |  | Longitude |
+| abundance_estimate | TEXT |  |  | Abundance estimate |
+| notes | TEXT |  |  | Notes |
+| media_urls | TEXT[] |  | {} | Media URLs |
+| verified | BOOLEAN | NOT NULL | false | Verified flag |
+| created_at | TIMESTAMPTZ | NOT NULL | now() | Creation timestamp |
+| updated_at | TIMESTAMPTZ | NOT NULL | now() | Update timestamp |
+
+Indexes: species_id, site_id, observation_date, verified, lat+lng — RLS: public view verified; auth insert; admin manage
+
+---
+
+**public.media_assets**
+
+| Column | Type | Constraints | Default | Description |
+|--------|------|-------------|---------|-------------|
+| id | UUID | PK | gen_random_uuid() | Media ID |
+| filename | TEXT | NOT NULL |  | Stored filename |
+| original_filename | TEXT | NOT NULL |  | Original filename |
+| file_path | TEXT | NOT NULL |  | File path |
+| file_url | TEXT | NOT NULL |  | Public URL |
+| file_size | BIGINT | NOT NULL |  | Bytes |
+| mime_type | TEXT | NOT NULL |  | MIME type |
+| media_type | TEXT | NOT NULL, CHECK IN ('image','video','audio','model','document') |  | Media type |
+| alt_text | TEXT |  |  | Alt text |
+| caption | TEXT |  |  | Caption |
+| species_id | TEXT | FK `public.species(id)`, ON DELETE SET NULL |  | Species ID |
+| site_id | TEXT | FK `public.sites(id)`, ON DELETE SET NULL |  | Site ID |
+| uploaded_by | UUID | FK `auth.users(id)`, ON DELETE SET NULL |  | Uploader |
+| is_public | BOOLEAN | NOT NULL | true | Public flag |
+| created_at | TIMESTAMPTZ | NOT NULL | now() | Creation timestamp |
+| updated_at | TIMESTAMPTZ | NOT NULL | now() | Update timestamp |
+
+Indexes: species_id, site_id, uploaded_by, media_type, is_public — RLS: public select where `is_public`; auth insert; owner update; admin manage
+
+---
+
+**public.feedback**
+
+| Column | Type | Constraints | Default | Description |
+|--------|------|-------------|---------|-------------|
+| id | UUID | PK | gen_random_uuid() | Feedback ID |
+| user_id | UUID | FK `auth.users(id)`, ON DELETE SET NULL |  | User ID |
+| email | TEXT |  |  | Email |
+| message | TEXT | NOT NULL |  | Message |
+| user_agent | TEXT |  |  | User agent |
+| url | TEXT |  |  | Page URL |
+| ip_address | INET |  |  | IP address |
+| is_read | BOOLEAN | NOT NULL | false | Read flag |
+| created_at | TIMESTAMPTZ | NOT NULL | now() | Creation timestamp |
+
+Indexes: user_id, email, is_read, created_at — RLS: anyone insert; admin manage
+
+---
+
+**public.analytics_events**
+
+| Column | Type | Constraints | Default | Description |
+|--------|------|-------------|---------|-------------|
+| id | UUID | PK | gen_random_uuid() | Event ID |
+| event_type | TEXT | NOT NULL |  | Event type |
+| event_data | JSONB |  |  | Event payload |
+| user_id | UUID | FK `auth.users(id)`, ON DELETE SET NULL |  | User ID |
+| session_id | TEXT |  |  | Session ID |
+| url | TEXT |  |  | Page URL |
+| user_agent | TEXT |  |  | User agent |
+| ip_address | INET |  |  | IP address |
+| created_at | TIMESTAMPTZ | NOT NULL | now() | Timestamp |
+
+Indexes: event_type, user_id, session_id, created_at, `event_data` (GIN) — RLS: admin only
+
+---
+
+**public.performance_metrics**
+
+| Column | Type | Constraints | Default | Description |
+|--------|------|-------------|---------|-------------|
+| id | UUID | PK | gen_random_uuid() | Metric ID |
+| metric_type | TEXT | NOT NULL |  | Metric type |
+| value | DECIMAL | NOT NULL |  | Metric value |
+| metadata | JSONB |  |  | Metadata |
+| url | TEXT |  |  | Page URL |
+| user_agent | TEXT |  |  | User agent |
+| created_at | TIMESTAMPTZ | NOT NULL | now() | Timestamp |
+
+Indexes: metric_type, created_at, `metadata` (GIN) — RLS: admin only
+
+---
+
+**public.team_members**
+
+| Column | Type | Constraints | Default | Description |
+|--------|------|-------------|---------|-------------|
+| id | UUID | PK | gen_random_uuid() | Member ID |
+| name | TEXT | NOT NULL |  | Name |
+| role | TEXT | NOT NULL |  | Role |
+| bio | TEXT |  |  | Bio |
+| email | TEXT |  |  | Email |
+| avatar_url | TEXT |  |  | Avatar URL |
+| social_links | JSONB |  |  | Social links |
+| is_active | BOOLEAN | NOT NULL | true | Active flag |
+| sort_order | INTEGER | NOT NULL | 0 | Sort order |
+| created_at | TIMESTAMPTZ | NOT NULL | now() | Creation timestamp |
+| updated_at | TIMESTAMPTZ | NOT NULL | now() | Update timestamp |
+
+Indexes: is_active, sort_order — RLS: public select active; admin manage
+
+---
+
+**public.activity_log**
+
+| Column | Type | Constraints | Default | Description |
+|--------|------|-------------|---------|-------------|
+| id | UUID | PK | gen_random_uuid() | Activity ID |
+| admin_id | UUID | FK `public.admins(id)`, ON DELETE SET NULL |  | Admin ID |
+| action_type | TEXT | NOT NULL |  | Action type |
+| entity_type | TEXT | NOT NULL |  | Entity type |
+| entity_id | TEXT |  |  | Entity ID |
+| action_details | JSONB |  |  | Details |
+| ip_address | INET |  |  | IP address |
+| user_agent | TEXT |  |  | User agent |
+| created_at | TIMESTAMPTZ | NOT NULL | now() | Timestamp |
+
+Indexes: admin_id, action_type, entity_type, created_at — RLS: admin view; system/auth insert
 
 ---
 
 **Relationships**
 - `admins.id` ↔ `auth.users.id` (1:1)
 - `profiles.id` ↔ `auth.users.id` (1:1)
-- `species_sites.species_id` ↔ `species.id` (M:N via link table)
-- `species_sites.site_id` ↔ `sites.id`
-- `distribution_records.species_id` ↔ `species.id` (N:1)
-- `distribution_records.site_id` ↔ `sites.id` (N:1, nullable)
-- `media_assets.species_id` ↔ `species.id` (N:1, nullable)
-- `media_assets.site_id` ↔ `sites.id` (N:1, nullable)
-- `media_assets.uploaded_by` ↔ `auth.users.id`
+- `species_sites` links `species` ↔ `sites` (M:N)
+- `distribution_records` ↔ `species` (N:1), ↔ `sites` (N:1, nullable)
+- `media_assets` ↔ `species` (N:1, nullable), ↔ `sites` (N:1, nullable), ↔ `auth.users` (uploader)
 - `feedback.user_id` ↔ `auth.users.id`
 - `activity_log.admin_id` ↔ `admins.id`
 
 **Triggers**
-- Function: `update_updated_at_column()` — sets `NEW.updated_at = now()`
-- Applied BEFORE UPDATE to: `admins`, `profiles`, `sites`, `species`, `distribution_records`, `media_assets`, `team_members`
+- `update_updated_at_column()` BEFORE UPDATE on: `admins`, `profiles`, `sites`, `species`, `distribution_records`, `media_assets`, `team_members`
 
-**Row Level Security (RLS) Summary**
-- Enabled on all tables in `public`
-- Common policies:
-  - Public read on `sites`, `species`, `species_sites`, active `team_members`
-  - Public insert on `feedback`
-  - Authenticated insert on `distribution_records`, `media_assets`
-  - Admin-only management on analytics, performance, activity log
-  - User-scoped select/update where applicable (e.g., `profiles`, `admins`)
+**Storage Buckets**
+- `species-models` (public, 50MB) — `model/gltf-binary`, `application/octet-stream`
+- `species-images` (public, 5MB) — `image/jpeg`, `image/png`, `image/webp`
+- `species-audio` (public, 10MB) — `audio/mpeg`, `audio/mp3`, `audio/wav`, `audio/ogg`
+- `site-media` (public, 10MB) — `image/jpeg`, `image/png`, `video/mp4`
+- `ar-patterns` (public, ~1MB) — `text/plain`, `application/octet-stream`
+- `ar-markers` (public, ~2MB) — `image/jpeg`, `image/png`, `image/jpg`
 
-**Storage Buckets (Supabase `storage.buckets`)**
-- `species-models` (public=true, limit 50MB, mime: `model/gltf-binary`, `application/octet-stream`)
-- `species-images` (public=true, limit 5MB, mime: `image/jpeg`, `image/png`, `image/webp`)
-- `species-audio` (public=true, limit 10MB, mime: `audio/mpeg`, `audio/mp3`, `audio/wav`, `audio/ogg`)
-- `site-media` (public=true, limit 10MB, mime: `image/jpeg`, `image/png`, `video/mp4`)
-- `ar-patterns` (public=true, limit ~1MB, mime: `text/plain`, `application/octet-stream`)
-- `ar-markers` (public=true, limit ~2MB, mime: `image/jpeg`, `image/png`, `image/jpg`)
-- Storage object RLS: Public SELECT per bucket; authenticated INSERT; admins DELETE
+Storage RLS: Public SELECT per bucket; authenticated INSERT; admin DELETE
 
 **Utility Functions**
-- `get_species_count_by_category(category_filter TEXT DEFAULT NULL)` → rows of `(category, count)`
-- `get_conservation_status_summary()` → rows of `(status, count)` ordered by IUCN severity
-- `search_species(search_term TEXT, limit_count INTEGER DEFAULT 50)` → ranked species search results
+- `get_species_count_by_category(category_filter TEXT DEFAULT NULL)` → `(category, count)`
+- `get_conservation_status_summary()` → `(status, count)` ordered by severity
+- `search_species(search_term TEXT, limit_count INTEGER DEFAULT 50)` → ranked results
 
 **Indexes (Overview)**
-- B-tree on common filter fields (e.g., `type`, `category`, dates)
-- Partial indexes on nullable AR/media fields for `species`
-- GIN indexes on arrays and JSONB (`image_urls`, `synonyms`, `threats`, `event_data`, `metadata`, `tags`)
+- B-tree: common filters (`type`, `category`, dates)
+- Partial: nullable AR/media fields in `species`
+- GIN: arrays and JSONB (`image_urls`, `synonyms`, `threats`, `event_data`, `metadata`, `tags`)
 
 **Notes**
-- Designed for Supabase with comprehensive RLS
-- Use UUIDs for identity; TEXT IDs for domain entities where human-readable keys are beneficial
-- Triggers maintain `updated_at`; consider app-side upserts to avoid race conditions
-- Validate MIME types and size limits against bucket configs when uploading
+- Supabase PostgreSQL with comprehensive RLS
+- Trigger-maintained `updated_at`
+- Validate uploads against bucket MIME and size limits
