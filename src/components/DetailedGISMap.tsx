@@ -31,6 +31,7 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
   const [isMapReady, setIsMapReady] = useState(false)
   const [activeMarkers, setActiveMarkers] = useState<Map<string, L.Marker>>(new Map())
   const [currentLayer, setCurrentLayer] = useState<'street' | 'satellite' | 'topo'>('street')
+  const [legendCollapsed, setLegendCollapsed] = useState(false)
   
   // Admin marker placement state
   const [adminMode, setAdminMode] = useState(false)
@@ -668,66 +669,135 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
           border-top-color: rgba(0, 0, 0, 0.85) !important;
         }
       `}</style>
-      {/* Left Sliding Info Panel - Mobile Optimized */}
-      <div className={`fixed inset-y-0 left-0 z-[1100] w-full sm:max-w-md transform transition-transform duration-300 ease-out ${panelOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="flex flex-col h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200 dark:border-slate-700 shadow-2xl">
-          <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-200 dark:border-slate-700">
-            <div className="min-w-0 flex-1">
-              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 truncate">{currentSite ? currentSite.name : 'Site Details'}</h2>
-              {currentSite && <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">{currentSite.designation}</p>}
+      {/* Left Sliding Info Panel - Enhanced Design */}
+      <div className={`fixed inset-y-0 left-0 z-[1100] w-full sm:max-w-lg transform transition-all duration-500 ease-out ${panelOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex flex-col h-full bg-gradient-to-br from-white/98 via-white/96 to-slate-50/98 dark:from-slate-900/98 dark:via-slate-900/96 dark:to-slate-950/98 backdrop-blur-2xl border-r-2 border-emerald-200/50 dark:border-emerald-900/50 shadow-[0_0_80px_-10px_rgba(0,0,0,0.3)] dark:shadow-[0_0_80px_-10px_rgba(0,0,0,0.8)]">
+          {/* Enhanced Header with Gradient Background */}
+          <div className="relative px-4 sm:px-6 py-4 sm:py-5 border-b-2 border-slate-200/80 dark:border-slate-700/80 bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-purple-500/10 dark:from-emerald-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBvcGFjaXR5PSIwLjAzIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-50"></div>
+            <div className="relative flex items-center justify-between">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg sm:text-xl font-extrabold bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 dark:from-emerald-400 dark:via-blue-400 dark:to-purple-400 bg-clip-text text-transparent truncate">
+                  {currentSite ? currentSite.name : 'Site Details'}
+                </h2>
+                {currentSite && (
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 truncate mt-1 font-medium flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    {currentSite.designation}
+                  </p>
+                )}
+              </div>
+              <button 
+                onClick={closePanel} 
+                aria-label="Close panel" 
+                className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 hover:bg-red-50 dark:hover:bg-red-900/30 hover:scale-110 border-2 border-slate-200 dark:border-slate-700 hover:border-red-400 dark:hover:border-red-600 transition-all duration-200 flex-shrink-0 shadow-lg hover:shadow-xl group"
+              >
+                <svg className="w-5 h-5 text-slate-600 dark:text-slate-400 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
             </div>
-            <button onClick={closePanel} aria-label="Close panel" className="p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition flex-shrink-0">
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
           </div>
-          <div className="overflow-y-auto flex-1 px-4 sm:px-5 py-3 sm:py-4 space-y-4 sm:space-y-6">
-            {!currentSite && <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Click a marker on the map to view details.</p>}
+          <div className="overflow-y-auto flex-1 px-4 sm:px-6 py-4 sm:py-6 space-y-5 sm:space-y-7">
+            {!currentSite && (
+              <div className="text-center py-12">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-emerald-100 to-blue-100 dark:from-emerald-900/30 dark:to-blue-900/30 flex items-center justify-center">
+                  <svg className="w-10 h-10 text-emerald-500 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-medium">Click a marker on the map to explore biodiversity hotspots</p>
+              </div>
+            )}
             {currentSite && (
               <>
-                {/* Site Hero Image */}
+                {/* Enhanced Site Hero Image */}
                 {currentSite.image && (
-                  <div className="relative -mx-4 sm:-mx-5 -mt-3 sm:-mt-4 mb-3 sm:mb-4">
+                  <div className="relative -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-4 sm:mb-5 group overflow-hidden">
                     <img 
                       src={currentSite.image} 
                       alt={currentSite.name}
-                      className="w-full h-32 sm:h-48 object-cover"
+                      className="w-full h-40 sm:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                    <div className="absolute bottom-2 sm:bottom-3 left-4 sm:left-5 right-4 sm:right-5">
-                      <div className="text-white font-bold text-sm sm:text-lg drop-shadow-lg">{currentSite.name}</div>
-                      <div className="text-white/90 text-xs drop-shadow">{currentSite.barangay}</div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-transparent to-blue-500/20" />
+                    <div className="absolute bottom-3 sm:bottom-4 left-4 sm:left-6 right-4 sm:right-6">
+                      <div className="text-white font-bold text-base sm:text-xl drop-shadow-2xl mb-1">
+                        {currentSite.name}
+                      </div>
+                      <div className="text-white/95 text-xs sm:text-sm drop-shadow-lg font-medium flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                        </svg>
+                        {currentSite.barangay}
+                      </div>
                     </div>
                   </div>
                 )}
                 
-                <div>
-                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-3">{currentSite.description}</p>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="bg-slate-100 dark:bg-slate-800 rounded-md p-2">
-                      <div className="font-semibold text-slate-700 dark:text-slate-200">Type</div>
-                      <div className="text-slate-600 dark:text-slate-400 capitalize">{currentSite.type}</div>
+                {/* Enhanced Description and Stats */}
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 dark:from-slate-800/50 dark:to-slate-900/50 rounded-2xl p-4 sm:p-5 border-2 border-slate-200/50 dark:border-slate-700/50 shadow-lg">
+                    <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{currentSite.description}</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-900/20 dark:to-emerald-950/30 rounded-xl p-3 sm:p-4 border-2 border-emerald-200/50 dark:border-emerald-800/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                      <div className="relative">
+                        <div className="font-bold text-emerald-700 dark:text-emerald-300 mb-1 text-xs uppercase tracking-wide">Type</div>
+                        <div className="text-slate-800 dark:text-slate-200 font-bold text-sm sm:text-base capitalize">{currentSite.type}</div>
+                      </div>
                     </div>
-                    <div className="bg-slate-100 dark:bg-slate-800 rounded-md p-2">
-                      <div className="font-semibold text-slate-700 dark:text-slate-200">Area</div>
-                      <div className="text-slate-600 dark:text-slate-400">{currentSite.areaHectares ? `${currentSite.areaHectares.toLocaleString()} ha` : 'N/A'}</div>
+                    <div className="group relative overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-950/30 rounded-xl p-3 sm:p-4 border-2 border-blue-200/50 dark:border-blue-800/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                      <div className="relative">
+                        <div className="font-bold text-blue-700 dark:text-blue-300 mb-1 text-xs uppercase tracking-wide">Area</div>
+                        <div className="text-slate-800 dark:text-slate-200 font-bold text-sm sm:text-base">{currentSite.areaHectares ? `${currentSite.areaHectares.toLocaleString()} ha` : 'N/A'}</div>
+                      </div>
                     </div>
-                    <div className="bg-slate-100 dark:bg-slate-800 rounded-md p-2 col-span-2">
-                      <div className="font-semibold text-slate-700 dark:text-slate-200">Barangay</div>
-                      <div className="text-slate-600 dark:text-slate-400 text-[10px] sm:text-[11px] leading-snug">{currentSite.barangay || '—'}</div>
+                    <div className="group relative overflow-hidden bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-900/20 dark:to-purple-950/30 rounded-xl p-3 sm:p-4 border-2 border-purple-200/50 dark:border-purple-800/50 col-span-2 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                      <div className="relative">
+                        <div className="font-bold text-purple-700 dark:text-purple-300 mb-1 text-xs uppercase tracking-wide">Barangay</div>
+                        <div className="text-slate-800 dark:text-slate-200 font-bold text-sm leading-snug">{currentSite.barangay || '—'}</div>
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div>
-                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">Key Features</h3>
-                  <ul className="space-y-1">
-                    {currentSite.features.slice(0, 6).map(f => (
-                      <li key={f} className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300"><span className="text-emerald-500 mt-0.5">•</span><span>{f}</span></li>
+                
+                {/* Enhanced Key Features Section */}
+                <div className="bg-gradient-to-br from-white to-slate-50/50 dark:from-slate-800/30 dark:to-slate-900/30 rounded-2xl p-4 sm:p-5 border-2 border-slate-200/50 dark:border-slate-700/50 shadow-lg">
+                  <h3 className="text-sm sm:text-base font-bold bg-gradient-to-r from-emerald-600 to-blue-600 dark:from-emerald-400 dark:to-blue-400 bg-clip-text text-transparent mb-3">
+                    Key Features
+                  </h3>
+                  <ul className="space-y-2">
+                    {currentSite.features.slice(0, 6).map((f, idx) => (
+                      <li key={f} className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-700 dark:text-slate-300 group">
+                        <span className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-emerald-500 to-blue-500 flex items-center justify-center text-white text-[10px] font-bold shadow-md group-hover:scale-110 transition-transform">
+                          {idx + 1}
+                        </span>
+                        <span className="flex-1 leading-relaxed">{f}</span>
+                      </li>
                     ))}
                   </ul>
                 </div>
-                <div>
-                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">Biodiversity ({currentSpecies.length})</h3>
-                  <div className="grid grid-cols-1 gap-2">
+                
+                {/* Enhanced Biodiversity Section */}
+                <div className="bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-emerald-950/20 dark:to-blue-950/20 rounded-2xl p-4 sm:p-5 border-2 border-emerald-200/50 dark:border-emerald-800/50 shadow-lg">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm sm:text-base font-bold bg-gradient-to-r from-emerald-600 to-blue-600 dark:from-emerald-400 dark:to-blue-400 bg-clip-text text-transparent">
+                      Biodiversity
+                    </h3>
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-blue-500 text-white text-xs font-bold shadow-lg">
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                        <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      {currentSpecies.length} Species
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
                     {currentSpecies.slice(0, 20).map(sp => (
                       <button
                         key={sp.id}
@@ -735,22 +805,47 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
                           setSelectedSpeciesId(sp.id)
                           setShowGallery(true)
                         }}
-                        className="text-left rounded-md border border-slate-200 dark:border-slate-700 p-2 sm:p-3 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-md transition-all"
+                        className="group text-left rounded-xl border-2 border-slate-200/70 dark:border-slate-700/70 p-3 sm:p-4 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 relative overflow-hidden"
                       >
-                        <div className="flex items-start gap-2 sm:gap-3">
+                        {/* Animated gradient overlay on hover */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-blue-500/0 to-purple-500/0 group-hover:from-emerald-500/5 group-hover:via-blue-500/5 group-hover:to-purple-500/5 transition-all duration-500" />
+                        
+                        <div className="relative flex items-start gap-3">
                           <div className="flex-1 min-w-0">
-                            <div className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{sp.commonName}</div>
-                            <div className="text-[9px] sm:text-[10px] italic text-slate-500 dark:text-slate-400 truncate">{sp.scientificName}</div>
+                            <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                              {sp.commonName}
+                            </div>
+                            <div className="text-[10px] sm:text-xs italic text-slate-500 dark:text-slate-400 truncate">
+                              {sp.scientificName}
+                            </div>
                           </div>
-                          <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                            <span className={`text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0.5 rounded-full font-medium ${sp.status === 'CR' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' : sp.status === 'EN' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' : sp.status === 'VU' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'}`}>{sp.status}</span>
-                            <span className={`text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0.5 rounded-full ${sp.category === 'flora' ? 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400' : 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400'}`}>{sp.category === 'flora' ? 'Flora' : 'Fauna'}</span>
+                          <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                            <span className={`text-[9px] sm:text-[10px] px-2 py-1 rounded-full font-bold shadow-sm ${
+                              sp.status === 'CR' 
+                                ? 'bg-gradient-to-r from-red-500 to-red-600 text-white' 
+                                : sp.status === 'EN' 
+                                ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white' 
+                                : sp.status === 'VU' 
+                                ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white' 
+                                : 'bg-gradient-to-r from-green-500 to-green-600 text-white'
+                            }`}>
+                              {sp.status}
+                            </span>
+                            <span className={`text-[9px] sm:text-[10px] px-2 py-1 rounded-full font-medium shadow-sm ${
+                              sp.category === 'flora' 
+                                ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 dark:from-green-900/40 dark:to-emerald-900/40 dark:text-green-300' 
+                                : 'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 dark:from-amber-900/40 dark:to-orange-900/40 dark:text-amber-300'
+                            }`}>
+                              {sp.category === 'flora' ? 'Flora' : 'Fauna'}
+                            </span>
                           </div>
                         </div>
                         {sp.images && sp.images.length > 0 && (
-                          <div className="mt-1 sm:mt-2 text-[9px] sm:text-[10px] text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1">
-                            <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                            {sp.images.length} photo{sp.images.length > 1 ? 's' : ''} • Click to view
+                          <div className="relative mt-2.5 sm:mt-3 text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            {sp.images.length} photo{sp.images.length > 1 ? 's' : ''} • Click to explore
                           </div>
                         )}
                       </button>
@@ -886,29 +981,53 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
         className="h-[60vh] sm:h-[70vh] w-full relative z-0 rounded-2xl overflow-hidden"
       />
       
-      {/* Combined Legend and Data Info Panel */}
-      <div className="absolute bottom-8 right-2 sm:right-4 z-[1000] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-lg sm:rounded-xl p-2 sm:p-3 shadow-lg border border-slate-200/80 dark:border-slate-700/80">
-        {/* Live Data Section */}
-        <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-500/50"></div>
-          <span className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-slate-100">Live Data</span>
-        </div>
-        <div className="text-[9px] sm:text-[10px] text-slate-600 dark:text-slate-400 mb-3">
-          <div className="font-semibold">{filteredHotspots.length} hotspot{filteredHotspots.length !== 1 ? 's' : ''} shown</div>
-          <div className="opacity-75">Click markers for details</div>
+      {/* Collapsible Combined Legend and Data Info Panel */}
+      <div className="absolute bottom-8 right-2 sm:right-4 z-[1000] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-lg sm:rounded-xl shadow-lg border border-slate-200/80 dark:border-slate-700/80 transition-all duration-300">
+        {/* Header with Toggle Button */}
+        <div 
+          className="flex items-center justify-between gap-2 p-2 sm:p-3 cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50 rounded-lg transition-colors"
+          onClick={() => setLegendCollapsed(!legendCollapsed)}
+        >
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-500/50"></div>
+            <span className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-slate-100">MatiArbio Interactive map</span>
+          </div>
+          <button 
+            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
+            aria-label={legendCollapsed ? "Expand legend" : "Collapse legend"}
+          >
+            <svg 
+              className={`w-3 h-3 sm:w-4 sm:h-4 text-slate-600 dark:text-slate-400 transition-transform duration-300 ${legendCollapsed ? 'rotate-180' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
         </div>
         
-        {/* Legend Section */}
-        <div className="border-t border-slate-200 dark:border-slate-700 pt-2 sm:pt-3">
-          <h4 className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-slate-100 mb-1 sm:mb-2 uppercase tracking-wider">Legend</h4>
-          <div className="space-y-1 sm:space-y-2">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full border-2 border-white dark:border-slate-800 shadow-sm"></div>
-              <span className="text-[10px] sm:text-xs text-slate-700 dark:text-slate-300 font-medium">Marine</span>
+        {/* Collapsible Content */}
+        <div className={`overflow-hidden transition-all duration-300 ${legendCollapsed ? 'max-h-0' : 'max-h-96'}`}>
+          <div className="px-2 sm:px-3 pb-2 sm:pb-3">
+            <div className="text-[9px] sm:text-[10px] text-slate-600 dark:text-slate-400 mb-3">
+              <div className="font-semibold">{filteredHotspots.length} hotspot{filteredHotspots.length !== 1 ? 's' : ''} shown</div>
+              <div className="opacity-75">Click markers for details</div>
             </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full border-2 border-white dark:border-slate-800 shadow-sm"></div>
-              <span className="text-[10px] sm:text-xs text-slate-700 dark:text-slate-300 font-medium">Terrestrial</span>
+            
+            {/* Legend Section */}
+            <div className="border-t border-slate-200 dark:border-slate-700 pt-2 sm:pt-3">
+              <h4 className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-slate-100 mb-1 sm:mb-2 uppercase tracking-wider">Legend</h4>
+              <div className="space-y-1 sm:space-y-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full border-2 border-white dark:border-slate-800 shadow-sm"></div>
+                  <span className="text-[10px] sm:text-xs text-slate-700 dark:text-slate-300 font-medium">Marine</span>
+                </div>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full border-2 border-white dark:border-slate-800 shadow-sm"></div>
+                  <span className="text-[10px] sm:text-xs text-slate-700 dark:text-slate-300 font-medium">Terrestrial</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

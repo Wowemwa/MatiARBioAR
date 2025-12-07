@@ -1,0 +1,303 @@
+
+---
+
+## 11. Troubleshooting
+
+### 11.1 Common Issues & Solutions
+
+**Website Won't Load:**
+- Check internet connection
+- Try different browser (Chrome, Edge, Firefox recommended)
+- Clear browser cache: Ctrl+Shift+Delete (Windows) or Cmd+Shift+Delete (Mac)
+- Disable browser extensions temporarily
+- Try incognito/private browsing mode
+
+**Map Not Displaying:**
+- Refresh the page (F5 or Ctrl+R)
+- Ensure JavaScript is enabled
+- Check browser console for errors (F12 → Console tab)
+- Verify internet connection is stable
+- Try zooming out to see if markers appear
+
+**AR Not Working:**
+- Grant camera permissions in browser settings
+- Use Chrome or Edge for best AR support
+- Ensure good lighting (not too bright or dark)
+- Hold device steady, 30-100cm from marker
+- Clean camera lens
+- Print markers clearly without wrinkles or glare
+- Check if device has gyroscope/accelerometer sensors
+
+**Search Not Finding Results:**
+- Check spelling of search terms
+- Try partial words or scientific names
+- Remove filters and try again
+- Refresh the page
+- Clear browser cache
+
+**Images Not Loading:**
+- Wait for lazy loading to complete
+- Check internet speed
+- Disable ad blockers temporarily
+- Try refreshing the page
+- Report broken images via feedback
+
+**Performance Issues:**
+- Close unnecessary browser tabs
+- Use WiFi instead of mobile data
+- Reduce active map layers
+- Clear browser cache and cookies
+- Close background applications
+- Update browser to latest version
+
+**Admin Panel Access Issues:**
+- Verify admin credentials
+- Check if session has expired (60 min timeout)
+- Clear cookies and login again
+- Contact super admin for access issues
+- Verify account has proper permissions
+
+### 11.2 Getting Help
+
+**Self-Help Resources:**
+- Read relevant sections of this manual
+- Check FAQ section below
+- Search GitHub issues for similar problems
+
+**Contact Support:**
+- Use in-app feedback button
+- GitHub Issues: https://github.com/Wowemwa/MatiARBioAR/issues
+- Include: browser version, device type, steps to reproduce, screenshots
+
+---
+
+## 12. Frequently Asked Questions (FAQ)
+
+### 12.1 General Questions
+
+**Q: Is this application free to use?**  
+A: Yes, MatiARBioAR is free for educational, research, and personal use.
+
+**Q: Do I need to install anything?**  
+A: No installation required! Access via web browser. Optionally install as PWA on mobile.
+
+**Q: Do I need an account?**  
+A: No account needed for browsing. Only administrators need accounts for content management.
+
+**Q: Can I use this offline?**  
+A: Basic features work offline after first visit (PWA). Maps and AR require internet.
+
+**Q: Is my privacy protected?**  
+A: Yes. No personal data collection. Camera is used locally only, video never uploaded.
+
+### 12.2 Species & Data Questions
+
+**Q: How many species are in the database?**  
+A: The database is continuously growing. Check Explorer for current count.
+
+**Q: How accurate is the conservation status?**  
+A: Based on IUCN Red List and verified with local data. Regularly updated.
+
+**Q: Can I submit species observations?**  
+A: Yes! Use the feedback form to submit sightings with photos, location, and date.
+
+**Q: What if I find an error?**  
+A: Report via feedback button with specific details. Admin team reviews all submissions.
+
+**Q: Why isn't [specific species] included?**  
+A: Database focuses on documented species in Mati City. Submit suggestions via feedback.
+
+### 12.3 Technical Questions
+
+**Q: Which browsers work best?**  
+A: Chrome and Edge (best for AR), Firefox, Safari. Use latest versions.
+
+**Q: Why is AR not working on my iPhone?**  
+A: AR.js has limited iOS support. Use Safari and grant camera permissions. Android recommended for AR.
+
+**Q: How much mobile data does this use?**  
+A: ~5MB initial load, ~1-2MB per species page, ~5MB for AR sessions. WiFi recommended.
+
+### 12.4 Educational Use
+
+**Q: Can teachers use this in classrooms?**  
+A: Absolutely! Designed for educational use. Projector-friendly interface included.
+
+**Q: Are there lesson plans available?**  
+A: Basic educational resources included. More comprehensive materials in development.
+
+**Q: How do I cite this in research?**  
+A: "MatiARBioAR (2025). Mati City Biodiversity Explorer. https://github.com/Wowemwa/MatiARBioAR. Accessed [date]."
+
+### 12.5 Conservation Questions
+
+**Q: How can I help protect these species?**  
+A: Learn about threats, support conservation organizations, participate in citizen science, spread awareness.
+
+**Q: Can I visit these conservation sites?**  
+A: Many sites are open to public with guidelines. Check site details for visitor information and restrictions.
+
+**Q: How can I report wildlife sightings?**  
+A: Submit through feedback form or contribute to iNaturalist. Include photos, location, and date.
+
+---
+
+## 13. Appendices
+
+### Appendix A: Glossary of Terms
+
+**Biodiversity** - The variety of all life forms including species, genetic, and ecosystem diversity.
+
+**Conservation Status** - IUCN classification indicating a species' risk of extinction (CR, EN, VU, NT, LC, DD).
+
+**Endemic** - Species naturally occurring only in a specific geographic region (e.g., Philippines).
+
+**GIS (Geographic Information System)** - Technology for capturing, managing, and analyzing spatial/geographic data.
+
+**Hotspot (Biodiversity)** - Area with exceptional concentration of endemic species facing significant habitat loss.
+
+**IUCN** - International Union for Conservation of Nature, global authority on conservation status.
+
+**Marker-based AR** - Augmented reality activated by recognizing and tracking printed markers/images.
+
+**PWA (Progressive Web App)** - Web application that can be installed and work offline like native apps.
+
+**Taxon (plural: Taxa)** - Taxonomic group of any rank (species, genus, family, order, etc.).
+
+**WGS84** - World Geodetic System 1984, standard coordinate reference system for GPS and mapping.
+
+### Appendix B: Conservation Status Guide
+
+| Code | IUCN Category | Description | Color Code |
+|------|---------------|-------------|------------|
+| **CR** | Critically Endangered | Extremely high risk of extinction | 🔴 Red |
+| **EN** | Endangered | High risk of extinction | 🟠 Orange |
+| **VU** | Vulnerable | High risk of becoming endangered | 🟡 Yellow |
+| **NT** | Near Threatened | Likely to become threatened soon | 🔵 Blue |
+| **LC** | Least Concern | Widespread and abundant | 🟢 Green |
+| **DD** | Data Deficient | Inadequate information | ⚪ Gray |
+
+### Appendix C: Quick Reference
+
+**Keyboard Shortcuts:**
+- `Ctrl/Cmd + F` - Search species
+- `Esc` - Close modal or popup
+- `Ctrl/Cmd + +/-` - Zoom in/out
+- `F11` - Full screen mode
+- `F5` - Refresh page
+- Arrow keys - Navigate through results
+
+**Mobile Touch Gestures:**
+- Swipe left/right - Navigate image galleries
+- Pinch to zoom - Map and AR viewing
+- Two-finger drag - Pan map
+- Double tap - Quick zoom to location
+- Swipe down - Refresh/close modal
+
+**Common URLs:**
+- Home: `/`
+- Species Explorer: `/explorer`
+- GIS Map: `/map`
+- AR Experience: `/ar`
+- About: `/about`
+- Admin Panel: `/admin` (requires login)
+
+**Color Codes:**
+- 🔴 Red - Critically Endangered
+- 🟠 Orange - Endangered
+- 🟡 Yellow - Vulnerable
+- 🔵 Blue - Near Threatened / Marine
+- 🟢 Green - Least Concern / Terrestrial
+- ⭐ Purple - Endemic species
+
+### Appendix D: Educational Resources
+
+**For Teachers:**
+- Use species profiles for lesson content
+- AR experiences for virtual field trips
+- Map exploration for geography lessons
+- Conservation status for environmental education
+- Scientific names for taxonomy lessons
+
+**For Students:**
+- Species identification practice
+- Ecosystem research projects
+- Conservation awareness campaigns
+- Field observation journals
+- AR scavenger hunts
+
+**Activity Ideas:**
+- Compare endemic vs introduced species
+- Map species distribution patterns
+- Create conservation action plans
+- Design AR markers for local species
+- Document biodiversity in your area
+
+### Appendix E: Contact & Support
+
+**Project Information:**
+- **Repository:** https://github.com/Wowemwa/MatiARBioAR
+- **Developer:** Wowemwa
+- **Bug Reports:** GitHub Issues
+- **Feature Requests:** GitHub Discussions
+
+**Conservation Partners:**
+- **DENR** - Department of Environment and Natural Resources
+- **Mati City LGU** - Local Government Unit
+- **Local NGOs** - Conservation organizations
+
+**Contributing:**
+- Report bugs and issues
+- Share feedback and suggestions
+- Contribute species observations
+- Participate in citizen science
+
+### Appendix F: Acknowledgments
+
+This project would not be possible without:
+
+- **Scientific Community** - Researchers who documented Mati City's biodiversity
+- **iNaturalist Contributors** - Community observations and photos
+- **Conservation Organizations** - DENR, LGUs, and local NGOs
+- **Open Source Community** - Developers of React, Leaflet, A-Frame, and other tools
+- **OpenStreetMap** - Volunteers providing map data
+- **Educational Institutions** - Supporting biodiversity research
+- **Local Communities** - Stewards of natural heritage
+
+---
+
+## 14. License & Legal Information
+
+**Software License:**  
+MIT License - Free to use, modify, and distribute with attribution.
+
+**Content License:**  
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0)
+- ✅ Share and adapt content
+- ✅ Attribution required
+- ❌ Commercial use prohibited without permission
+- ✅ Share derivatives under same license
+
+**Third-Party Licenses:**
+- React, Leaflet, A-Frame: Various open source licenses
+- OpenStreetMap data: ODbL (Open Database License)
+- Species images: Individual attributions in captions
+
+**Disclaimer:**  
+This application is provided for educational and informational purposes. While we strive for accuracy, species information should be verified with official sources for critical conservation decisions. The developers are not liable for any consequences arising from the use of this application.
+
+**Copyright © 2025 MatiARBioAR Project Team**
+
+---
+
+**End of User Manual**
+
+**Document Version:** 2.0 - Comprehensive Edition  
+**Last Updated:** December 5, 2025  
+**For Capstone Project Documentation**
+
+---
+
+*For the most up-to-date information, visit: https://github.com/Wowemwa/MatiARBioAR*
+
+*Thank you for using MatiARBioAR to explore and protect Mati City's incredible biodiversity!* 🌿🦜🌊
