@@ -89,8 +89,25 @@ export default function FeedbackFloating() {
     <div aria-live="polite">
       {/* Floating button */}
       <div className="fixed right-6 bottom-6 z-50 flex flex-col items-end gap-3">
-        <div>
-
+        {/* Request Species Addition Button - Coming Soon */}
+        <div className="relative group">
+          {/* Coming Soon Tooltip */}
+          <div className="absolute bottom-full mb-2 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+            <div className="bg-slate-800 dark:bg-slate-700 text-white px-3 py-2 rounded-lg shadow-lg text-xs whitespace-nowrap">
+              Coming Soon! 🚀
+              <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800 dark:border-t-slate-700"></div>
+            </div>
+          </div>
+          
+          <button
+            disabled
+            className="flex items-center justify-center w-14 h-14 rounded-full bg-slate-300 dark:bg-slate-700 text-slate-400 dark:text-slate-500 shadow-lg cursor-not-allowed grayscale opacity-60"
+            aria-label="Request species addition - Coming soon"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
         </div>
 
         <div className="relative">
