@@ -129,10 +129,6 @@ export default function SpeciesDetailModal({ species, isOpen, onClose }: Species
                       {species.scientificName}
                     </p>
                   </div>
-
-                  <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed max-w-3xl">
-                    {species.blurb || species.description}
-                  </p>
                 </div>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState, useCallback } from 'react'
+import { createContext, ReactNode, useContext, useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { supabase } from '../supabaseClient'
 import { Hotspot, SpeciesDetail } from '../data/mati-hotspots'
 
@@ -87,10 +87,12 @@ interface DataProviderProps {
   children: ReactNode
 }
 
-const SPECIES_STORAGE_KEY = 'mati-species-data:v2'
-const HOTSPOTS_STORAGE_KEY = 'mati-hotspots-data:v2'
-const TEAM_STORAGE_KEY = 'mati-team-data:v2'
-const CACHE_DURATION = 10 * 60 * 1000 // 10 minutes
+const CACHE_VERSION = 'v3' // Increment to invalidate old cache
+const SPECIES_STORAGE_KEY = `mati-species-data:${CACHE_VERSION}`
+const HOTSPOTS_STORAGE_KEY = `mati-hotspots-data:${CACHE_VERSION}`
+const TEAM_STORAGE_KEY = `mati-team-data:${CACHE_VERSION}`
+const CACHE_VERSION_KEY = 'mati-cache-version'
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 // Configurable DB/network timeouts and retry behavior (use Vite env vars)
 const DB_TIMEOUT_MS = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_DB_TIMEOUT_MS)
   ? parseInt(String(import.meta.env.VITE_DB_TIMEOUT_MS))
@@ -135,6 +137,7 @@ export function DataProvider({ children }: DataProviderProps) {
   const [error, setError] = useState<string | undefined>(undefined)
   const [dataLoaded, setDataLoaded] = useState(false)
   const [isHydrating, setIsHydrating] = useState(false)
+  const initializationStarted = useRef(false)
 
   // Load data from Supabase
   const hydrate = useCallback(async (force = false) => {
@@ -144,34 +147,54 @@ export function DataProvider({ children }: DataProviderProps) {
       return
     }
 
+    // If data is already loaded and not forcing refresh, skip
+    if (dataLoaded && !force) {
+      console.log('[DataContext] Data already loaded, skipping hydration')
+      return
+    }
+
     // Try to load from cache first (unless force refresh)
     if (!force) {
       try {
-        const cachedSpecies = localStorage.getItem(SPECIES_STORAGE_KEY)
-        const cachedHotspots = localStorage.getItem(HOTSPOTS_STORAGE_KEY)
-        const cachedTeam = localStorage.getItem(TEAM_STORAGE_KEY)
-        const cacheTimestamp = localStorage.getItem('mati-data-cache-timestamp')
+        // Check cache version first
+        const storedVersion = localStorage.getItem(CACHE_VERSION_KEY)
+        if (storedVersion !== CACHE_VERSION) {
+          console.log('[DataContext] Cache version mismatch, clearing old cache')
+          localStorage.clear()
+          localStorage.setItem(CACHE_VERSION_KEY, CACHE_VERSION)
+        } else {
+          const cachedSpecies = localStorage.getItem(SPECIES_STORAGE_KEY)
+          const cachedHotspots = localStorage.getItem(HOTSPOTS_STORAGE_KEY)
+          const cachedTeam = localStorage.getItem(TEAM_STORAGE_KEY)
+          const cacheTimestamp = localStorage.getItem('mati-data-cache-timestamp')
 
-        if (cachedSpecies && cachedHotspots && cachedTeam && cacheTimestamp) {
-          const cacheAge = Date.now() - parseInt(cacheTimestamp)
-          
-          if (cacheAge < CACHE_DURATION) {
-            console.log('[DataContext] Loading data from cache (age:', Math.round(cacheAge / 1000), 'seconds)')
+          if (cachedSpecies && cachedHotspots && cachedTeam && cacheTimestamp) {
+            const cacheAge = Date.now() - parseInt(cacheTimestamp)
             
-            const speciesData = JSON.parse(cachedSpecies)
-            const hotspotsData = JSON.parse(cachedHotspots)
-            const teamData = JSON.parse(cachedTeam)
-            
-            setSpecies(speciesData)
-            setHotspots(hotspotsData)
-            setTeamMembers(teamData)
-            setDataLoaded(true)
-            setLoading(false)
-            
-            console.log('[DataContext] Data loaded from cache successfully')
-            return
-          } else {
-            console.log('[DataContext] Cache expired, loading fresh data')
+            if (cacheAge < CACHE_DURATION) {
+              console.log('[DataContext] Loading data from cache (age:', Math.round(cacheAge / 1000), 'seconds)')
+              
+              const speciesData = JSON.parse(cachedSpecies)
+              const hotspotsData = JSON.parse(cachedHotspots)
+              const teamData = JSON.parse(cachedTeam)
+              
+              // Validate cached data
+              if (Array.isArray(speciesData) && Array.isArray(hotspotsData) && Array.isArray(teamData) &&
+                  speciesData.length > 0 && hotspotsData.length > 0) {
+                setSpecies(speciesData)
+                setHotspots(hotspotsData)
+                setTeamMembers(teamData)
+                setDataLoaded(true)
+                setLoading(false)
+                
+                console.log('[DataContext] Data loaded from cache successfully')
+                return
+              } else {
+                console.warn('[DataContext] Cached data validation failed, will load fresh data')
+              }
+            } else {
+              console.log('[DataContext] Cache expired (age:', Math.round(cacheAge / 1000), 'seconds), loading fresh data')
+            }
           }
         }
       } catch (cacheError) {
@@ -355,11 +378,12 @@ export function DataProvider({ children }: DataProviderProps) {
 
           // Cache the data
           try {
+            localStorage.setItem(CACHE_VERSION_KEY, CACHE_VERSION)
             localStorage.setItem(SPECIES_STORAGE_KEY, JSON.stringify(transformedSpecies))
             localStorage.setItem(HOTSPOTS_STORAGE_KEY, JSON.stringify(updatedSites))
             localStorage.setItem(TEAM_STORAGE_KEY, JSON.stringify(transformedTeam))
             localStorage.setItem('mati-data-cache-timestamp', Date.now().toString())
-            console.log('[DataContext] Data cached successfully')
+            console.log('[DataContext] Data cached successfully (version:', CACHE_VERSION, ')')
           } catch (cacheError) {
             console.warn('[DataContext] Failed to cache data:', cacheError)
             // Continue without caching - data is still loaded
@@ -419,41 +443,63 @@ export function DataProvider({ children }: DataProviderProps) {
       setLoading(false)
       setIsHydrating(false)
     }
-  }, [])
+  }, [dataLoaded, isHydrating])
 
   // Clear cached data and force refresh
   const clearCache = useCallback(async () => {
     try {
+      console.log('[DataContext] Clearing cache and refreshing data...')
       localStorage.removeItem(SPECIES_STORAGE_KEY)
       localStorage.removeItem(HOTSPOTS_STORAGE_KEY)
       localStorage.removeItem(TEAM_STORAGE_KEY)
       localStorage.removeItem('mati-data-cache-timestamp')
+      localStorage.removeItem(CACHE_VERSION_KEY)
       console.log('[DataContext] Cache cleared successfully')
       
       // Force refresh data
+      setDataLoaded(false)
       await hydrate(true)
     } catch (error) {
       console.error('[DataContext] Failed to clear cache:', error)
+      throw error
     }
   }, [hydrate])
 
+  // Only hydrate once on mount
   useEffect(() => {
-    void hydrate()
-  }, [hydrate])
+    // Prevent duplicate initialization in React StrictMode
+    if (initializationStarted.current) {
+      return
+    }
+    
+    initializationStarted.current = true
+    let mounted = true
+    
+    const initData = async () => {
+      if (mounted && !dataLoaded && !isHydrating) {
+        await hydrate()
+      }
+    }
+    
+    void initData()
+    
+    return () => {
+      mounted = false
+    }
+  }, []) // Empty dependency array - only run once on mount
 
   // Listen for service worker updates and refresh data when cache is cleared
   useEffect(() => {
     const handleServiceWorkerUpdate = () => {
-      console.log('[DataContext] Service worker updated, refreshing data...')
-      setDataLoaded(false)
-      void hydrate(true)
+      console.log('[DataContext] Service worker updated, will refresh on next page load')
+      // Don't force reload immediately, just mark cache as stale
+      localStorage.removeItem('mati-data-cache-timestamp')
     }
 
     // Listen for service worker controller change (when SW updates)
     const handleControllerChange = () => {
-      console.log('[DataContext] Service worker controller changed, refreshing data...')
-      setDataLoaded(false)
-      void hydrate(true)
+      console.log('[DataContext] Service worker controller changed')
+      // Only refresh if explicitly needed
     }
 
     if ('serviceWorker' in navigator) {
@@ -818,3 +864,6 @@ export function useData() {
   }
   return context
 }
+
+// Alias for consistency
+export const useDataContext = useData

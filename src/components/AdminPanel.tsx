@@ -892,47 +892,46 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="group">
-                      <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                        <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                        </svg>
-                        Common Name
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={editingSpecies.commonName}
-                          onChange={(e) => setEditingSpecies({...editingSpecies, commonName: e.target.value})}
-                          className="flex-1 px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all group-hover:border-blue-300 dark:group-hover:border-blue-700"
-                          placeholder="e.g., Philippine Eagle"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleAutofill}
-                          className="px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 whitespace-nowrap"
-                          title="Search internet for species information and generate ID"
-                        >
-                          ✨ Autofill
-                        </button>
-                      </div>
-                    </div>
-                    <div className="group">
-                      <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                        <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Scientific Name
-                      </label>
+                  <div className="group">
+                    <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                      <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                      Common Name
+                    </label>
+                    <div className="flex gap-2">
                       <input
                         type="text"
-                        value={editingSpecies.scientificName}
-                        onChange={(e) => setEditingSpecies({...editingSpecies, scientificName: e.target.value})}
-                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 italic transition-all group-hover:border-indigo-300 dark:group-hover:border-indigo-700"
-                        placeholder="Genus species"
+                        value={editingSpecies.commonName}
+                        onChange={(e) => setEditingSpecies({...editingSpecies, commonName: e.target.value})}
+                        className="flex-1 px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all group-hover:border-blue-300 dark:group-hover:border-blue-700"
+                        placeholder="e.g., Philippine Eagle"
                       />
+                      <button
+                        type="button"
+                        onClick={handleAutofill}
+                        className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 whitespace-nowrap flex items-center gap-2"
+                        title="Search internet for species information and generate ID"
+                      >
+                        ✨ Autofill
+                      </button>
                     </div>
+                  </div>
+
+                  <div className="group">
+                    <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                      <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Scientific Name
+                    </label>
+                    <input
+                      type="text"
+                      value={editingSpecies.scientificName}
+                      onChange={(e) => setEditingSpecies({...editingSpecies, scientificName: e.target.value})}
+                      className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 italic transition-all group-hover:border-indigo-300 dark:group-hover:border-indigo-700"
+                      placeholder="Genus species"
+                    />
                   </div>
 
                   <div className="group">

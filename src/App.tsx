@@ -8,7 +8,8 @@ import ModernHome from './components/ModernHome'
 import { WaveIcon, MountainIcon, SpeciesIcon, ARIcon, InfoIcon, MapIcon, EducationIcon, TechIcon, ConservationIcon, LeafIcon } from './components/Icons'
 import { HiMapPin, HiShieldCheck } from 'react-icons/hi2'
 import { GiButterfly } from 'react-icons/gi'
-import { MdAutoAwesome, MdWbSunny, MdNightlight } from 'react-icons/md'
+import { MdAutoAwesome, MdWbSunny, MdNightlight, MdPublic } from 'react-icons/md'
+import { PiPlantFill, PiPawPrintFill } from 'react-icons/pi'
 import { IoInformationCircle } from 'react-icons/io5'
 import useScrollPosition from './hooks/useScrollPosition'
 import { DataProvider, useData } from './context/DataContext'
@@ -258,11 +259,9 @@ const Navbar = memo(function Navbar() {
                 Live Beta Testing
               </span>
             </div>
-            <div className="relative flex items-center gap-2 rounded-full border-2 border-emerald-300/70 bg-gradient-to-r from-emerald-100/95 via-teal-100/95 to-blue-100/95 px-3 pt-1 pb-2 shadow-2xl backdrop-blur-3xl transition-all duration-500 hover:shadow-3xl hover:border-emerald-400/80 dark:border-emerald-400/60 dark:bg-gradient-to-r dark:from-emerald-800/80 dark:via-teal-800/80 dark:to-blue-800/80">
-              {/* Animated gradient overlays */}
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-blue-500/20 rounded-full animate-[gradient-bg_6s_ease-in-out_infinite] opacity-50" />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-blue-400/15 via-purple-400/15 to-emerald-400/15 rounded-full animate-[gradient-bg_8s_ease-in-out_infinite_reverse] opacity-50" />
-              <div className="pointer-events-none absolute inset-0 bg-white/10 dark:bg-white/5 rounded-full shadow-inner" />
+            <div className="relative flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-50/95 via-teal-50/95 to-blue-50/95 dark:from-emerald-950/95 dark:via-teal-950/95 dark:to-blue-950/95 px-3 py-2.5 shadow-md backdrop-blur-lg transition-all duration-300 border border-emerald-200/50 dark:border-emerald-700/50 hover:shadow-lg">
+              {/* Animated gradient accent */}
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-blue-500/5 to-purple-500/5 rounded-full animate-[gradient-shift_8s_ease-in-out_infinite]" />
               
               {navItems.map((item) => {
                 const isActive = location.pathname.startsWith(item.to)
@@ -271,34 +270,32 @@ const Navbar = memo(function Navbar() {
                   <NavLink
                     key={item.to}
                     to={item.to}
-                    className={`group relative z-10 inline-flex items-center gap-3 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-500 ${
+                    className={`group relative z-10 inline-flex items-center gap-2.5 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${
                       isActive
                         ? isAdminItem
-                          ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white shadow-xl scale-110'
-                          : 'bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500 text-white shadow-xl scale-110'
+                          ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md scale-105'
+                          : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md scale-105'
                         : isAdminItem
-                            ? 'text-purple-700 dark:text-purple-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-100/90 dark:hover:bg-purple-900/70 hover:scale-105 hover:shadow-lg'
-                            : 'text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white/90 dark:hover:bg-slate-700/70 hover:scale-105 hover:shadow-lg'
+                            ? 'text-slate-700 dark:text-slate-300 hover:bg-purple-50 dark:hover:bg-purple-900/30 hover:text-purple-700 dark:hover:text-purple-400 hover:scale-105'
+                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white hover:scale-105'
                     }`}
                   >
-                    {/* Glow effect for active state */}
+                    {/* Animated shimmer on active state */}
                     {isActive && (
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-500/30 via-teal-500/30 to-blue-500/30 blur-xl" />
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_2s_ease-in-out_infinite]" />
                     )}
                     
-                    <span className={`flex h-8 w-8 items-center justify-center rounded-full text-base transition-all duration-500 ${
+                    <span className={`flex h-7 w-7 items-center justify-center rounded-full transition-all duration-300 ${
                       isActive
-                        ? 'bg-white/25 text-white shadow-lg'
+                        ? 'bg-white/20 text-white animate-[pulse_2s_ease-in-out_infinite]'
                         : isAdminItem
-                            ? 'bg-purple-100/90 dark:bg-purple-900/50 border border-purple-200/90 dark:border-purple-700/70 group-hover:bg-purple-50 dark:group-hover:bg-purple-900/70 group-hover:scale-110'
-                            : 'bg-white/70 dark:bg-slate-600/70 border border-white/90 dark:border-slate-500/70 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-900/40 group-hover:scale-110'
+                            ? 'text-purple-500 dark:text-purple-400 group-hover:text-purple-600 dark:group-hover:text-purple-300 group-hover:rotate-12 group-hover:scale-110'
+                            : 'text-slate-500 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 group-hover:rotate-12 group-hover:scale-110'
                     }`}>
                       {item.badge}
                     </span>
                     
-                    <div className="flex flex-col items-start">
-                      <span className="leading-tight">{item.label}</span>
-                    </div>
+                    <span className="leading-tight group-hover:tracking-wide transition-all duration-300">{item.label}</span>
                   </NavLink>
                 )
               })}
@@ -1578,7 +1575,7 @@ const ARDemo = memo(function ARDemo() {
   const [showARExperienceModal, setShowARExperienceModal] = useState(false)
   const [arExperienceUrl, setArExperienceUrl] = useState<string>('')
   const [showAboutPopup, setShowAboutPopup] = useState(false)
-  const [showAboutContent, setShowAboutContent] = useState(false)
+  const [showAboutContent, setShowAboutContent] = useState(!isMobileView)
 
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('')
@@ -1685,72 +1682,39 @@ const ARDemo = memo(function ARDemo() {
           {/* Filter Buttons */}
           <div className="flex flex-wrap justify-center gap-2">
             {/* Category Filters */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSelectedCategory(selectedCategory === 'all' ? null : 'all')}
-                className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
-                  selectedCategory === 'all'
-                    ? 'bg-emerald-500 text-white shadow-lg'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                }`}
-              >
-                All Categories
-              </button>
-              <button
-                onClick={() => setSelectedCategory(selectedCategory === 'fauna' ? null : 'fauna')}
-                className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
-                  selectedCategory === 'fauna'
-                    ? 'bg-blue-500 text-white shadow-lg'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                }`}
-              >
-                🦊 Fauna
-              </button>
-              <button
-                onClick={() => setSelectedCategory(selectedCategory === 'flora' ? null : 'flora')}
-                className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
-                  selectedCategory === 'flora'
-                    ? 'bg-green-500 text-white shadow-lg'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                }`}
-              >
-                🌱 Flora
-              </button>
-            </div>
-
-            {/* Status Filters */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSelectedStatus(selectedStatus === 'all' ? null : 'all')}
-                className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
-                  selectedStatus === 'all'
-                    ? 'bg-purple-500 text-white shadow-lg'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                }`}
-              >
-                All Status
-              </button>
-              <button
-                onClick={() => setSelectedStatus(selectedStatus === 'CR' ? null : 'CR')}
-                className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
-                  selectedStatus === 'CR'
-                    ? 'bg-red-500 text-white shadow-lg'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                }`}
-              >
-                Critically Endangered
-              </button>
-              <button
-                onClick={() => setSelectedStatus(selectedStatus === 'EN' ? null : 'EN')}
-                className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
-                  selectedStatus === 'EN'
-                    ? 'bg-orange-500 text-white shadow-lg'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                }`}
-              >
-                Endangered
-              </button>
-            </div>
+            <button
+              onClick={() => setSelectedCategory(selectedCategory === 'all' ? null : 'all')}
+              className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 ${
+                selectedCategory === 'all'
+                  ? 'bg-emerald-500 text-white shadow-lg'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+              }`}
+            >
+              <MdPublic className="w-4 h-4" />
+              All Categories
+            </button>
+            <button
+              onClick={() => setSelectedCategory(selectedCategory === 'fauna' ? null : 'fauna')}
+              className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 ${
+                selectedCategory === 'fauna'
+                  ? 'bg-blue-500 text-white shadow-lg'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+              }`}
+            >
+              <PiPawPrintFill className="w-4 h-4" />
+              Fauna
+            </button>
+            <button
+              onClick={() => setSelectedCategory(selectedCategory === 'flora' ? null : 'flora')}
+              className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 ${
+                selectedCategory === 'flora'
+                  ? 'bg-green-500 text-white shadow-lg'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+              }`}
+            >
+              <PiPlantFill className="w-4 h-4" />
+              Flora
+            </button>
           </div>
 
           {/* Results Count */}
@@ -2065,72 +2029,74 @@ const ARDemo = memo(function ARDemo() {
 
                     {/* Right Column - Species Information */}
                     <div className="space-y-4 sm:space-y-6">
-                      {/* Species Overview Cards - Grid Layout */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                        {/* Conservation Status */}
-                        <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 p-4 rounded-xl border border-amber-200/50 dark:border-amber-700/50">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-amber-500 rounded-lg">
-                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                              </svg>
+                      {/* Species Overview Cards - Grid Layout - Hidden on mobile as they appear in About popup */}
+                      {!isMobileView && (
+                        <>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                            {/* Conservation Status */}
+                            <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 p-4 rounded-xl border border-amber-200/50 dark:border-amber-700/50">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 bg-amber-500 rounded-lg">
+                                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                  </svg>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wide">Status</p>
+                                  <p className="text-sm font-bold text-amber-800 dark:text-amber-200">
+                                    {selectedSpeciesData.status === 'CR' ? 'Critically Endangered' :
+                                     selectedSpeciesData.status === 'EN' ? 'Endangered' :
+                                     selectedSpeciesData.status === 'VU' ? 'Vulnerable' :
+                                     selectedSpeciesData.status === 'NT' ? 'Near Threatened' :
+                                     'Least Concern'}
+                                  </p>
+                                </div>
+                              </div>
                             </div>
-                            <div>
-                              <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wide">Status</p>
-                              <p className="text-sm font-bold text-amber-800 dark:text-amber-200">
-                                {selectedSpeciesData.status === 'CR' ? 'Critically Endangered' :
-                                 selectedSpeciesData.status === 'EN' ? 'Endangered' :
-                                 selectedSpeciesData.status === 'VU' ? 'Vulnerable' :
-                                 selectedSpeciesData.status === 'NT' ? 'Near Threatened' :
-                                 'Least Concern'}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
 
-                        {/* Category */}
-                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-xl border border-green-200/50 dark:border-green-700/50">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-green-500 rounded-lg">
-                              <span className="text-sm">{selectedSpeciesData.category === 'fauna' ? '🦊' : '🌱'}</span>
-                            </div>
-                            <div>
-                              <p className="text-xs font-semibold text-green-700 dark:text-green-300 uppercase tracking-wide">Category</p>
-                              <p className="text-sm font-bold text-green-800 dark:text-green-200">
-                                {selectedSpeciesData.category === 'fauna' ? 'Fauna' : 'Flora'}
-                              </p>
+                            {/* Category */}
+                            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-xl border border-green-200/50 dark:border-green-700/50">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 bg-green-500 rounded-lg">
+                                  <span className="text-sm">{selectedSpeciesData.category === 'fauna' ? '🦊' : '🌱'}</span>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-green-700 dark:text-green-300 uppercase tracking-wide">Category</p>
+                                  <p className="text-sm font-bold text-green-800 dark:text-green-200">
+                                    {selectedSpeciesData.category === 'fauna' ? 'Fauna' : 'Flora'}
+                                  </p>
+                                </div>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </div>
 
-                      {/* Habitat */}
-                      <div className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 p-4 rounded-xl border border-teal-200/50 dark:border-teal-700/50">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-teal-500 rounded-lg">
-                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                          {/* Habitat */}
+                          <div className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 p-4 rounded-xl border border-teal-200/50 dark:border-teal-700/50">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-teal-500 rounded-lg">
+                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-teal-700 dark:text-teal-300 uppercase tracking-wide">Habitat</p>
+                                <p className="text-sm font-bold text-teal-800 dark:text-teal-200">
+                                  {selectedSpeciesData.habitat}
+                                </p>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-xs font-semibold text-teal-700 dark:text-teal-300 uppercase tracking-wide">Habitat</p>
-                            <p className="text-sm font-bold text-teal-800 dark:text-teal-200">
-                              {selectedSpeciesData.habitat}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                        </>
+                      )}
 
                       {/* Full Description */}
                       <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200/50 dark:border-slate-700/50">
                         <h3 
-                          className={`text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 ${isMobileView ? 'cursor-pointer hover:text-purple-600 dark:hover:text-purple-400 transition-colors' : 'cursor-pointer hover:text-purple-600 dark:hover:text-purple-400 transition-colors'}`}
+                          className={`text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 ${isMobileView ? 'cursor-pointer hover:text-purple-600 dark:hover:text-purple-400 transition-colors' : ''}`}
                           onClick={() => {
                             if (isMobileView) {
                               setShowAboutPopup(true);
                               setShowAboutContent(true); // Show content immediately when popup opens
-                            } else {
-                              setShowAboutContent(!showAboutContent);
                             }
                           }}
                         >
@@ -2138,22 +2104,6 @@ const ARDemo = memo(function ARDemo() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                           About {selectedSpeciesData.commonName}
-                          {!isMobileView && (
-                            <span className="text-sm font-normal text-purple-600 dark:text-purple-400 ml-2">
-                              - {showAboutContent ? 'Tap to hide information' : 'Tap to view full information'}
-                            </span>
-                          )}
-                          {!isMobileView && (
-                            <svg className="w-4 h-4 text-purple-500 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          )}
-                          {!isMobileView && (
-                            <svg className={`w-4 h-4 text-purple-500 ml-2 transition-transform duration-200 ${showAboutContent ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          )}
                           {isMobileView && (
                             <svg className="w-4 h-4 text-purple-500 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -2161,7 +2111,7 @@ const ARDemo = memo(function ARDemo() {
                             </svg>
                           )}
                         </h3>
-                        {(!isMobileView && showAboutContent) && (
+                        {!isMobileView && (
                           <div className="space-y-4">
                             <div>
                               <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base break-words hyphens-auto">

@@ -60,17 +60,27 @@ export async function getWikipediaSummary(scientificName: string): Promise<{
 export function parseEcologicalInfo(extract: string): Partial<EcologicalInfo> {
   const info: Partial<EcologicalInfo> = {}
   
-  // Extract habitat information
+  // Extract habitat information with more flexible patterns
   const habitatPatterns = [
-    /(?:found|occurs|lives|inhabits|native to) (?:in|on|at) ([^.]+?)(?:\.|,)/i,
-    /habitat[s]? (?:include[s]?|is|are) ([^.]+?)(?:\.|,)/i
+    /(?:found|occurs|lives|inhabits|native|endemic|distributed|present|common) (?:in|on|at|throughout|across) ([^.]+?(?:forest|reef|ocean|sea|marine|freshwater|terrestrial|mountain|coastal|wetland|grassland|woodland|jungle|river|lake|stream|mangrove|swamp|savanna|desert|island|beach|cave)[^.]*?)(?:\.|,|;)/i,
+    /habitat[s]? (?:include[s]?|is|are|consist[s]? of|range[s]? from) ([^.]+?)(?:\.|,|;)/i,
+    /(?:typically|usually|primarily|mainly|often) (?:found|occurs|lives|inhabits) (?:in|on|at) ([^.]+?)(?:\.|,|;)/i,
+    /(?:in|on|at) (?:the )?([^.]*?(?:forest|reef|ocean|sea|marine|freshwater|terrestrial|mountain|coastal|wetland|grassland)[^.]{0,50}?)(?:\.|,|and|where)/i,
   ]
   
   for (const pattern of habitatPatterns) {
     const match = extract.match(pattern)
-    if (match && match[1]) {
+    if (match && match[1] && match[1].length > 5) {
       info.habitat = match[1].trim()
       break
+    }
+  }
+  
+  // If no habitat found, check if first sentence mentions location/habitat keywords
+  if (!info.habitat) {
+    const firstSentence = extract.split(/[.!?]/)[0]
+    if (firstSentence && /(?:forest|reef|ocean|sea|marine|freshwater|terrestrial|mountain|coastal|wetland|grassland|woodland|river|lake|island|tropical|subtropical)/i.test(firstSentence)) {
+      info.habitat = firstSentence.trim()
     }
   }
   

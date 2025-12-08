@@ -102,6 +102,7 @@ const ModernNav = memo(function ModernNav() {
                 onClick={toggleTheme}
                 className="relative ml-2 p-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-300 group overflow-hidden"
                 aria-label="Toggle theme"
+                title="Toggle theme"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="relative">

@@ -3,6 +3,10 @@ import Fuse from 'fuse.js'
 import { useData } from '../context/DataContext'
 import { MountainIcon, SpeciesIcon } from '../components/Icons'
 import SpeciesDetailModal from './SpeciesDetailModal'
+import { BiFilterAlt } from 'react-icons/bi'
+import { MdPublic } from 'react-icons/md'
+import { PiPlantFill, PiPawPrintFill } from 'react-icons/pi'
+import { FaStar } from 'react-icons/fa'
 
 const STATUS_ORDER = ['CR','EN','VU','NT','LC','DD']
 const ITEMS_PER_PAGE = 50
@@ -158,9 +162,7 @@ export default function BiodiversityExplorer() {
               <div className="space-y-4">
                 <div className="flex flex-wrap gap-3">
                   <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
-                    </svg>
+                    <BiFilterAlt className="w-4 h-4" />
                     Conservation Status:
                   </span>
                   {['all','CR','EN','VU','NT','LC','DD'].map(s => (
@@ -184,9 +186,9 @@ export default function BiodiversityExplorer() {
                     Type:
                   </span>
                   {[
-                    { key: 'all', label: 'All Types', icon: '🌍' },
-                    { key: 'flora', label: 'Flora', icon: '🌿' },
-                    { key: 'fauna', label: 'Fauna', icon: '🐾' }
+                    { key: 'all', label: 'All Types', Icon: MdPublic },
+                    { key: 'flora', label: 'Flora', Icon: PiPlantFill },
+                    { key: 'fauna', label: 'Fauna', Icon: PiPawPrintFill }
                   ].map(t => (
                     <button 
                       key={t.key} 
@@ -197,7 +199,7 @@ export default function BiodiversityExplorer() {
                           : 'bg-white/80 dark:bg-slate-800/80 border-white/60 dark:border-white/20 hover:border-purple-400 dark:hover:border-purple-500 text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20'
                       }`}
                     >
-                      <span>{t.icon}</span>
+                      <t.Icon className="w-4 h-4" />
                       <span>{t.label}</span>
                     </button>
                   ))}
@@ -224,8 +226,8 @@ export default function BiodiversityExplorer() {
                       onChange={e=>setEndemicOnly(e.target.checked)} 
                       className="w-4 h-4 text-amber-500 bg-transparent border-2 border-amber-400 rounded focus:ring-amber-500 focus:ring-2 transition-colors" 
                     />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-amber-600 dark:group-hover:text-amber-400 flex items-center gap-1">
-                      <span>⭐</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-amber-600 dark:group-hover:text-amber-400 flex items-center gap-2">
+                      <FaStar className="w-3.5 h-3.5" />
                       <span>Endemic Only</span>
                     </span>
                   </label>

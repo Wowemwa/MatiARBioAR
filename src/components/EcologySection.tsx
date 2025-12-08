@@ -69,11 +69,12 @@ export default function EcologySection({
     }
   }
 
-  // Combine existing data with fetched data
-  const habitat = ecologicalInfo?.habitat || existingHabitat || 'Habitat information not available'
+  // Combine existing data with fetched data - prioritize database then online sources
+  const habitat = existingHabitat || ecologicalInfo?.habitat
   const conservationStatusText = ecologicalInfo?.conservationStatus || existingStatus
   const diet = ecologicalInfo?.diet
   const nativeRange = ecologicalInfo?.nativeRange
+  const hasOnlineHabitat = !existingHabitat && ecologicalInfo?.habitat
 
   const LinkWrapper = isModal ? 'div' : Link
 
@@ -93,20 +94,50 @@ export default function EcologySection({
         {/* Left Column */}
         <div className="space-y-3 sm:space-y-4 md:space-y-5 lg:space-y-6">
           {/* Habitat */}
-          <div className="p-3 sm:p-4 md:p-5 lg:p-6 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg sm:rounded-xl lg:rounded-2xl border border-emerald-200/50 dark:border-emerald-700/30">
-            <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
-              <span className="text-emerald-500 text-sm sm:text-base">🏡</span>
-              Habitat
-            </h3>
-            <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{habitat}</p>
-            {nativeRange && (
-              <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-emerald-200/50 dark:border-emerald-700/30">
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                  <span className="font-semibold">Native Range:</span> {nativeRange}
-                </p>
-              </div>
-            )}
-          </div>
+          {habitat ? (
+            <div className="p-3 sm:p-4 md:p-5 lg:p-6 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg sm:rounded-xl lg:rounded-2xl border border-emerald-200/50 dark:border-emerald-700/30">
+              <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+                <span className="text-emerald-500 text-sm sm:text-base">🏡</span>
+                Habitat
+                {hasOnlineHabitat && (
+                  <span className="ml-auto text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full font-normal">
+                    From Wikipedia
+                  </span>
+                )}
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{habitat}</p>
+              {nativeRange && (
+                <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-emerald-200/50 dark:border-emerald-700/30">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                    <span className="font-semibold">Native Range:</span> {nativeRange}
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : loading ? (
+            <div className="p-3 sm:p-4 md:p-5 lg:p-6 bg-gray-50 dark:bg-gray-800/50 rounded-lg sm:rounded-xl lg:rounded-2xl border border-gray-200/50 dark:border-gray-700/30">
+              <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+                <span className="text-gray-400 text-sm sm:text-base">🏡</span>
+                Habitat
+                <div className="ml-auto">
+                  <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-emerald-500 border-t-transparent"></div>
+                </div>
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 italic">
+                Searching for habitat information online...
+              </p>
+            </div>
+          ) : (
+            <div className="p-3 sm:p-4 md:p-5 lg:p-6 bg-gray-50 dark:bg-gray-800/50 rounded-lg sm:rounded-xl lg:rounded-2xl border border-gray-200/50 dark:border-gray-700/30">
+              <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+                <span className="text-gray-400 text-sm sm:text-base">🏡</span>
+                Habitat
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 italic">
+                Information about where this species lives (e.g., forests, coral reefs, grasslands, rivers, mountains) is being researched and will be added soon.
+              </p>
+            </div>
+          )}
 
           {/* Diet (for fauna) */}
           {diet && category === 'fauna' && (
