@@ -151,8 +151,8 @@ const Navbar = memo(function Navbar() {
   const { isMobileView, deviceInfo } = useDeviceDetection()
   const navItems = useMemo(() => [
     { to: '/biodiversity', label: 'Biodiversity', badge: <GiButterfly className="w-5 h-5" /> },
-    { to: '/ar', label: 'Augmented Reality', badge: <MdAutoAwesome className="w-5 h-5" /> },
     { to: '/gis', label: 'Interactive Map', badge: <HiMapPin className="w-5 h-5" /> },
+    { to: '/ar', label: 'Augmented Reality', badge: <MdAutoAwesome className="w-5 h-5" /> },
     ...(isAdmin ? [{ to: '/mati-secret-admin-2024', label: 'Admin', badge: <HiShieldCheck className="w-5 h-5" />, adminOnly: true }] : []),
     { to: '/about', label: 'About', badge: <IoInformationCircle className="w-5 h-5" /> },
   ], [isAdmin])
