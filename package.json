@@ -33,7 +33,7 @@
     "react-icons": "^5.5.0",
     "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.30.1",
-    "three": "^0.158.0",
+    "three": "^0.160.0",
     "three-panorama-controls": "^1.1.11"
   },
   "devDependencies": {
