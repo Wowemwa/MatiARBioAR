@@ -124,7 +124,7 @@ const PanoramaScene = ({ imageUrl, onDebugUpdate, calibrationOffsets, shouldReca
     }
   }, [gyroscopeEnabled, onDebugUpdate])
 
-  // Apply device orientation to camera
+  // Apply device orientation to camera with smooth blending to allow touch controls
   useFrame(() => {
     if (!gyroEnabled || !gyroscopeEnabled || !deviceOrientation.alpha || !deviceOrientation.beta || !deviceOrientation.gamma) return
 
@@ -139,11 +139,11 @@ const PanoramaScene = ({ imageUrl, onDebugUpdate, calibrationOffsets, shouldReca
 
     // Create quaternion from device orientation
     const euler = new Euler(beta, alpha, -gamma, 'YXZ')
-    const quaternion = new Quaternion()
-    quaternion.setFromEuler(euler)
+    const targetQuaternion = new Quaternion()
+    targetQuaternion.setFromEuler(euler)
 
-    // Apply to camera
-    camera.quaternion.copy(quaternion)
+    // Smoothly blend gyroscope input with current camera rotation (allows touch controls to work)
+    camera.quaternion.slerp(targetQuaternion, 0.3)
   })
 
   // Debug gyroscope availability
