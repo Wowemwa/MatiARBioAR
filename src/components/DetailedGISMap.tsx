@@ -9,7 +9,14 @@ import { TextureLoader, BackSide, Euler, Quaternion } from 'three'
 import { PanoramaControls } from 'three-panorama-controls/react'
 
 // Panorama Scene Component using React Three Fiber
-const PanoramaScene = ({ imageUrl, onDebugUpdate }: { imageUrl: string, onDebugUpdate: (data: any) => void }) => {
+const PanoramaScene = ({ imageUrl, onDebugUpdate, calibrationOffsets, shouldRecalibrate, onRecalibrateDone, setCalibrationOffsets }: { 
+  imageUrl: string, 
+  onDebugUpdate: (data: any) => void,
+  calibrationOffsets: { alpha: number, beta: number, gamma: number },
+  shouldRecalibrate: boolean,
+  onRecalibrateDone: () => void,
+  setCalibrationOffsets: (offsets: { alpha: number, beta: number, gamma: number }) => void
+}) => {
   const texture = useLoader(TextureLoader, imageUrl)
   const { camera } = useThree()
   const [gyroscopeEnabled, setGyroscopeEnabled] = useState(false)
@@ -18,6 +25,25 @@ const PanoramaScene = ({ imageUrl, onDebugUpdate }: { imageUrl: string, onDebugU
     beta: null,
     gamma: null
   })
+
+  // Recalibrate gyroscope
+  const recalibrateGyroscope = () => {
+    if (deviceOrientation.alpha !== null && deviceOrientation.beta !== null && deviceOrientation.gamma !== null) {
+      setCalibrationOffsets({
+        alpha: deviceOrientation.alpha,
+        beta: deviceOrientation.beta,
+        gamma: deviceOrientation.gamma
+      })
+    }
+  }
+
+  // Handle recalibration trigger
+  useEffect(() => {
+    if (shouldRecalibrate) {
+      recalibrateGyroscope()
+      onRecalibrateDone()
+    }
+  }, [shouldRecalibrate, deviceOrientation, setCalibrationOffsets, onRecalibrateDone])
 
   // Request gyroscope permission when component mounts
   useEffect(() => {
@@ -82,9 +108,9 @@ const PanoramaScene = ({ imageUrl, onDebugUpdate }: { imageUrl: string, onDebugU
     // Beta = front/back tilt (X rotation)
     // Gamma = left/right tilt (Y rotation)
 
-    const alpha = (deviceOrientation.alpha * Math.PI) / 180 // Convert to radians
-    const beta = (deviceOrientation.beta * Math.PI) / 180
-    const gamma = (deviceOrientation.gamma * Math.PI) / 180
+    const alpha = ((deviceOrientation.alpha - calibrationOffsets.alpha) * Math.PI) / 180 // Convert to radians
+    const beta = ((deviceOrientation.beta - calibrationOffsets.beta) * Math.PI) / 180
+    const gamma = ((deviceOrientation.gamma - calibrationOffsets.gamma) * Math.PI) / 180
 
     // Create quaternion from device orientation
     const euler = new Euler(beta, alpha, -gamma, 'YXZ')
@@ -175,6 +201,8 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
     gyroscopeEnabled: boolean;
     deviceOrientation: { alpha: number | null; beta: number | null; gamma: number | null } | null;
   }>({ gyroscopeEnabled: false, deviceOrientation: null })
+  const [calibrationOffsets, setCalibrationOffsets] = useState({ alpha: 0, beta: 0, gamma: 0 })
+  const [shouldRecalibrate, setShouldRecalibrate] = useState(false)
   
   // Admin marker placement state
   const [adminMode, setAdminMode] = useState(false)
@@ -1329,7 +1357,14 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
               camera={{ position: [0, 0, 5], fov: 75 }}
               style={{ width: '100%', height: '100%' }}
             >
-              <PanoramaScene imageUrl={currentSite.panoramicImage} onDebugUpdate={setPanoramaDebugData} />
+              <PanoramaScene 
+                imageUrl={currentSite.panoramicImage} 
+                onDebugUpdate={setPanoramaDebugData}
+                calibrationOffsets={calibrationOffsets}
+                shouldRecalibrate={shouldRecalibrate}
+                onRecalibrateDone={() => setShouldRecalibrate(false)}
+                setCalibrationOffsets={setCalibrationOffsets}
+              />
             </Canvas>
 
             {/* Control Instructions */}
@@ -1339,6 +1374,12 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
                 <div className="text-gray-300 text-xs">
                   • Drag to look around • Pinch to zoom • Device sensors for gyroscope
                 </div>
+                <button
+                  onClick={() => setShouldRecalibrate(true)}
+                  className="mt-2 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
+                >
+                  Recalibrate Gyroscope
+                </button>
               </div>
             </div>
 
@@ -1354,6 +1395,9 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
                     <div>α: {panoramaDebugData.deviceOrientation.alpha?.toFixed(1)}°</div>
                     <div>β: {panoramaDebugData.deviceOrientation.beta?.toFixed(1)}°</div>
                     <div>γ: {panoramaDebugData.deviceOrientation.gamma?.toFixed(1)}°</div>
+                    <div className="mt-1 border-t border-gray-600 pt-1">
+                      <div>Offsets: α:{calibrationOffsets.alpha.toFixed(1)} β:{calibrationOffsets.beta.toFixed(1)} γ:{calibrationOffsets.gamma.toFixed(1)}</div>
+                    </div>
                   </div>
                 )}
               </div>
