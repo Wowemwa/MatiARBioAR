@@ -261,3 +261,5 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 [![GitHub Forks](https://img.shields.io/github/forks/Wowemwa/MatiARBioAR?style=social)](https://github.com/Wowemwa/MatiARBioAR)
 
 </div>
+
+<!-- Deployment trigger -->
