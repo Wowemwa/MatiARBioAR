@@ -1341,8 +1341,8 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
 
       {/* Panoramic Viewer Modal */}
       {showPanoramic && currentSite?.panoramicImage && (
-        <div className="fixed inset-0 z-[1200] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative w-full h-full max-w-6xl max-h-[90vh] bg-black rounded-2xl overflow-hidden shadow-2xl">
+        <div className="fixed inset-0 z-[1200] bg-black">
+          <div className="relative w-full h-full bg-black overflow-hidden">
             <button
               onClick={() => setShowPanoramic(false)}
               className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-200"
