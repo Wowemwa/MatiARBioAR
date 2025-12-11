@@ -176,7 +176,7 @@ const PanoramaScene = ({ imageUrl, onDebugUpdate, calibrationOffsets, shouldReca
     <>
       {/* Panorama sphere with inverted geometry */}
       <mesh scale={[-1, 1, 1]}>
-        <sphereGeometry args={[10, 60, 20]} />
+        <sphereGeometry args={[10, 128, 64]} />
         <meshBasicMaterial map={texture} side={BackSide} />
       </mesh>
 
@@ -185,8 +185,8 @@ const PanoramaScene = ({ imageUrl, onDebugUpdate, calibrationOffsets, shouldReca
         makeDefault={true}
         enabled={true}
         zoomable
-        minFov={10}
-        maxFov={90}
+        minFov={40}
+        maxFov={75}
         zoomSpeed={0.05}
         panSpeed={0.1}
       />
@@ -1430,7 +1430,7 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
 
             {/* Modern Three.js Panoramic Viewer */}
             <Canvas
-              camera={{ position: [0, 0, 5], fov: 75 }}
+              camera={{ position: [0, 0, 0.1], fov: 60 }}
               style={{ width: '100%', height: '100%' }}
             >
               <PanoramaScene 
