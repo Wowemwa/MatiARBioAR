@@ -139,11 +139,11 @@ const PanoramaScene = ({ imageUrl, onDebugUpdate, calibrationOffsets, shouldReca
 
     // Create quaternion from device orientation
     const euler = new Euler(beta, alpha, -gamma, 'YXZ')
-    const targetQuaternion = new Quaternion()
-    targetQuaternion.setFromEuler(euler)
+    const quaternion = new Quaternion()
+    quaternion.setFromEuler(euler)
 
-    // Smoothly blend gyroscope input with current camera rotation (allows touch controls to work)
-    camera.quaternion.slerp(targetQuaternion, 0.3)
+    // Apply to camera (full gyro control)
+    camera.quaternion.copy(quaternion)
   })
 
   // Debug gyroscope availability
@@ -231,7 +231,7 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
   const [isFullScreen, setIsFullScreen] = useState(false)
   const [isPanoramaLoading, setIsPanoramaLoading] = useState(false)
   const [showCalibratePanel, setShowCalibratePanel] = useState(false)
-  const [controlMode, setControlMode] = useState<'swipe' | 'swipe+gyro'>('swipe+gyro')
+  const [controlMode, setControlMode] = useState<'swipe' | 'gyro'>('gyro')
 
   // Handle fullscreen changes
   useEffect(() => {
@@ -1440,7 +1440,7 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
                 shouldRecalibrate={shouldRecalibrate}
                 onRecalibrateDone={() => setShouldRecalibrate(false)}
                 setCalibrationOffsets={setCalibrationOffsets}
-                gyroEnabled={controlMode === 'swipe+gyro'}
+                gyroEnabled={controlMode === 'gyro'}
                 onLoadComplete={() => setIsPanoramaLoading(false)}
               />
             </Canvas>
@@ -1475,15 +1475,15 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
             {/* Control Mode Toggle - Lower Left */}
             <div className="absolute bottom-4 left-4 z-10">
               <button
-                onClick={() => setControlMode(prev => prev === 'swipe' ? 'swipe+gyro' : 'swipe')}
+                onClick={() => setControlMode(prev => prev === 'swipe' ? 'gyro' : 'swipe')}
                 className="bg-black/50 hover:bg-black/70 backdrop-blur-md text-white px-4 py-2 rounded-full transition-all duration-200 flex items-center gap-2"
               >
-                {controlMode === 'swipe+gyro' ? (
+                {controlMode === 'gyro' ? (
                   <>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                     </svg>
-                    <span className="text-sm font-medium">Swipe + Gyro</span>
+                    <span className="text-sm font-medium">Gyro Only</span>
                   </>
                 ) : (
                   <>
