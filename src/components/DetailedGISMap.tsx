@@ -9,17 +9,28 @@ import { TextureLoader, BackSide, Euler, Quaternion } from 'three'
 import { PanoramaControls } from 'three-panorama-controls/react'
 
 // Panorama Scene Component using React Three Fiber
-const PanoramaScene = ({ imageUrl, onDebugUpdate, calibrationOffsets, shouldRecalibrate, onRecalibrateDone, setCalibrationOffsets }: { 
+const PanoramaScene = ({ imageUrl, onDebugUpdate, calibrationOffsets, shouldRecalibrate, onRecalibrateDone, setCalibrationOffsets, gyroEnabled, onLoadComplete }: { 
   imageUrl: string, 
   onDebugUpdate: (data: any) => void,
   calibrationOffsets: { alpha: number, beta: number, gamma: number },
   shouldRecalibrate: boolean,
   onRecalibrateDone: () => void,
-  setCalibrationOffsets: (offsets: { alpha: number, beta: number, gamma: number }) => void
+  setCalibrationOffsets: (offsets: { alpha: number, beta: number, gamma: number }) => void,
+  gyroEnabled: boolean,
+  onLoadComplete: () => void
 }) => {
   const texture = useLoader(TextureLoader, imageUrl)
   const { camera } = useThree()
   const [gyroscopeEnabled, setGyroscopeEnabled] = useState(false)
+  const [isTextureLoaded, setIsTextureLoaded] = useState(false)
+
+  // Mark texture as loaded and trigger callback
+  useEffect(() => {
+    if (texture) {
+      setIsTextureLoaded(true)
+      onLoadComplete()
+    }
+  }, [texture, onLoadComplete])
   const [deviceOrientation, setDeviceOrientation] = useState<{ alpha: number | null, beta: number | null, gamma: number | null }>({
     alpha: null,
     beta: null,
@@ -75,6 +86,20 @@ const PanoramaScene = ({ imageUrl, onDebugUpdate, calibrationOffsets, shouldReca
     requestGyroscopePermission()
   }, [])
 
+  // Auto-calibrate on first device orientation reading
+  const [hasAutoCalibrated, setHasAutoCalibrated] = useState(false)
+  useEffect(() => {
+    if (!hasAutoCalibrated && gyroscopeEnabled && deviceOrientation.alpha !== null && deviceOrientation.beta !== null && deviceOrientation.gamma !== null) {
+      setCalibrationOffsets({
+        alpha: deviceOrientation.alpha,
+        beta: deviceOrientation.beta,
+        gamma: deviceOrientation.gamma
+      })
+      setHasAutoCalibrated(true)
+      console.log('✅ Auto-calibrated gyroscope on load')
+    }
+  }, [gyroscopeEnabled, deviceOrientation, hasAutoCalibrated, setCalibrationOffsets])
+
   // Handle device orientation changes
   useEffect(() => {
     if (!gyroscopeEnabled) {
@@ -101,7 +126,7 @@ const PanoramaScene = ({ imageUrl, onDebugUpdate, calibrationOffsets, shouldReca
 
   // Apply device orientation to camera
   useFrame(() => {
-    if (!gyroscopeEnabled || !deviceOrientation.alpha || !deviceOrientation.beta || !deviceOrientation.gamma) return
+    if (!gyroEnabled || !gyroscopeEnabled || !deviceOrientation.alpha || !deviceOrientation.beta || !deviceOrientation.gamma) return
 
     // Convert device orientation to camera rotation
     // Alpha = compass direction (Z rotation)
@@ -204,6 +229,9 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
   const [calibrationOffsets, setCalibrationOffsets] = useState({ alpha: 0, beta: 0, gamma: 0 })
   const [shouldRecalibrate, setShouldRecalibrate] = useState(false)
   const [isFullScreen, setIsFullScreen] = useState(false)
+  const [isPanoramaLoading, setIsPanoramaLoading] = useState(false)
+  const [showCalibratePanel, setShowCalibratePanel] = useState(false)
+  const [controlMode, setControlMode] = useState<'swipe' | 'swipe+gyro'>('swipe+gyro')
 
   // Handle fullscreen changes
   useEffect(() => {
@@ -944,7 +972,10 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
                 {currentSite?.panoramicImage && (
                   <div className="relative -mx-4 sm:-mx-6 mb-4 sm:mb-5">
                     <button
-                      onClick={() => setShowPanoramic(true)}
+                      onClick={() => {
+                        setShowPanoramic(true)
+                        setIsPanoramaLoading(true)
+                      }}
                       className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1409,6 +1440,8 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
                 shouldRecalibrate={shouldRecalibrate}
                 onRecalibrateDone={() => setShouldRecalibrate(false)}
                 setCalibrationOffsets={setCalibrationOffsets}
+                gyroEnabled={controlMode === 'swipe+gyro'}
+                onLoadComplete={() => setIsPanoramaLoading(false)}
               />
             </Canvas>
 
@@ -1428,25 +1461,77 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
               </div>
             </div> */}
 
-            {/* Debug info overlay - hidden */}
-            {/* <div className="absolute top-4 left-4 z-10 bg-black/70 backdrop-blur-md rounded-lg p-3 max-w-xs">
-              <div className="text-white text-xs font-mono">
-                <div className="font-semibold mb-2">🔧 Gyroscope Debug</div>
-                <div>Gyroscope: {panoramaDebugData.gyroscopeEnabled ? '✅ Enabled' : '❌ Disabled'}</div>
-                <div>Device: {typeof DeviceOrientationEvent !== 'undefined' ? '✅ Has Sensors' : '❌ No Sensors'}</div>
-                <div>Controls: {panoramaDebugData.gyroscopeEnabled ? '📱 Gyro' : '👆 Touch'}</div>
-                {panoramaDebugData.gyroscopeEnabled && panoramaDebugData.deviceOrientation?.alpha && (
-                  <div className="mt-1 text-xs">
-                    <div>α: {panoramaDebugData.deviceOrientation.alpha?.toFixed(1)}°</div>
-                    <div>β: {panoramaDebugData.deviceOrientation.beta?.toFixed(1)}°</div>
-                    <div>γ: {panoramaDebugData.deviceOrientation.gamma?.toFixed(1)}°</div>
-                    <div className="mt-1 border-t border-gray-600 pt-1">
-                      <div>Offsets: α:{calibrationOffsets.alpha.toFixed(1)} β:{calibrationOffsets.beta.toFixed(1)} γ:{calibrationOffsets.gamma.toFixed(1)}</div>
-                    </div>
-                  </div>
-                )}
+            {/* Loading Animation */}
+            {isPanoramaLoading && (
+              <div className="absolute inset-0 z-20 bg-black/80 backdrop-blur-sm flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-white text-lg font-medium">Loading Panorama...</p>
+                  <p className="text-gray-400 text-sm mt-2">Calibrating sensors</p>
+                </div>
               </div>
-            </div> */}
+            )}
+
+            {/* Control Mode Toggle - Lower Left */}
+            <div className="absolute bottom-4 left-4 z-10">
+              <button
+                onClick={() => setControlMode(prev => prev === 'swipe' ? 'swipe+gyro' : 'swipe')}
+                className="bg-black/50 hover:bg-black/70 backdrop-blur-md text-white px-4 py-2 rounded-full transition-all duration-200 flex items-center gap-2"
+              >
+                {controlMode === 'swipe+gyro' ? (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                    <span className="text-sm font-medium">Swipe + Gyro</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/>
+                    </svg>
+                    <span className="text-sm font-medium">Swipe Only</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Calibrate Button - Lower Right */}
+            {!showCalibratePanel ? (
+              <button
+                onClick={() => setShowCalibratePanel(true)}
+                className="absolute bottom-4 right-4 z-10 bg-black/50 hover:bg-black/70 backdrop-blur-md text-white p-3 rounded-full transition-all duration-200"
+                title="Calibrate Gyroscope"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                </svg>
+              </button>
+            ) : (
+              <div className="absolute bottom-4 right-4 z-10 bg-black/70 backdrop-blur-md rounded-xl p-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-white font-medium text-sm">Gyroscope Calibration</h3>
+                  <button
+                    onClick={() => setShowCalibratePanel(false)}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </button>
+                </div>
+                <p className="text-gray-300 text-xs mb-3">Hold device at desired neutral position</p>
+                <button
+                  onClick={() => {
+                    setShouldRecalibrate(true)
+                    setTimeout(() => setShowCalibratePanel(false), 1000)
+                  }}
+                  className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm rounded-lg transition-colors"
+                >
+                  Calibrate Now
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
