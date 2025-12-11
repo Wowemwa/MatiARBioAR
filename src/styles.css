@@ -1,6 +1,5 @@
 /* Import design tokens first - must be at the very top */
 @import './styles/design-tokens.css';
-@import '@photo-sphere-viewer/core/index.css';
 
 /* Prevent theme flicker - apply instantly without transition on page load */
 @layer base {

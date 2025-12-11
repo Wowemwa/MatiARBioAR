@@ -4,8 +4,144 @@ import 'leaflet/dist/leaflet.css'
 import { useData } from '../context/DataContext'
 import { useAdmin } from '../context/AdminContext'
 import { supabase } from '../supabaseClient'
-import { Viewer } from '@photo-sphere-viewer/core'
-import { GyroscopePlugin } from '@photo-sphere-viewer/gyroscope-plugin'
+import { Canvas, useLoader, useFrame, useThree } from '@react-three/fiber'
+import { TextureLoader, BackSide, Euler, Quaternion } from 'three'
+import { PanoramaControls } from 'three-panorama-controls/react'
+
+// Panorama Scene Component using React Three Fiber
+const PanoramaScene = ({ imageUrl, onDebugUpdate }: { imageUrl: string, onDebugUpdate: (data: any) => void }) => {
+  const texture = useLoader(TextureLoader, imageUrl)
+  const { camera } = useThree()
+  const [gyroscopeEnabled, setGyroscopeEnabled] = useState(false)
+  const [deviceOrientation, setDeviceOrientation] = useState<{ alpha: number | null, beta: number | null, gamma: number | null }>({
+    alpha: null,
+    beta: null,
+    gamma: null
+  })
+
+  // Request gyroscope permission when component mounts
+  useEffect(() => {
+    const requestGyroscopePermission = async () => {
+      console.log('🔍 Requesting gyroscope permission...')
+
+      if (typeof DeviceOrientationEvent !== 'undefined' &&
+          typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+        try {
+          const permission = await (DeviceOrientationEvent as any).requestPermission()
+          console.log('📱 Gyroscope permission result:', permission)
+
+          if (permission === 'granted') {
+            setGyroscopeEnabled(true)
+            console.log('✅ Gyroscope permission granted!')
+          } else {
+            console.log('❌ Gyroscope permission denied')
+          }
+        } catch (error) {
+          console.error('❌ Error requesting gyroscope permission:', error)
+        }
+      } else {
+        // Android or desktop - assume permission granted
+        setGyroscopeEnabled(true)
+        console.log('✅ No permission API needed (Android/Desktop)')
+      }
+    }
+
+    requestGyroscopePermission()
+  }, [])
+
+  // Handle device orientation changes
+  useEffect(() => {
+    if (!gyroscopeEnabled) {
+      onDebugUpdate({ gyroscopeEnabled: false, deviceOrientation: null })
+      return
+    }
+
+    const handleDeviceOrientation = (event: DeviceOrientationEvent) => {
+      const orientation = {
+        alpha: event.alpha,
+        beta: event.beta,
+        gamma: event.gamma
+      }
+      setDeviceOrientation(orientation)
+      onDebugUpdate({ gyroscopeEnabled: true, deviceOrientation: orientation })
+    }
+
+    window.addEventListener('deviceorientation', handleDeviceOrientation)
+
+    return () => {
+      window.removeEventListener('deviceorientation', handleDeviceOrientation)
+    }
+  }, [gyroscopeEnabled, onDebugUpdate])
+
+  // Apply device orientation to camera
+  useFrame(() => {
+    if (!gyroscopeEnabled || !deviceOrientation.alpha || !deviceOrientation.beta || !deviceOrientation.gamma) return
+
+    // Convert device orientation to camera rotation
+    // Alpha = compass direction (Z rotation)
+    // Beta = front/back tilt (X rotation)
+    // Gamma = left/right tilt (Y rotation)
+
+    const alpha = (deviceOrientation.alpha * Math.PI) / 180 // Convert to radians
+    const beta = (deviceOrientation.beta * Math.PI) / 180
+    const gamma = (deviceOrientation.gamma * Math.PI) / 180
+
+    // Create quaternion from device orientation
+    const euler = new Euler(beta, alpha, -gamma, 'YXZ')
+    const quaternion = new Quaternion()
+    quaternion.setFromEuler(euler)
+
+    // Apply to camera
+    camera.quaternion.copy(quaternion)
+  })
+
+  // Debug gyroscope availability
+  useEffect(() => {
+    console.log('🔍 Checking device sensors...')
+
+    // Check for DeviceOrientationEvent
+    if (typeof DeviceOrientationEvent !== 'undefined') {
+      console.log('✅ DeviceOrientationEvent available')
+
+      // Check for permission API
+      if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+        console.log('✅ Permission API available - iOS device detected')
+      } else {
+        console.log('ℹ️ No permission API - Android or desktop device')
+      }
+    } else {
+      console.log('❌ DeviceOrientationEvent not available')
+    }
+
+    // Check for DeviceMotionEvent (accelerometer)
+    if (typeof DeviceMotionEvent !== 'undefined') {
+      console.log('✅ DeviceMotionEvent available (accelerometer)')
+    } else {
+      console.log('❌ DeviceMotionEvent not available')
+    }
+  }, [])
+
+  return (
+    <>
+      {/* Panorama sphere with inverted geometry */}
+      <mesh scale={[-1, 1, 1]}>
+        <sphereGeometry args={[10, 60, 20]} />
+        <meshBasicMaterial map={texture} side={BackSide} />
+      </mesh>
+
+      {/* Modern Three.js panorama controls - disabled when gyroscope is active */}
+      <PanoramaControls
+        makeDefault={!gyroscopeEnabled}
+        enabled={!gyroscopeEnabled}
+        zoomable
+        minFov={10}
+        maxFov={90}
+        zoomSpeed={0.05}
+        panSpeed={0.1}
+      />
+    </>
+  )
+}
 
 // Fix for Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -35,8 +171,10 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
   const [currentLayer, setCurrentLayer] = useState<'street' | 'satellite' | 'topo'>('street')
   const [legendCollapsed, setLegendCollapsed] = useState(false)
   const [showPanoramic, setShowPanoramic] = useState(false)
-  const [panoramicControlMode, setPanoramicControlMode] = useState<'touch' | 'gyroscope'>('touch')
-  const [panoramicViewer, setPanoramicViewer] = useState<Viewer | null>(null)
+  const [panoramaDebugData, setPanoramaDebugData] = useState<{
+    gyroscopeEnabled: boolean;
+    deviceOrientation: { alpha: number | null; beta: number | null; gamma: number | null } | null;
+  }>({ gyroscopeEnabled: false, deviceOrientation: null })
   
   // Admin marker placement state
   const [adminMode, setAdminMode] = useState(false)
@@ -458,137 +596,6 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
   const currentSpecies = useMemo(() => currentSite ? species.filter(sp => sp.siteIds.includes(currentSite.id)) : [], [species, currentSite])
   const selectedSpeciesData = useMemo(() => currentSpecies.find(sp => sp.id === selectedSpeciesId) || null, [currentSpecies, selectedSpeciesId])
   const closePanel = useCallback(() => { setPanelOpen(false); setSelectedHotspot(null); setSelectedSpeciesId(null); setShowGallery(false) }, [])
-
-  // Initialize panoramic viewer
-  useEffect(() => {
-    if (showPanoramic && currentSite?.panoramicImage) {
-      console.log('Initializing panoramic viewer for site:', currentSite.name)
-      // Small delay to ensure DOM is ready
-      setTimeout(async () => {
-        const plugins: Array<import('@photo-sphere-viewer/core').PluginConstructor | [import('@photo-sphere-viewer/core').PluginConstructor, any]> = []
-
-        // Add gyroscope plugin if available and enabled
-        if (panoramicControlMode === 'gyroscope') {
-          console.log('Adding gyroscope plugin...')
-
-          // Request gyroscope permission if needed
-          if (typeof DeviceOrientationEvent !== 'undefined' && typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-            try {
-              const permission = await (DeviceOrientationEvent as any).requestPermission()
-              console.log('Gyroscope permission:', permission)
-              if (permission !== 'granted') {
-                console.warn('Gyroscope permission denied')
-                alert('Gyroscope permission is required for device-based navigation. Please allow access to device sensors.')
-                return
-              }
-            } catch (error) {
-              console.error('Error requesting gyroscope permission:', error)
-            }
-          }
-
-          plugins.push([GyroscopePlugin, {
-            touchmove: false, // Disable touch when using gyroscope
-            moveInertia: false
-          }])
-        }
-
-        console.log('Creating viewer with plugins:', plugins.length, 'plugins')
-        console.log('Panorama URL:', currentSite?.panoramicImage)
-
-        const viewer = new Viewer({
-          container: document.querySelector('#panorama') as HTMLElement,
-          panorama: currentSite.panoramicImage,
-          loadingImg: '/loading.gif', // You can add a loading image
-          mousewheel: panoramicControlMode === 'touch',
-          touchmoveTwoFingers: panoramicControlMode === 'touch',
-          navbar: [
-            'autorotate',
-            'zoom',
-            'fullscreen',
-            'caption',
-            'download'
-          ],
-          plugins: plugins
-        })
-
-        setPanoramicViewer(viewer)
-      }, 100)
-    }
-  }, [showPanoramic, currentSite?.panoramicImage, panoramicControlMode])
-
-  // Update viewer controls when mode changes
-  useEffect(() => {
-    if (panoramicViewer && showPanoramic) {
-      console.log('Mode changed to:', panoramicControlMode, '- reinitializing viewer')
-      // Destroy current viewer and reinitialize with new settings
-      panoramicViewer.destroy()
-      setPanoramicViewer(null)
-
-      // Small delay to ensure cleanup is complete
-      setTimeout(async () => {
-        const plugins: Array<import('@photo-sphere-viewer/core').PluginConstructor | [import('@photo-sphere-viewer/core').PluginConstructor, any]> = []
-
-        // Add gyroscope plugin if available and enabled
-        if (panoramicControlMode === 'gyroscope') {
-          console.log('Re-adding gyroscope plugin for mode change...')
-
-          // Request gyroscope permission if needed
-          if (typeof DeviceOrientationEvent !== 'undefined' && typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-            try {
-              const permission = await (DeviceOrientationEvent as any).requestPermission()
-              console.log('Gyroscope permission:', permission)
-              if (permission !== 'granted') {
-                console.warn('Gyroscope permission denied')
-                alert('Gyroscope permission is required for device-based navigation. Please allow access to device sensors.')
-                return
-              }
-            } catch (error) {
-              console.error('Error requesting gyroscope permission:', error)
-            }
-          }
-
-          plugins.push([GyroscopePlugin, {
-            touchmove: false, // Disable touch when using gyroscope
-            moveInertia: false
-          }])
-        }
-
-        console.log('Re-creating viewer with plugins:', plugins.length, 'plugins')
-
-        const viewer = new Viewer({
-          container: document.querySelector('#panorama') as HTMLElement,
-          panorama: currentSite?.panoramicImage,
-          loadingImg: '/loading.gif',
-          mousewheel: panoramicControlMode === 'touch',
-          touchmoveTwoFingers: panoramicControlMode === 'touch',
-          navbar: [
-            'autorotate',
-            'zoom',
-            'fullscreen',
-            'caption',
-            'download'
-          ],
-          plugins: plugins
-        })
-
-        setPanoramicViewer(viewer)
-      }, 100)
-    }
-  }, [panoramicControlMode])
-
-  // Cleanup panoramic viewer when closing
-  useEffect(() => {
-    if (!showPanoramic) {
-      if (panoramicViewer) {
-        panoramicViewer.destroy()
-        setPanoramicViewer(null)
-      }
-      const panoramaElement = document.getElementById('panorama')
-      if (panoramaElement) {
-        panoramaElement.innerHTML = ''
-      }
-    }
-  }, [showPanoramic, panoramicViewer])
   const toggleGallery = useCallback(() => setShowGallery(g => !g), [])
   
   // Admin: Toggle marker placement mode
@@ -1317,42 +1324,40 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
               </svg>
             </button>
 
-            {/* Control Mode Selector */}
-            <div className="absolute top-4 left-4 z-10 bg-black/50 backdrop-blur-md rounded-xl p-3">
-              <div className="flex items-center gap-2 text-white text-sm">
-                <span className="font-medium">Controls:</span>
-                <div className="flex bg-black/30 rounded-lg p-1">
-                  <button
-                    onClick={() => setPanoramicControlMode('touch')}
-                    className={`px-3 py-1 rounded-md transition-all text-xs font-medium ${
-                      panoramicControlMode === 'touch'
-                        ? 'bg-blue-500 text-white'
-                        : 'text-gray-300 hover:text-white'
-                    }`}
-                  >
-                    👆 Touch
-                  </button>
-                  <button
-                    onClick={() => setPanoramicControlMode('gyroscope')}
-                    className={`px-3 py-1 rounded-md transition-all text-xs font-medium ${
-                      panoramicControlMode === 'gyroscope'
-                        ? 'bg-blue-500 text-white'
-                        : 'text-gray-300 hover:text-white'
-                    }`}
-                  >
-                    📱 Gyro
-                  </button>
+            {/* Modern Three.js Panoramic Viewer */}
+            <Canvas
+              camera={{ position: [0, 0, 5], fov: 75 }}
+              style={{ width: '100%', height: '100%' }}
+            >
+              <PanoramaScene imageUrl={currentSite.panoramicImage} onDebugUpdate={setPanoramaDebugData} />
+            </Canvas>
+
+            {/* Control Instructions */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-black/70 backdrop-blur-md rounded-xl p-3">
+              <div className="text-white text-sm text-center">
+                <div className="font-medium mb-1">360° Panorama Controls</div>
+                <div className="text-gray-300 text-xs">
+                  • Drag to look around • Pinch to zoom • Device sensors for gyroscope
                 </div>
-              </div>
-              <div className="text-xs text-gray-400 mt-1">
-                {panoramicControlMode === 'touch'
-                  ? 'Swipe or drag to navigate'
-                  : 'Move your device to look around'
-                }
               </div>
             </div>
 
-            <div id="panorama" className="w-full h-full"></div>
+            {/* Debug info overlay */}
+            <div className="absolute top-4 left-4 z-10 bg-black/70 backdrop-blur-md rounded-lg p-3 max-w-xs">
+              <div className="text-white text-xs font-mono">
+                <div className="font-semibold mb-2">🔧 Gyroscope Debug</div>
+                <div>Gyroscope: {panoramaDebugData.gyroscopeEnabled ? '✅ Enabled' : '❌ Disabled'}</div>
+                <div>Device: {typeof DeviceOrientationEvent !== 'undefined' ? '✅ Has Sensors' : '❌ No Sensors'}</div>
+                <div>Controls: {panoramaDebugData.gyroscopeEnabled ? '📱 Gyro' : '👆 Touch'}</div>
+                {panoramaDebugData.gyroscopeEnabled && panoramaDebugData.deviceOrientation?.alpha && (
+                  <div className="mt-1 text-xs">
+                    <div>α: {panoramaDebugData.deviceOrientation.alpha?.toFixed(1)}°</div>
+                    <div>β: {panoramaDebugData.deviceOrientation.beta?.toFixed(1)}°</div>
+                    <div>γ: {panoramaDebugData.deviceOrientation.gamma?.toFixed(1)}°</div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
