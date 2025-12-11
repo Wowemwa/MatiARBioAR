@@ -4,6 +4,8 @@ import 'leaflet/dist/leaflet.css'
 import { useData } from '../context/DataContext'
 import { useAdmin } from '../context/AdminContext'
 import { supabase } from '../supabaseClient'
+import { Viewer } from '@photo-sphere-viewer/core'
+import { GyroscopePlugin } from '@photo-sphere-viewer/gyroscope-plugin'
 
 // Fix for Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -32,6 +34,9 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
   const [activeMarkers, setActiveMarkers] = useState<Map<string, L.Marker>>(new Map())
   const [currentLayer, setCurrentLayer] = useState<'street' | 'satellite' | 'topo'>('street')
   const [legendCollapsed, setLegendCollapsed] = useState(false)
+  const [showPanoramic, setShowPanoramic] = useState(false)
+  const [panoramicControlMode, setPanoramicControlMode] = useState<'touch' | 'gyroscope'>('touch')
+  const [panoramicViewer, setPanoramicViewer] = useState<Viewer | null>(null)
   
   // Admin marker placement state
   const [adminMode, setAdminMode] = useState(false)
@@ -453,6 +458,69 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
   const currentSpecies = useMemo(() => currentSite ? species.filter(sp => sp.siteIds.includes(currentSite.id)) : [], [species, currentSite])
   const selectedSpeciesData = useMemo(() => currentSpecies.find(sp => sp.id === selectedSpeciesId) || null, [currentSpecies, selectedSpeciesId])
   const closePanel = useCallback(() => { setPanelOpen(false); setSelectedHotspot(null); setSelectedSpeciesId(null); setShowGallery(false) }, [])
+
+  // Initialize panoramic viewer
+  useEffect(() => {
+    if (showPanoramic && currentSite?.panoramicImage) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        const plugins: Array<import('@photo-sphere-viewer/core').PluginConstructor | [import('@photo-sphere-viewer/core').PluginConstructor, any]> = []
+
+        // Add gyroscope plugin if available and enabled
+        if (panoramicControlMode === 'gyroscope') {
+          plugins.push([GyroscopePlugin, {
+            touchmove: false, // Disable touch when using gyroscope
+            moveInertia: false
+          }])
+        }
+
+        const viewer = new Viewer({
+          container: document.querySelector('#panorama') as HTMLElement,
+          panorama: currentSite.panoramicImage,
+          loadingImg: '/loading.gif', // You can add a loading image
+          mousewheel: panoramicControlMode === 'touch',
+          touchmoveTwoFingers: panoramicControlMode === 'touch',
+          navbar: [
+            'autorotate',
+            'zoom',
+            'fullscreen',
+            'caption',
+            'download'
+          ],
+          plugins: plugins
+        })
+
+        setPanoramicViewer(viewer)
+      }, 100)
+    }
+  }, [showPanoramic, currentSite?.panoramicImage, panoramicControlMode])
+
+  // Update viewer controls when mode changes
+  useEffect(() => {
+    if (panoramicViewer && showPanoramic && panoramicControlMode === 'gyroscope') {
+      // For gyroscope mode, we need to reinitialize the viewer
+      // This is a simple approach - show message to user
+      const gyroPlugin = panoramicViewer.getPlugin(GyroscopePlugin)
+      if (!gyroPlugin) {
+        // Plugin not loaded, show message
+        console.log('Gyroscope mode selected - close and reopen panoramic view to enable sensor controls')
+      }
+    }
+  }, [panoramicControlMode, panoramicViewer, showPanoramic])
+
+  // Cleanup panoramic viewer when closing
+  useEffect(() => {
+    if (!showPanoramic) {
+      if (panoramicViewer) {
+        panoramicViewer.destroy()
+        setPanoramicViewer(null)
+      }
+      const panoramaElement = document.getElementById('panorama')
+      if (panoramaElement) {
+        panoramaElement.innerHTML = ''
+      }
+    }
+  }, [showPanoramic, panoramicViewer])
   const toggleGallery = useCallback(() => setShowGallery(g => !g), [])
   
   // Admin: Toggle marker placement mode
@@ -735,6 +803,21 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
                         {currentSite.barangay}
                       </div>
                     </div>
+                  </div>
+                )}
+                
+                {/* Panoramic View Button */}
+                {currentSite?.panoramicImage && (
+                  <div className="relative -mx-4 sm:-mx-6 mb-4 sm:mb-5">
+                    <button
+                      onClick={() => setShowPanoramic(true)}
+                      className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      View 360° Panoramic
+                    </button>
                   </div>
                 )}
                 
@@ -1150,6 +1233,59 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Panoramic Viewer Modal */}
+      {showPanoramic && currentSite?.panoramicImage && (
+        <div className="fixed inset-0 z-[1200] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="relative w-full h-full max-w-6xl max-h-[90vh] bg-black rounded-2xl overflow-hidden shadow-2xl">
+            <button
+              onClick={() => setShowPanoramic(false)}
+              className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-200"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+
+            {/* Control Mode Selector */}
+            <div className="absolute top-4 left-4 z-10 bg-black/50 backdrop-blur-md rounded-xl p-3">
+              <div className="flex items-center gap-2 text-white text-sm">
+                <span className="font-medium">Controls:</span>
+                <div className="flex bg-black/30 rounded-lg p-1">
+                  <button
+                    onClick={() => setPanoramicControlMode('touch')}
+                    className={`px-3 py-1 rounded-md transition-all text-xs font-medium ${
+                      panoramicControlMode === 'touch'
+                        ? 'bg-blue-500 text-white'
+                        : 'text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    👆 Touch
+                  </button>
+                  <button
+                    onClick={() => setPanoramicControlMode('gyroscope')}
+                    className={`px-3 py-1 rounded-md transition-all text-xs font-medium ${
+                      panoramicControlMode === 'gyroscope'
+                        ? 'bg-blue-500 text-white'
+                        : 'text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    📱 Gyro
+                  </button>
+                </div>
+              </div>
+              <div className="text-xs text-gray-400 mt-1">
+                {panoramicControlMode === 'touch'
+                  ? 'Swipe or drag to navigate'
+                  : 'Move your device to look around (close & reopen to enable)'
+                }
+              </div>
+            </div>
+
+            <div id="panorama" className="w-full h-full"></div>
+          </div>
         </div>
       )}
     </div>

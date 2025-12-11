@@ -38,6 +38,7 @@ export interface Hotspot {
   features: string[]
   stewardship: string
   image?: string
+  panoramicImage?: string
   tags: string[]
   highlightSpeciesIds: string[]
   floraIds: string[]
@@ -72,6 +73,7 @@ export const HOTSPOTS: Hotspot[] = [
     stewardship:
       'Protected Area Management Board (PAMB) comprising DENR, Davao Oriental LGUs, indigenous Mandaya and Kalagan communities, and scientific institutions.',
     image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
+    panoramicImage: '/street-view-360.png', // User's panoramic image
     tags: ['UNESCO World Heritage', 'Pygmy Forest', 'Endemic Species', 'Philippine Eagle', 'Pitcher Plants', 'Ultramafic Soil'],
     highlightSpeciesIds: [
       'philippine-eagle',

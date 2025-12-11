@@ -276,6 +276,7 @@ export function DataProvider({ children }: DataProviderProps) {
             features: site.features || [],
             stewardship: site.stewardship,
             image: site.image_url,
+            panoramicImage: site.panoramic_image_url,
             tags: site.tags || [],
             visitorNotes: site.visitor_notes,
             // Map species relationships
@@ -379,9 +380,26 @@ export function DataProvider({ children }: DataProviderProps) {
           // Cache the data
           try {
             localStorage.setItem(CACHE_VERSION_KEY, CACHE_VERSION)
-            localStorage.setItem(SPECIES_STORAGE_KEY, JSON.stringify(transformedSpecies))
-            localStorage.setItem(HOTSPOTS_STORAGE_KEY, JSON.stringify(updatedSites))
-            localStorage.setItem(TEAM_STORAGE_KEY, JSON.stringify(transformedTeam))
+            
+            // Try to cache each dataset individually to handle quota limits
+            try {
+              localStorage.setItem(SPECIES_STORAGE_KEY, JSON.stringify(transformedSpecies))
+            } catch (speciesError) {
+              console.warn('[DataContext] Failed to cache species data (quota exceeded):', speciesError)
+            }
+            
+            try {
+              localStorage.setItem(HOTSPOTS_STORAGE_KEY, JSON.stringify(updatedSites))
+            } catch (hotspotsError) {
+              console.warn('[DataContext] Failed to cache hotspots data (quota exceeded):', hotspotsError)
+            }
+            
+            try {
+              localStorage.setItem(TEAM_STORAGE_KEY, JSON.stringify(transformedTeam))
+            } catch (teamError) {
+              console.warn('[DataContext] Failed to cache team data (quota exceeded):', teamError)
+            }
+            
             localStorage.setItem('mati-data-cache-timestamp', Date.now().toString())
             console.log('[DataContext] Data cached successfully (version:', CACHE_VERSION, ')')
           } catch (cacheError) {

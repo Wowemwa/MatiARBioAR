@@ -72,6 +72,7 @@ export interface Hotspot {
   features: string[]
   stewardship: string
   image?: string
+  panoramicImage?: 'C:\Users\Terminator\Downloads\Street View 360.png'
   tags: string[]
   highlightSpeciesIds: string[]
   floraIds: string[]

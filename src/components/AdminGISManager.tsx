@@ -23,6 +23,7 @@ interface NewHotspotData {
   features: string[]
   selectedSpeciesIds: string[]
   imageUrl: string
+  panoramicImageUrl: string
 }
 
 export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerProps) {
@@ -34,6 +35,7 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
   const [showMarkerForm, setShowMarkerForm] = useState(false)
   const [selectedHotspot, setSelectedHotspot] = useState<string | null>(null)
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [uploadingPanoramic, setUploadingPanoramic] = useState(false)
   const [fetchingInfo, setFetchingInfo] = useState(false)
   const [newHotspotData, setNewHotspotData] = useState<NewHotspotData>({
     name: '',
@@ -45,7 +47,8 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
     type: 'marine',
     features: [],
     selectedSpeciesIds: [],
-    imageUrl: ''
+    imageUrl: '',
+    panoramicImageUrl: ''
   })
 
   // Initialize map
@@ -217,6 +220,37 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
     }
   }, [])
 
+  const handlePanoramicUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit for panoramic images
+      alert('Panoramic image must be less than 10MB')
+      return
+    }
+
+    setUploadingPanoramic(true)
+
+    try {
+      // Convert to base64
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64String = reader.result as string
+        setNewHotspotData(prev => ({ ...prev, panoramicImageUrl: base64String }))
+        setUploadingPanoramic(false)
+      }
+      reader.onerror = () => {
+        alert('Failed to read panoramic image file')
+        setUploadingPanoramic(false)
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      console.error('Error uploading panoramic image:', error)
+      alert('Failed to upload panoramic image')
+      setUploadingPanoramic(false)
+    }
+  }, [])
+
   const handleSave = useCallback(async () => {
     if (!newHotspotData.name || !newHotspotData.description) {
       alert('Please fill in at least the name and description')
@@ -242,6 +276,7 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
         stewardship: 'To be determined',
         tags: [],
         image_url: newHotspotData.imageUrl || null,
+        panoramic_image_url: newHotspotData.panoramicImageUrl || null,
         visitor_notes: null
       }
 
@@ -291,7 +326,8 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
         type: 'marine',
         features: [],
         selectedSpeciesIds: [],
-        imageUrl: ''
+        imageUrl: '',
+        panoramicImageUrl: ''
       })
 
       // Refresh the data instead of reloading the page
@@ -353,7 +389,8 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
       type: 'marine',
       features: [],
       selectedSpeciesIds: [],
-      imageUrl: ''
+      imageUrl: '',
+      panoramicImageUrl: ''
     })
   }
 
@@ -607,6 +644,42 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
                       <p className="text-sm text-blue-600">Uploading image...</p>
                     )}
                     <p className="text-xs text-gray-500">Max 5MB. This image will be displayed when users view this site on the map.</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-semibold mb-2">360° Panoramic Image (optional)</label>
+                  <div className="space-y-2">
+                    {newHotspotData.panoramicImageUrl && (
+                      <div className="relative w-full h-32 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+                        <img 
+                          src={newHotspotData.panoramicImageUrl} 
+                          alt="Panoramic Preview" 
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setNewHotspotData(prev => ({ ...prev, panoramicImageUrl: '' }))}
+                          className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg"
+                        >
+                          ✕ Remove
+                        </button>
+                        <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                          360° Preview
+                        </div>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePanoramicUpload}
+                      disabled={uploadingPanoramic}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                    />
+                    {uploadingPanoramic && (
+                      <p className="text-sm text-purple-600">Uploading panoramic image...</p>
+                    )}
+                    <p className="text-xs text-gray-500">Max 10MB. Users can explore this 360° view when viewing the site details.</p>
                   </div>
                 </div>
 
