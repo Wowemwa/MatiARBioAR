@@ -155,10 +155,10 @@ const PanoramaScene = ({ imageUrl, onDebugUpdate, calibrationOffsets, shouldReca
         <meshBasicMaterial map={texture} side={BackSide} />
       </mesh>
 
-      {/* Modern Three.js panorama controls - disabled when gyroscope is active */}
+      {/* Modern Three.js panorama controls - enabled with gyroscope */}
       <PanoramaControls
-        makeDefault={!gyroscopeEnabled}
-        enabled={!gyroscopeEnabled}
+        makeDefault={true}
+        enabled={true}
         zoomable
         minFov={10}
         maxFov={90}
@@ -1367,8 +1367,8 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
               />
             </Canvas>
 
-            {/* Control Instructions */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-black/70 backdrop-blur-md rounded-xl p-3">
+            {/* Control Instructions - hidden */}
+            {/* <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-black/70 backdrop-blur-md rounded-xl p-3">
               <div className="text-white text-sm text-center">
                 <div className="font-medium mb-1">360° Panorama Controls</div>
                 <div className="text-gray-300 text-xs">
@@ -1381,10 +1381,10 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
                   Recalibrate Gyroscope
                 </button>
               </div>
-            </div>
+            </div> */}
 
-            {/* Debug info overlay */}
-            <div className="absolute top-4 left-4 z-10 bg-black/70 backdrop-blur-md rounded-lg p-3 max-w-xs">
+            {/* Debug info overlay - hidden */}
+            {/* <div className="absolute top-4 left-4 z-10 bg-black/70 backdrop-blur-md rounded-lg p-3 max-w-xs">
               <div className="text-white text-xs font-mono">
                 <div className="font-semibold mb-2">🔧 Gyroscope Debug</div>
                 <div>Gyroscope: {panoramaDebugData.gyroscopeEnabled ? '✅ Enabled' : '❌ Disabled'}</div>
@@ -1401,7 +1401,7 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
                   </div>
                 )}
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       )}
