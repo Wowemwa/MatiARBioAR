@@ -72,7 +72,7 @@ export interface Hotspot {
   features: string[]
   stewardship: string
   image?: string
-  panoramicImage?: 'C:\Users\Terminator\Downloads\Street View 360.png'
+  panoramicImage?: string
   tags: string[]
   highlightSpeciesIds: string[]
   floraIds: string[]
@@ -106,6 +106,7 @@ export const MATI_HOTSPOTS: Hotspot[] = [
     ],
     stewardship: 'Protected Area Management Board (PAMB) comprising DENR, Davao Oriental LGUs, indigenous Mandaya and Kalagan communities, and scientific institutions.',
     image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Mount_Hamiguitan_Range_Wildlife_Sanctuary_%2814%29.jpg/1200px-Mount_Hamiguitan_Range_Wildlife_Sanctuary_%2814%29.jpg',
+    panoramicImage: '/street-view-360.png',
     tags: ['UNESCO World Heritage', 'Pygmy Forest', 'Endemic Species', 'Philippine Eagle', 'Pitcher Plants', 'Ultramafic Soil'],
     highlightSpeciesIds: ['philippine-eagle', 'nepenthes-hamiguitanensis', 'batomys-hamiguitan'],
     floraIds: ['nepenthes-hamiguitanensis', 'nepenthes-peltata', 'nepenthes-micramphora', 'leptospermum-flavescens', 'dacrydium-elatum', 'almaciga-tree'],

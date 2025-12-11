@@ -10,6 +10,7 @@
   "background_color": "#ffffff",
   "categories": ["education", "science", "environment"],
   "lang": "en",
+  "permissions": ["gyroscope", "accelerometer"],
   "icons": [],
   "shortcuts": [
     {

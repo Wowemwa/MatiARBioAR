@@ -462,17 +462,38 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
   // Initialize panoramic viewer
   useEffect(() => {
     if (showPanoramic && currentSite?.panoramicImage) {
+      console.log('Initializing panoramic viewer for site:', currentSite.name)
       // Small delay to ensure DOM is ready
-      setTimeout(() => {
+      setTimeout(async () => {
         const plugins: Array<import('@photo-sphere-viewer/core').PluginConstructor | [import('@photo-sphere-viewer/core').PluginConstructor, any]> = []
 
         // Add gyroscope plugin if available and enabled
         if (panoramicControlMode === 'gyroscope') {
+          console.log('Adding gyroscope plugin...')
+
+          // Request gyroscope permission if needed
+          if (typeof DeviceOrientationEvent !== 'undefined' && typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+            try {
+              const permission = await (DeviceOrientationEvent as any).requestPermission()
+              console.log('Gyroscope permission:', permission)
+              if (permission !== 'granted') {
+                console.warn('Gyroscope permission denied')
+                alert('Gyroscope permission is required for device-based navigation. Please allow access to device sensors.')
+                return
+              }
+            } catch (error) {
+              console.error('Error requesting gyroscope permission:', error)
+            }
+          }
+
           plugins.push([GyroscopePlugin, {
             touchmove: false, // Disable touch when using gyroscope
             moveInertia: false
           }])
         }
+
+        console.log('Creating viewer with plugins:', plugins.length, 'plugins')
+        console.log('Panorama URL:', currentSite?.panoramicImage)
 
         const viewer = new Viewer({
           container: document.querySelector('#panorama') as HTMLElement,
@@ -497,16 +518,63 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
 
   // Update viewer controls when mode changes
   useEffect(() => {
-    if (panoramicViewer && showPanoramic && panoramicControlMode === 'gyroscope') {
-      // For gyroscope mode, we need to reinitialize the viewer
-      // This is a simple approach - show message to user
-      const gyroPlugin = panoramicViewer.getPlugin(GyroscopePlugin)
-      if (!gyroPlugin) {
-        // Plugin not loaded, show message
-        console.log('Gyroscope mode selected - close and reopen panoramic view to enable sensor controls')
-      }
+    if (panoramicViewer && showPanoramic) {
+      console.log('Mode changed to:', panoramicControlMode, '- reinitializing viewer')
+      // Destroy current viewer and reinitialize with new settings
+      panoramicViewer.destroy()
+      setPanoramicViewer(null)
+
+      // Small delay to ensure cleanup is complete
+      setTimeout(async () => {
+        const plugins: Array<import('@photo-sphere-viewer/core').PluginConstructor | [import('@photo-sphere-viewer/core').PluginConstructor, any]> = []
+
+        // Add gyroscope plugin if available and enabled
+        if (panoramicControlMode === 'gyroscope') {
+          console.log('Re-adding gyroscope plugin for mode change...')
+
+          // Request gyroscope permission if needed
+          if (typeof DeviceOrientationEvent !== 'undefined' && typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+            try {
+              const permission = await (DeviceOrientationEvent as any).requestPermission()
+              console.log('Gyroscope permission:', permission)
+              if (permission !== 'granted') {
+                console.warn('Gyroscope permission denied')
+                alert('Gyroscope permission is required for device-based navigation. Please allow access to device sensors.')
+                return
+              }
+            } catch (error) {
+              console.error('Error requesting gyroscope permission:', error)
+            }
+          }
+
+          plugins.push([GyroscopePlugin, {
+            touchmove: false, // Disable touch when using gyroscope
+            moveInertia: false
+          }])
+        }
+
+        console.log('Re-creating viewer with plugins:', plugins.length, 'plugins')
+
+        const viewer = new Viewer({
+          container: document.querySelector('#panorama') as HTMLElement,
+          panorama: currentSite?.panoramicImage,
+          loadingImg: '/loading.gif',
+          mousewheel: panoramicControlMode === 'touch',
+          touchmoveTwoFingers: panoramicControlMode === 'touch',
+          navbar: [
+            'autorotate',
+            'zoom',
+            'fullscreen',
+            'caption',
+            'download'
+          ],
+          plugins: plugins
+        })
+
+        setPanoramicViewer(viewer)
+      }, 100)
     }
-  }, [panoramicControlMode, panoramicViewer, showPanoramic])
+  }, [panoramicControlMode])
 
   // Cleanup panoramic viewer when closing
   useEffect(() => {
@@ -1279,7 +1347,7 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
               <div className="text-xs text-gray-400 mt-1">
                 {panoramicControlMode === 'touch'
                   ? 'Swipe or drag to navigate'
-                  : 'Move your device to look around (close & reopen to enable)'
+                  : 'Move your device to look around'
                 }
               </div>
             </div>
