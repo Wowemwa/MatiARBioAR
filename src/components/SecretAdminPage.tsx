@@ -16,7 +16,8 @@ import {
   FaChartLine,
   FaPaw,
   FaSeedling,
-  FaExclamationTriangle
+  FaExclamationTriangle,
+  FaStreetView
 } from 'react-icons/fa'
 import { HiSparkles, HiShieldCheck, HiExclamationTriangle, HiHome, HiArrowRight } from 'react-icons/hi2'
 
@@ -25,6 +26,7 @@ export default function SecretAdminPage() {
   const { species, loading } = useData()
   const { isMobileView } = useDeviceDetection()
   const [showAdminPanel, setShowAdminPanel] = useState(false)
+  const [adminPanelTab, setAdminPanelTab] = useState<'species' | 'feedbacks' | 'panoramas'>('species')
   const [showUserManagement, setShowUserManagement] = useState(false)
   const [showGISManager, setShowGISManager] = useState(false)
   const [showFeedbacksViewer, setShowFeedbacksViewer] = useState(false)
@@ -160,7 +162,10 @@ export default function SecretAdminPage() {
           {/* Action Cards */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div 
-            onClick={() => setShowAdminPanel(true)}
+            onClick={() => {
+              setAdminPanelTab('species')
+              setShowAdminPanel(true)
+            }}
             className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-emerald-500"
           >
             <div className="flex items-center gap-3 mb-4">
@@ -172,6 +177,26 @@ export default function SecretAdminPage() {
             <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">Add, edit, and manage biodiversity data</p>
             <div className="flex items-center text-emerald-600 dark:text-emerald-400 text-sm font-semibold">
               <span>Manage Species</span>
+              <HiArrowRight className="w-4 h-4 ml-1" />
+            </div>
+          </div>
+
+          <div 
+            onClick={() => {
+              setAdminPanelTab('panoramas')
+              setShowAdminPanel(true)
+            }}
+            className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-orange-500"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
+                <FaStreetView className="text-white text-xl" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Panorama Manager</h2>
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">Manage 360° panoramas and virtual tours</p>
+            <div className="flex items-center text-orange-600 dark:text-orange-400 text-sm font-semibold">
+              <span>Manage Panoramas</span>
               <HiArrowRight className="w-4 h-4 ml-1" />
             </div>
           </div>
@@ -213,7 +238,7 @@ export default function SecretAdminPage() {
         </div>
       </div>
 
-      <AdminPanel isVisible={showAdminPanel} onClose={() => setShowAdminPanel(false)} />
+      <AdminPanel isVisible={showAdminPanel} onClose={() => setShowAdminPanel(false)} initialTab={adminPanelTab} />
       <UserManagement isVisible={showUserManagement} onClose={() => setShowUserManagement(false)} />
       <AdminGISManager isVisible={showGISManager} onClose={() => setShowGISManager(false)} />
       <AdminFeedbacksViewer isVisible={showFeedbacksViewer} onClose={() => setShowFeedbacksViewer(false)} />

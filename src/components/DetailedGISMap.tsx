@@ -4,195 +4,35 @@ import 'leaflet/dist/leaflet.css'
 import { useData } from '../context/DataContext'
 import { useAdmin } from '../context/AdminContext'
 import { supabase } from '../supabaseClient'
-import { Canvas, useLoader, useFrame, useThree } from '@react-three/fiber'
-import { TextureLoader, BackSide, Euler, Quaternion } from 'three'
-import { PanoramaControls } from 'three-panorama-controls/react'
+import { Canvas } from '@react-three/fiber'
+import { OrbitControls, Stage, useGLTF } from '@react-three/drei'
+import { Suspense } from 'react'
+import PanoramaScene from './PanoramaScene'
 
-// Panorama Scene Component using React Three Fiber
-const PanoramaScene = ({ imageUrl, onDebugUpdate, calibrationOffsets, shouldRecalibrate, onRecalibrateDone, setCalibrationOffsets, gyroEnabled, onLoadComplete }: { 
-  imageUrl: string, 
-  onDebugUpdate: (data: any) => void,
-  calibrationOffsets: { alpha: number, beta: number, gamma: number },
-  shouldRecalibrate: boolean,
-  onRecalibrateDone: () => void,
-  setCalibrationOffsets: (offsets: { alpha: number, beta: number, gamma: number }) => void,
-  gyroEnabled: boolean,
-  onLoadComplete: () => void
-}) => {
-  const texture = useLoader(TextureLoader, imageUrl)
-  const { camera } = useThree()
-  const [gyroscopeEnabled, setGyroscopeEnabled] = useState(false)
-  const [isTextureLoaded, setIsTextureLoaded] = useState(false)
-
-  // Mark texture as loaded and trigger callback
-  useEffect(() => {
-    if (texture) {
-      setIsTextureLoaded(true)
-      onLoadComplete()
-    }
-  }, [texture, onLoadComplete])
-  const [deviceOrientation, setDeviceOrientation] = useState<{ alpha: number | null, beta: number | null, gamma: number | null }>({
-    alpha: null,
-    beta: null,
-    gamma: null
-  })
-
-  // Recalibrate gyroscope
-  const recalibrateGyroscope = () => {
-    if (deviceOrientation.alpha !== null && deviceOrientation.beta !== null && deviceOrientation.gamma !== null) {
-      setCalibrationOffsets({
-        alpha: deviceOrientation.alpha,
-        beta: deviceOrientation.beta,
-        gamma: deviceOrientation.gamma
-      })
-    }
-  }
-
-  // Handle recalibration trigger
-  useEffect(() => {
-    if (shouldRecalibrate) {
-      recalibrateGyroscope()
-      onRecalibrateDone()
-    }
-  }, [shouldRecalibrate, deviceOrientation, setCalibrationOffsets, onRecalibrateDone])
-
-  // Request gyroscope permission when component mounts
-  useEffect(() => {
-    const requestGyroscopePermission = async () => {
-      console.log('🔍 Requesting gyroscope permission...')
-
-      if (typeof DeviceOrientationEvent !== 'undefined' &&
-          typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-        try {
-          const permission = await (DeviceOrientationEvent as any).requestPermission()
-          console.log('📱 Gyroscope permission result:', permission)
-
-          if (permission === 'granted') {
-            setGyroscopeEnabled(true)
-            console.log('✅ Gyroscope permission granted!')
-          } else {
-            console.log('❌ Gyroscope permission denied')
-          }
-        } catch (error) {
-          console.error('❌ Error requesting gyroscope permission:', error)
-        }
-      } else {
-        // Android or desktop - assume permission granted
-        setGyroscopeEnabled(true)
-        console.log('✅ No permission API needed (Android/Desktop)')
-      }
-    }
-
-    requestGyroscopePermission()
-  }, [])
-
-  // Auto-calibrate on first device orientation reading
-  const [hasAutoCalibrated, setHasAutoCalibrated] = useState(false)
-  useEffect(() => {
-    if (!hasAutoCalibrated && gyroscopeEnabled && deviceOrientation.alpha !== null && deviceOrientation.beta !== null && deviceOrientation.gamma !== null) {
-      setCalibrationOffsets({
-        alpha: deviceOrientation.alpha,
-        beta: deviceOrientation.beta,
-        gamma: deviceOrientation.gamma
-      })
-      setHasAutoCalibrated(true)
-      console.log('✅ Auto-calibrated gyroscope on load')
-    }
-  }, [gyroscopeEnabled, deviceOrientation, hasAutoCalibrated, setCalibrationOffsets])
-
-  // Handle device orientation changes
-  useEffect(() => {
-    if (!gyroscopeEnabled) {
-      onDebugUpdate({ gyroscopeEnabled: false, deviceOrientation: null })
-      return
-    }
-
-    const handleDeviceOrientation = (event: DeviceOrientationEvent) => {
-      const orientation = {
-        alpha: event.alpha,
-        beta: event.beta,
-        gamma: event.gamma
-      }
-      setDeviceOrientation(orientation)
-      onDebugUpdate({ gyroscopeEnabled: true, deviceOrientation: orientation })
-    }
-
-    window.addEventListener('deviceorientation', handleDeviceOrientation)
-
-    return () => {
-      window.removeEventListener('deviceorientation', handleDeviceOrientation)
-    }
-  }, [gyroscopeEnabled, onDebugUpdate])
-
-  // Apply device orientation to camera with smooth blending to allow touch controls
-  useFrame(() => {
-    if (!gyroEnabled || !gyroscopeEnabled || !deviceOrientation.alpha || !deviceOrientation.beta || !deviceOrientation.gamma) return
-
-    // Convert device orientation to camera rotation
-    // Alpha = compass direction (Z rotation)
-    // Beta = front/back tilt (X rotation)
-    // Gamma = left/right tilt (Y rotation)
-
-    const alpha = ((deviceOrientation.alpha - calibrationOffsets.alpha) * Math.PI) / 180 // Convert to radians
-    const beta = ((deviceOrientation.beta - calibrationOffsets.beta) * Math.PI) / 180
-    const gamma = ((deviceOrientation.gamma - calibrationOffsets.gamma) * Math.PI) / 180
-
-    // Create quaternion from device orientation
-    const euler = new Euler(beta, alpha, -gamma, 'YXZ')
-    const quaternion = new Quaternion()
-    quaternion.setFromEuler(euler)
-
-    // Apply to camera (full gyro control)
-    camera.quaternion.copy(quaternion)
-  })
-
-  // Debug gyroscope availability
-  useEffect(() => {
-    console.log('🔍 Checking device sensors...')
-
-    // Check for DeviceOrientationEvent
-    if (typeof DeviceOrientationEvent !== 'undefined') {
-      console.log('✅ DeviceOrientationEvent available')
-
-      // Check for permission API
-      if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-        console.log('✅ Permission API available - iOS device detected')
-      } else {
-        console.log('ℹ️ No permission API - Android or desktop device')
-      }
-    } else {
-      console.log('❌ DeviceOrientationEvent not available')
-    }
-
-    // Check for DeviceMotionEvent (accelerometer)
-    if (typeof DeviceMotionEvent !== 'undefined') {
-      console.log('✅ DeviceMotionEvent available (accelerometer)')
-    } else {
-      console.log('❌ DeviceMotionEvent not available')
-    }
-  }, [])
-
-  return (
-    <>
-      {/* Panorama sphere with inverted geometry */}
-      <mesh scale={[-1, 1, 1]}>
-        <sphereGeometry args={[10, 128, 64]} />
-        <meshBasicMaterial map={texture} side={BackSide} />
-      </mesh>
-
-      {/* Modern Three.js panorama controls - enabled with gyroscope */}
-      <PanoramaControls
-        makeDefault={true}
-        enabled={true}
-        zoomable
-        minFov={40}
-        maxFov={75}
-        zoomSpeed={0.05}
-        panSpeed={0.1}
-      />
-    </>
-  )
+function ModelPreview({ url }: { url: string }) {
+  const { scene } = useGLTF(url)
+  return <primitive object={scene} />
 }
+
+// Fix for Leaflet default markers
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Fix for Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -232,6 +72,24 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
   const [isPanoramaLoading, setIsPanoramaLoading] = useState(false)
   const [showCalibratePanel, setShowCalibratePanel] = useState(false)
   const [controlMode, setControlMode] = useState<'swipe' | 'gyro'>('gyro')
+  const [sitePanoramas, setSitePanoramas] = useState<Record<string, { id: string, url: string }>>({})
+  const [currentPanoramaMarkers, setCurrentPanoramaMarkers] = useState<any[]>([])
+  const [selectedPanoramaMarker, setSelectedPanoramaMarker] = useState<any>(null)
+
+  // Fetch panoramas linked to sites
+  useEffect(() => {
+    const fetchPanoramas = async () => {
+      const { data } = await supabase.from('panoramas').select('id, site_id, image_url').eq('is_active', true)
+      if (data) {
+        const map: Record<string, { id: string, url: string }> = {}
+        data.forEach(p => {
+          if (p.site_id) map[p.site_id] = { id: p.id, url: p.image_url }
+        })
+        setSitePanoramas(map)
+      }
+    }
+    fetchPanoramas()
+  }, [])
 
   // Handle fullscreen changes
   useEffect(() => {
@@ -680,6 +538,25 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
   ]
 
   const currentSite = useMemo(() => hotspots.find(h => h.id === selectedHotspot) || null, [hotspots, selectedHotspot])
+
+  // Fetch markers when panorama is shown
+  useEffect(() => {
+    if (showPanoramic && currentSite) {
+      const panorama = sitePanoramas[currentSite.id]
+      if (panorama) {
+        const fetchMarkers = async () => {
+          const { data } = await supabase
+            .from('panorama_markers')
+            .select('*')
+            .eq('panorama_id', panorama.id)
+          console.log('Fetched panorama markers:', data)
+          setCurrentPanoramaMarkers(data || [])
+        }
+        fetchMarkers()
+      }
+    }
+  }, [showPanoramic, currentSite, sitePanoramas])
+
   const currentSpecies = useMemo(() => currentSite ? species.filter(sp => sp.siteIds.includes(currentSite.id)) : [], [species, currentSite])
   const selectedSpeciesData = useMemo(() => currentSpecies.find(sp => sp.id === selectedSpeciesId) || null, [currentSpecies, selectedSpeciesId])
   const closePanel = useCallback(() => { setPanelOpen(false); setSelectedHotspot(null); setSelectedSpeciesId(null); setShowGallery(false) }, [])
@@ -969,7 +846,7 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
                 )}
                 
                 {/* Panoramic View Button */}
-                {currentSite?.panoramicImage && (
+                {((currentSite && sitePanoramas[currentSite.id]?.url) || currentSite?.panoramicImage) && (
                   <div className="relative -mx-4 sm:-mx-6 mb-4 sm:mb-5">
                     <button
                       onClick={() => {
@@ -1402,7 +1279,7 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
       )}
 
       {/* Panoramic Viewer Modal */}
-      {showPanoramic && currentSite?.panoramicImage && (
+      {showPanoramic && ((currentSite && sitePanoramas[currentSite.id]?.url) || currentSite?.panoramicImage) && (
         <div className="fixed inset-0 z-[1200] bg-black">
           <div id="panorama-viewer-container" className="relative w-full h-full bg-black overflow-hidden">
             <button
@@ -1434,7 +1311,9 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
               style={{ width: '100%', height: '100%' }}
             >
               <PanoramaScene 
-                imageUrl={currentSite.panoramicImage} 
+                imageUrl={(currentSite && sitePanoramas[currentSite.id]?.url) || currentSite?.panoramicImage || ''} 
+                markers={currentPanoramaMarkers}
+                onMarkerClick={setSelectedPanoramaMarker}
                 onDebugUpdate={setPanoramaDebugData}
                 calibrationOffsets={calibrationOffsets}
                 shouldRecalibrate={shouldRecalibrate}
@@ -1444,6 +1323,63 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
                 onLoadComplete={() => setIsPanoramaLoading(false)}
               />
             </Canvas>
+
+            {/* Marker Info Modal */}
+            {selectedPanoramaMarker && (
+              <div className="absolute inset-0 z-30 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedPanoramaMarker(null)}>
+                <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+                  <div className="relative h-64 bg-gray-200">
+                    {selectedPanoramaMarker.model_url ? (
+                      <div className="absolute inset-0 bg-gradient-to-b from-gray-800 to-gray-900">
+                        <Canvas shadows dpr={[1, 2]} camera={{ fov: 50 }}>
+                          <Suspense fallback={null}>
+                            <Stage environment="city" intensity={0.5}>
+                              <ModelPreview url={selectedPanoramaMarker.model_url} />
+                            </Stage>
+                          </Suspense>
+                          <OrbitControls autoRotate />
+                        </Canvas>
+                        <div className="absolute bottom-2 right-2 text-[10px] text-white/50 px-2 py-1 bg-black/30 rounded-full">
+                          Interactive 3D View
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/30">
+                        <svg className="w-16 h-16 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                      </div>
+                    )}
+                    <button 
+                      onClick={() => setSelectedPanoramaMarker(null)}
+                      className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors z-10"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                      {selectedPanoramaMarker.title}
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                      {selectedPanoramaMarker.content}
+                    </p>
+                    
+                    <div className="mt-6 flex justify-end">
+                      <button
+                        onClick={() => setSelectedPanoramaMarker(null)}
+                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Control Instructions - hidden */}
             {/* <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-black/70 backdrop-blur-md rounded-xl p-3">

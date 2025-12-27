@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import AdminFeedbacks from './AdminFeedbacks'
+import AdminPanoramaManager from './AdminPanoramaManager'
 import { PlusIcon, EditIcon, DeleteIcon, SaveIcon, CancelIcon, EyeIcon } from './Icons'
 import { SpeciesDetail, SpeciesStatus } from '../data/mati-hotspots'
 import { useData } from '../context/DataContext'
@@ -9,6 +10,7 @@ import { uploadImageToStorage, isValidImageFile } from '../utils/imageUpload'
 interface AdminPanelProps {
   isVisible: boolean
   onClose: () => void
+  initialTab?: 'species' | 'feedbacks' | 'panoramas'
 }
 
 interface SpeciesFormData {
@@ -42,8 +44,17 @@ const emptySpecies: SpeciesFormData = {
   arViewerHtml: undefined
 }
 
-export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
+export default function AdminPanel({ isVisible, onClose, initialTab = 'species' }: AdminPanelProps) {
   const { species, createSpecies, updateSpecies, deleteSpecies, refresh, clearCache, hotspots } = useData()
+  const [activeTab, setActiveTab] = useState<'species' | 'feedbacks' | 'panoramas'>(initialTab)
+
+  // Update active tab when initialTab changes or modal opens
+  useMemo(() => {
+    if (isVisible) {
+      setActiveTab(initialTab)
+    }
+  }, [isVisible, initialTab])
+
   const [showFeedbacks, setShowFeedbacks] = useState(false)
   const [editingSpecies, setEditingSpecies] = useState<SpeciesFormData | null>(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -692,10 +703,10 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         {/* Header */}
         <div className="relative z-10 bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 text-white p-8">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-3xl font-bold mb-2">🌿 Species Administration</h2>
-              <p className="text-white/90 text-lg">Manage biodiversity data for Mati City&apos;s natural heritage</p>
+              <h2 className="text-3xl font-bold mb-2">🌿 Admin Panel</h2>
+              <p className="text-white/90 text-lg">Manage biodiversity data, panoramas, and feedback</p>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -707,12 +718,60 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
               </button>
             </div>
           </div>
+
+          {/* Navigation Tabs */}
+          <div className="flex space-x-1 bg-white/10 p-1 rounded-xl backdrop-blur-sm inline-flex">
+            <button
+              onClick={() => setActiveTab('species')}
+              className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                activeTab === 'species' 
+                  ? 'bg-white text-emerald-600 shadow-lg' 
+                  : 'text-white hover:bg-white/10'
+              }`}
+            >
+              Species
+            </button>
+            <button
+              onClick={() => setActiveTab('panoramas')}
+              className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                activeTab === 'panoramas' 
+                  ? 'bg-white text-emerald-600 shadow-lg' 
+                  : 'text-white hover:bg-white/10'
+              }`}
+            >
+              Panoramas
+            </button>
+            <button
+              onClick={() => setActiveTab('feedbacks')}
+              className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                activeTab === 'feedbacks' 
+                  ? 'bg-white text-emerald-600 shadow-lg' 
+                  : 'text-white hover:bg-white/10'
+              }`}
+            >
+              Feedbacks
+            </button>
+          </div>
         </div>
 
         {/* Content Area */}
-        <div className="relative z-10 flex h-full">
-          {/* Species List */}
-          <div className="w-1/2 border-r border-white/20 dark:border-white/10 p-8 overflow-y-auto">
+        <div className="relative z-10 flex h-full overflow-hidden bg-white dark:bg-slate-800">
+          {activeTab === 'panoramas' && (
+            <div className="w-full h-full">
+              <AdminPanoramaManager />
+            </div>
+          )}
+
+          {activeTab === 'feedbacks' && (
+            <div className="w-full h-full overflow-y-auto">
+              <AdminFeedbacks />
+            </div>
+          )}
+
+          {activeTab === 'species' && (
+            <>
+              {/* Species List */}
+              <div className="w-1/2 border-r border-white/20 dark:border-white/10 p-8 overflow-y-auto">
             {/* Controls */}
             <div className="space-y-6 mb-8">
               <button
@@ -1206,9 +1265,6 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                 </div>
               </div>
             ) : (
-              showFeedbacks ? (
-                <AdminFeedbacks />
-              ) : (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center p-12 max-w-md">
                     <div className="relative mb-6">
@@ -1231,10 +1287,11 @@ export default function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                     </div>
                   </div>
                 </div>
-              )
             )}
           </div>
-          </div>
+          </>
+          )}
+      </div>
       </div>
 
       {/* Image Preview Modal */}
