@@ -73,6 +73,7 @@ export interface Hotspot {
   stewardship: string
   image?: string
   panoramicImage?: string
+  audio_url?: string
   tags: string[]
   highlightSpeciesIds: string[]
   floraIds: string[]

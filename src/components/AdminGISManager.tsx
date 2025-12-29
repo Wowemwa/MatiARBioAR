@@ -23,6 +23,7 @@ interface NewHotspotData {
   features: string[]
   selectedSpeciesIds: string[]
   imageUrl: string
+  audioUrl?: string
   panoramicImageUrl: string
 }
 
@@ -490,14 +491,15 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
                             name: hotspot.name || '',
                             barangay: hotspot.barangay || '',
                             description: hotspot.description || '',
-                            areaHectares: hotspot.area_hectares || 0,
+                            areaHectares: hotspot.areaHectares || 0,
                             lat: hotspot.lat,
                             lng: hotspot.lng,
                             type: hotspot.type as 'marine' | 'terrestrial',
                             features: hotspot.features || [],
                             selectedSpeciesIds: [],
-                            imageUrl: hotspot.image_url || '',
-                            panoramicImageUrl: ''
+                            imageUrl: hotspot.image || '',
+                            audioUrl: (hotspot as any).audio_url || '',
+                            panoramicImageUrl: hotspot.panoramicImage || ''
                           })
                           setMarkerType(hotspot.type as 'marine' | 'terrestrial')
                           setShowMarkerForm(true)
