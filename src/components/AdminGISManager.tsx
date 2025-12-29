@@ -238,7 +238,8 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
     }
 
     try {
-      const siteId = `custom-${Date.now()}`
+      // Use existing ID if editing, otherwise create new one
+      const siteId = selectedHotspot || `custom-${Date.now()}`
       
       const siteData = {
         id: siteId,
@@ -260,11 +261,10 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
         visitor_notes: null
       }
 
-      const { error: siteError } = await supabase
-        .from('sites')
-        .insert(siteData)
-        .select()
-        .single()
+      // If editing (selectedHotspot exists), update; otherwise insert new
+      const { error: siteError } = selectedHotspot
+        ? await supabase.from('sites').update(siteData).eq('id', siteId)
+        : await supabase.from('sites').insert(siteData).select().single()
 
       if (siteError) {
         console.error('Error saving site:', siteError)
@@ -289,13 +289,14 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
         }
       }
 
-      alert(`✅ Site "${newHotspotData.name}" saved successfully!`)
+      alert(`✅ Site "${newHotspotData.name}" ${selectedHotspot ? 'updated' : 'saved'} successfully!`)
       
       if (tempMarker && mapRef.current) {
         mapRef.current.removeLayer(tempMarker)
         setTempMarker(null)
       }
       setShowMarkerForm(false)
+      setSelectedHotspot(null)
       setNewHotspotData({
         name: '',
         barangay: '',
@@ -316,7 +317,7 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
       console.error('Unexpected error saving site:', error)
       alert(`Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
-  }, [newHotspotData, tempMarker])
+  }, [newHotspotData, tempMarker, selectedHotspot])
 
   const handleDelete = useCallback(async () => {
     if (!selectedHotspot) return
@@ -392,7 +393,7 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
           <div className="w-80 border-r border-gray-200 dark:border-gray-700 p-6 overflow-y-auto bg-white dark:bg-slate-800">
             <div className="space-y-4">
               <div>
-                <h3 className="font-bold text-lg mb-3">Marker Type</h3>
+                <h3 className="font-bold text-lg mb-3 text-gray-900 dark:text-white">Marker Type</h3>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setMarkerType('marine')}
@@ -415,33 +416,60 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
                     🏔️ Terrestrial
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
                   💡 <strong>Auto-detected:</strong> Type is automatically suggested based on location
                 </p>
               </div>
 
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl p-4">
-                <p className="text-sm text-gray-700 dark:text-gray-300">
+                <p className="text-sm text-gray-900 dark:text-gray-200">
                   💡 <strong>Smart Auto-fill:</strong> Click anywhere on the map to place a marker. Barangay and site type will be automatically detected and filled based on the location!
                 </p>
               </div>
 
               {selectedHotspot && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl p-4">
-                  <h4 className="font-bold mb-2">Selected Marker</h4>
-                  <p className="text-sm mb-3">{hotspots.find(h => h.id === selectedHotspot)?.name}</p>
-                  <button
-                    onClick={handleDelete}
-                    className="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold flex items-center justify-center gap-2"
-                  >
-                    <DeleteIcon className="w-4 h-4" />
-                    Delete Marker
-                  </button>
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl p-4">
+                  <h4 className="font-bold mb-2 text-gray-900 dark:text-white">Selected Marker</h4>
+                  <p className="text-sm mb-3 text-gray-700 dark:text-gray-300">{hotspots.find(h => h.id === selectedHotspot)?.name}</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        const hotspot = hotspots.find(h => h.id === selectedHotspot)
+                        if (hotspot) {
+                          setNewHotspotData({
+                            name: hotspot.name || '',
+                            barangay: hotspot.barangay || '',
+                            description: hotspot.description || '',
+                            areaHectares: hotspot.area_hectares || 0,
+                            lat: hotspot.lat,
+                            lng: hotspot.lng,
+                            type: hotspot.type as 'marine' | 'terrestrial',
+                            features: hotspot.features || [],
+                            selectedSpeciesIds: [],
+                            imageUrl: hotspot.image_url || '',
+                            panoramicImageUrl: ''
+                          })
+                          setMarkerType(hotspot.type as 'marine' | 'terrestrial')
+                          setShowMarkerForm(true)
+                        }
+                      }}
+                      className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold flex items-center justify-center gap-2"
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold flex items-center justify-center gap-2"
+                    >
+                      <DeleteIcon className="w-4 h-4" />
+                      Delete
+                    </button>
+                  </div>
                 </div>
               )}
 
               <div>
-                <h4 className="font-bold mb-2">Existing Markers</h4>
+                <h4 className="font-bold mb-2 text-gray-900 dark:text-white">Existing Markers</h4>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {hotspots.map(hotspot => (
                     <div
@@ -459,8 +487,8 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
                       <div className="flex items-center gap-2">
                         <span className="text-xl">{hotspot.type === 'marine' ? '🌊' : '🏔️'}</span>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold truncate">{hotspot.name}</p>
-                          <p className="text-xs text-gray-500">{hotspot.type}</p>
+                          <p className="font-semibold truncate text-gray-900 dark:text-white">{hotspot.name}</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">{hotspot.type}</p>
                         </div>
                       </div>
                     </div>
