@@ -7,6 +7,7 @@ export interface Panorama {
   description?: string
   image_url: string
   thumbnail_url?: string
+  audio_url?: string
   is_active: boolean
   initial_view_h: number
   initial_view_v: number
@@ -52,6 +53,7 @@ export interface PanoramaSceneProps {
   onLinkClick?: (link: PanoramaLink) => void
   allPanoramas?: Panorama[]
   imageUrl: string
+  audioUrl?: string
   onDebugUpdate?: (data: any) => void
   calibrationOffsets?: CalibrationOffsets
   shouldRecalibrate?: boolean

@@ -107,53 +107,53 @@ function LinkItem({ link, onClick, targetPanorama }: { link: any, onClick?: (lin
 
       {/* Navigation Arrow - Google Street Map Style - Base circle */}
       <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.4, 0.4, 0.1, 32]} />
+        <cylinderGeometry args={[0.5, 0.5, 0.15, 32]} />
         <meshStandardMaterial 
-          color="#ffffff" 
+          color="#60a5fa" 
           transparent 
-          opacity={hovered ? 0.95 : 0.5}
-          emissive="#ffffff"
-          emissiveIntensity={hovered ? 0.2 : 0.05}
-          metalness={0.3}
-          roughness={0.4}
+          opacity={hovered ? 1.0 : 0.9}
+          emissive="#3b82f6"
+          emissiveIntensity={hovered ? 0.6 : 0.4}
+          metalness={0.1}
+          roughness={0.2}
         />
       </mesh>
 
       {/* Arrow shaft */}
       <mesh position={[0, 0.5, 0]}>
-        <cylinderGeometry args={[0.15, 0.15, 0.8, 16]} />
+        <cylinderGeometry args={[0.18, 0.18, 1.0, 16]} />
         <meshStandardMaterial 
-          color="#ffffff" 
+          color="#60a5fa" 
           transparent 
-          opacity={hovered ? 1.0 : 0.5}
-          emissive="#ffffff"
-          emissiveIntensity={hovered ? 0.3 : 0.1}
-          metalness={0.3}
-          roughness={0.4}
+          opacity={hovered ? 1.0 : 0.95}
+          emissive="#3b82f6"
+          emissiveIntensity={hovered ? 0.7 : 0.5}
+          metalness={0.1}
+          roughness={0.2}
         />
       </mesh>
 
       {/* Arrow cone on top - Pointing up */}
       <mesh position={[0, 1.0, 0]}>
-        <coneGeometry args={[0.35, 0.5, 16]} />
+        <coneGeometry args={[0.4, 0.6, 16]} />
         <meshStandardMaterial 
-          color="#ffffff" 
+          color="#60a5fa" 
           transparent 
-          opacity={hovered ? 1.0 : 0.5}
-          emissive="#ffffff"
-          emissiveIntensity={hovered ? 0.3 : 0.1}
-          metalness={0.3}
-          roughness={0.4}
+          opacity={hovered ? 1.0 : 0.95}
+          emissive="#3b82f6"
+          emissiveIntensity={hovered ? 0.8 : 0.6}
+          metalness={0.1}
+          roughness={0.2}
         />
       </mesh>
 
-      {/* Subtle glow effect when hovered - Static, just changes opacity */}
+      {/* Subtle glow effect - Static, just changes opacity */}
       <mesh>
-        <sphereGeometry args={[0.9, 16, 16]} />
+        <sphereGeometry args={[1.1, 16, 16]} />
         <meshBasicMaterial 
-          color="#ffffff" 
+          color="#3b82f6" 
           transparent 
-          opacity={hovered ? 0.12 : 0} 
+          opacity={hovered ? 0.25 : 0.15} 
         />
       </mesh>
 
@@ -283,6 +283,7 @@ function useProgressiveLoader(imageUrl: string, onProgress?: (progress: number) 
 
 export default function PanoramaScene({ 
   imageUrl, 
+  audioUrl,
   onDebugUpdate = () => {}, 
   calibrationOffsets = { alpha: 0, beta: 0, gamma: 0 }, 
   shouldRecalibrate = false, 
@@ -301,9 +302,106 @@ export default function PanoramaScene({
   const [gyroscopeEnabled, setGyroscopeEnabled] = useState(false)
   const [loadingProgress, setLoadingProgress] = useState(0)
   const controlsRef = useRef<any>(null)
+  const [isUserInteracting, setIsUserInteracting] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const interactionTimeoutRef = useRef<any>(null)
   
   // Use progressive loading
   const { texture, progress, error } = useProgressiveLoader(imageUrl, setLoadingProgress)
+
+  // Auto-pan rotation when not interacting
+  useFrame((state, delta) => {
+    // Auto-rotate when not interacting
+    if (!isUserInteracting && !gyroEnabled && camera && controlsRef.current) {
+      camera.rotation.y += delta * 0.05 // Slow rotation speed
+    }
+  })
+
+  // Track user interaction
+  useEffect(() => {
+    const handleInteractionStart = () => {
+      setIsUserInteracting(true)
+      if (interactionTimeoutRef.current) {
+        clearTimeout(interactionTimeoutRef.current)
+      }
+    }
+
+    const handleInteractionEnd = () => {
+      // Resume auto-pan after 3 seconds of no interaction
+      interactionTimeoutRef.current = setTimeout(() => {
+        setIsUserInteracting(false)
+      }, 3000)
+    }
+
+    window.addEventListener('mousedown', handleInteractionStart)
+    window.addEventListener('touchstart', handleInteractionStart)
+    window.addEventListener('mouseup', handleInteractionEnd)
+    window.addEventListener('touchend', handleInteractionEnd)
+    window.addEventListener('wheel', handleInteractionStart)
+
+    return () => {
+      window.removeEventListener('mousedown', handleInteractionStart)
+      window.removeEventListener('touchstart', handleInteractionStart)
+      window.removeEventListener('mouseup', handleInteractionEnd)
+      window.removeEventListener('touchend', handleInteractionEnd)
+      window.removeEventListener('wheel', handleInteractionStart)
+      if (interactionTimeoutRef.current) {
+        clearTimeout(interactionTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  // Audio playback - continues across panorama navigation within same site
+  useEffect(() => {
+    console.log('[Audio Playback] Effect triggered. audioUrl:', audioUrl, 'texture loaded:', !!texture)
+    
+    if (audioUrl && texture) {
+      // Only create/update if URL changed or audio doesn't exist
+      if (!audioRef.current || audioRef.current.src !== audioUrl) {
+        console.log('[Audio Playback] Creating/updating audio element')
+        
+        // Pause old audio if changing to different audio
+        if (audioRef.current && audioRef.current.src !== audioUrl) {
+          audioRef.current.pause()
+          audioRef.current.currentTime = 0
+        }
+        
+        // Create or update audio element
+        if (!audioRef.current) {
+          audioRef.current = new Audio(audioUrl)
+          audioRef.current.loop = true
+          audioRef.current.volume = 0.3 // 30% volume
+        } else {
+          audioRef.current.src = audioUrl
+        }
+
+        // Play audio
+        audioRef.current.play().catch(err => {
+          console.log('Audio autoplay blocked, waiting for user interaction:', err)
+          // Browser blocked autoplay, wait for user interaction
+          const playOnInteraction = () => {
+            audioRef.current?.play().catch(e => console.error('Audio play error:', e))
+            window.removeEventListener('click', playOnInteraction)
+            window.removeEventListener('touchstart', playOnInteraction)
+          }
+          window.addEventListener('click', playOnInteraction, { once: true })
+          window.addEventListener('touchstart', playOnInteraction, { once: true })
+        })
+      }
+    } else if (!audioUrl && audioRef.current) {
+      // Stop audio if no audio URL (switched to site without audio)
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+    }
+
+    // Cleanup audio only on unmount (not on panorama change)
+    return () => {
+      if (audioRef.current && !audioUrl) {
+        audioRef.current.pause()
+        audioRef.current.currentTime = 0
+      }
+    }
+  }, [audioUrl, texture])
 
   // Listen for reset view event
   useEffect(() => {
@@ -439,37 +537,25 @@ export default function PanoramaScene({
     }
   }
 
-  // Show loading state or error
-  if (!texture) {
+  // Show error only - loading is handled by earth loader in parent
+  if (error) {
     return (
       <Html center>
         <div className="flex flex-col items-center gap-3 bg-black/80 backdrop-blur-md px-6 py-4 rounded-xl border border-white/20">
-          {error ? (
-            <>
-              <div className="text-red-400 text-sm font-medium">⚠️ {error}</div>
-              <button 
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg text-xs transition-colors"
-              >
-                Retry
-              </button>
-            </>
-          ) : (
-            <>
-              <div className="w-48 h-2 bg-white/10 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-300 ease-out"
-                  style={{ width: `${loadingProgress}%` }}
-                />
-              </div>
-              <div className="text-white text-sm font-medium">
-                Loading Panorama... {Math.round(loadingProgress)}%
-              </div>
-            </>
-          )}
+          <div className="text-red-400 text-sm font-medium">⚠️ {error}</div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg text-xs transition-colors"
+          >
+            Retry
+          </button>
         </div>
       </Html>
     )
+  }
+
+  if (!texture) {
+    return null
   }
 
   return (

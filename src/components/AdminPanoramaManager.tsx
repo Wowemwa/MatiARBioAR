@@ -33,6 +33,7 @@ export default function AdminPanoramaManager() {
   const [tourPanoramas, setTourPanoramas] = useState<string[]>([]) // IDs of panoramas in current tour
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null) // Currently selected site
   const [expandedSites, setExpandedSites] = useState<Set<string>>(new Set()) // Expanded site accordions
+  const [uploadingAudio, setUploadingAudio] = useState(false)
 
   const handleModelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return
@@ -65,6 +66,42 @@ export default function AdminPanoramaManager() {
       alert('Error uploading model')
     } finally {
       setUploadingModel(false)
+    }
+  }
+
+  const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return
+    
+    const file = e.target.files[0]
+    const validTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg']
+    if (!validTypes.includes(file.type)) {
+      alert('Please upload an audio file (MP3, WAV, or OGG)')
+      return
+    }
+
+    setUploadingAudio(true)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}_${Math.random()}.${fileExt}`
+      const filePath = `${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('panorama_audio')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('panorama_audio')
+        .getPublicUrl(filePath)
+
+      setEditForm(prev => ({ ...prev, audio_url: publicUrl }))
+      alert('Audio uploaded successfully!')
+    } catch (error) {
+      console.error('Error uploading audio:', error)
+      alert('Error uploading audio')
+    } finally {
+      setUploadingAudio(false)
     }
   }
 
@@ -203,6 +240,7 @@ export default function AdminPanoramaManager() {
       description: editForm.description,
       image_url: editForm.image_url,
       thumbnail_url: editForm.thumbnail_url,
+      audio_url: editForm.audio_url,
       is_active: editForm.is_active,
       initial_view_h: editForm.initial_view_h,
       initial_view_v: editForm.initial_view_v,
@@ -950,6 +988,64 @@ export default function AdminPanoramaManager() {
                         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="https://..."
                       />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Background Music (Optional)</label>
+                    <div className="space-y-3">
+                      {editForm.audio_url ? (
+                        <div className="bg-gray-50 dark:bg-slate-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
+                              </svg>
+                              <span className="text-sm font-medium text-gray-900 dark:text-white">Audio Uploaded</span>
+                            </div>
+                            <button
+                              onClick={() => setEditForm(prev => ({ ...prev, audio_url: '' }))}
+                              className="text-red-600 hover:text-red-700 text-sm font-medium"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                          <audio controls className="w-full" src={editForm.audio_url} />
+                        </div>
+                      ) : (
+                        <div className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-purple-500 dark:hover:border-purple-400 transition-colors bg-gray-50 dark:bg-slate-800/50">
+                          <input
+                            type="file"
+                            accept="audio/*"
+                            onChange={handleAudioUpload}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                          />
+                          <div className="flex flex-col items-center justify-center space-y-2">
+                            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-full">
+                              <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                Click to upload background music
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                MP3, WAV, or OGG (Max 10MB)
+                              </p>
+                            </div>
+                            {uploadingAudio && (
+                              <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-medium text-sm">
+                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
+                                Uploading audio...
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        💡 This audio will play automatically when users view this panorama
+                      </p>
                     </div>
                   </div>
 

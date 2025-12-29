@@ -104,22 +104,22 @@ export default function GISMapPage({ className = '' }: GISMapPageProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-blue-50/50 dark:from-slate-800/50 dark:to-blue-900/20 rounded-lg sm:rounded-xl border border-slate-200/50 dark:border-slate-700/50">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-blue-50/50 dark:from-slate-800/50 dark:to-blue-900/20 rounded-lg sm:rounded-xl border border-slate-200/50 dark:border-slate-700/50">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <kbd className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white dark:bg-slate-700 rounded border border-slate-200 dark:border-slate-600 text-xs font-mono">Click</kbd>
-                <span className="text-xs text-slate-600 dark:text-slate-400">Select</span>
+                <span className="text-xs text-slate-600 dark:text-slate-200">Select</span>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <kbd className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white dark:bg-slate-700 rounded border border-slate-200 dark:border-slate-600 text-xs font-mono">Scroll</kbd>
-                <span className="text-xs text-slate-600 dark:text-slate-400">Zoom</span>
+                <span className="text-xs text-slate-600 dark:text-slate-200">Zoom</span>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <kbd className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white dark:bg-slate-700 rounded border border-slate-200 dark:border-slate-600 text-xs font-mono">Drag</kbd>
-                <span className="text-xs text-slate-600 dark:text-slate-400">Pan</span>
+                <span className="text-xs text-slate-600 dark:text-slate-200">Pan</span>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <kbd className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white dark:bg-slate-700 rounded border border-slate-200 dark:border-slate-600 text-xs font-mono">Layer</kbd>
-                <span className="text-xs text-slate-600 dark:text-slate-400">Switch</span>
+                <span className="text-xs text-slate-600 dark:text-slate-200">Switch</span>
               </div>
             </div>
           </div>

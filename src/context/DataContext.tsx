@@ -87,7 +87,7 @@ interface DataProviderProps {
   children: ReactNode
 }
 
-const CACHE_VERSION = 'v3' // Increment to invalidate old cache
+const CACHE_VERSION = 'v4' // Increment to invalidate old cache
 const SPECIES_STORAGE_KEY = `mati-species-data:${CACHE_VERSION}`
 const HOTSPOTS_STORAGE_KEY = `mati-hotspots-data:${CACHE_VERSION}`
 const TEAM_STORAGE_KEY = `mati-team-data:${CACHE_VERSION}`
@@ -231,7 +231,8 @@ export function DataProvider({ children }: DataProviderProps) {
             supabase.from('sites').select('*').order('name'),
             supabase.from('species').select('*').order('common_name'),
             supabase.from('species_sites').select('*'),
-            supabase.from('team_members').select('*').order('sort_order')
+            supabase.from('team_members').select('*').order('sort_order'),
+            supabase.from('panoramas').select('*')
           ])
           let results: any
           try {
@@ -245,18 +246,26 @@ export function DataProvider({ children }: DataProviderProps) {
             throw new Error('Database query timeout')
           }
 
-          const [sitesResult, speciesResult, speciesSitesResult, teamResult] = results
+          const [sitesResult, speciesResult, speciesSitesResult, teamResult, panoramasResult] = results
 
           // Check for errors
           if (sitesResult.error) throw sitesResult.error
           if (speciesResult.error) throw speciesResult.error
           if (speciesSitesResult.error) throw speciesSitesResult.error
           if (teamResult.error) throw teamResult.error
+          if (panoramasResult.error) throw panoramasResult.error
 
           const sitesData = sitesResult.data || []
           const speciesData = speciesResult.data || []
           const speciesSitesData = speciesSitesResult.data || []
           const teamData = teamResult.data || []
+          const panoramasData = panoramasResult.data || []
+
+          // Create a map of site_id to active panorama image_url
+          const sitePanoramaMap: Record<string, string> = {}
+          panoramasData.filter((p: any) => p.is_active && p.site_id).forEach((p: any) => {
+            sitePanoramaMap[p.site_id] = p.image_url
+          })
 
           // Transform sites data to match Hotspot interface
           const transformedSites: Hotspot[] = sitesData.map((site: any) => ({
@@ -276,7 +285,8 @@ export function DataProvider({ children }: DataProviderProps) {
             features: site.features || [],
             stewardship: site.stewardship,
             image: site.image_url,
-            panoramicImage: site.panoramic_image_url,
+            panoramicImage: site.panoramic_image_url || sitePanoramaMap[site.id],
+            audio_url: site.audio_url || null,
             tags: site.tags || [],
             visitorNotes: site.visitor_notes,
             // Map species relationships

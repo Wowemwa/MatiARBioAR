@@ -35,6 +35,7 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
   const [showMarkerForm, setShowMarkerForm] = useState(false)
   const [selectedHotspot, setSelectedHotspot] = useState<string | null>(null)
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [uploadingAudio, setUploadingAudio] = useState(false)
   const [fetchingInfo, setFetchingInfo] = useState(false)
   const [newHotspotData, setNewHotspotData] = useState<NewHotspotData>({
     name: '',
@@ -47,6 +48,7 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
     features: [],
     selectedSpeciesIds: [],
     imageUrl: '',
+    audioUrl: '',
     panoramicImageUrl: ''
   })
 
@@ -231,6 +233,47 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
     }
   }, [])
 
+  const handleAudioUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const validTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg']
+    if (!validTypes.includes(file.type)) {
+      alert('Please upload an audio file (MP3, WAV, or OGG)')
+      return
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Audio size should be less than 10MB')
+      return
+    }
+
+    setUploadingAudio(true)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}_${Math.random()}.${fileExt}`
+      const filePath = `${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('panorama_audio')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('panorama_audio')
+        .getPublicUrl(filePath)
+
+      setNewHotspotData(prev => ({ ...prev, audioUrl: publicUrl }))
+      alert('Audio uploaded successfully!')
+    } catch (error) {
+      console.error('Error uploading audio:', error)
+      alert('Error uploading audio. Make sure the panorama_audio bucket exists.')
+    } finally {
+      setUploadingAudio(false)
+    }
+  }, [])
+
   const handleSave = useCallback(async () => {
     if (!newHotspotData.name || !newHotspotData.description) {
       alert('Please fill in at least the name and description')
@@ -257,6 +300,7 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
         stewardship: 'To be determined',
         tags: [],
         image_url: newHotspotData.imageUrl || null,
+        audio_url: newHotspotData.audioUrl || null,
         panoramic_image_url: newHotspotData.panoramicImageUrl || null,
         visitor_notes: null
       }
@@ -611,16 +655,6 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-2 text-gray-900 dark:text-white">Area (hectares)</label>
-                  <input
-                    type="number"
-                    value={newHotspotData.areaHectares}
-                    onChange={(e) => setNewHotspotData(prev => ({ ...prev, areaHectares: parseFloat(e.target.value) || 0 }))}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                  />
-                </div>
-
-                <div>
                   <label className="block font-semibold mb-2 text-gray-900 dark:text-white">Site Image</label>
                   <div className="space-y-2">
                     {newHotspotData.imageUrl && (
@@ -670,6 +704,48 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
                         </p>
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-semibold mb-2 text-gray-900 dark:text-white">Background Music (Optional)</label>
+                  <div className="space-y-3">
+                    {newHotspotData.audioUrl ? (
+                      <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
+                            </svg>
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">Audio Uploaded</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setNewHotspotData(prev => ({ ...prev, audioUrl: '' }))}
+                            className="text-red-600 hover:text-red-700 text-sm font-medium"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                        <audio controls className="w-full" src={newHotspotData.audioUrl} />
+                      </div>
+                    ) : (
+                      <>
+                        <input
+                          type="file"
+                          accept="audio/*"
+                          onChange={handleAudioUpload}
+                          disabled={uploadingAudio}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                        />
+                        {uploadingAudio && (
+                          <p className="text-sm text-purple-600">Uploading audio...</p>
+                        )}
+                      </>
+                    )}
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      🎵 This audio will play continuously across all panoramas in this site
+                    </p>
                   </div>
                 </div>
 

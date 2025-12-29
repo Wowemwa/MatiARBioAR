@@ -237,7 +237,7 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
         zoom: 11,
         zoomControl: false, // We'll add custom zoom controls
         attributionControl: true,
-        minZoom: 10,
+        minZoom: 5,
         maxZoom: 18
       })
 
@@ -466,6 +466,14 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
   // Add markers for filtered hotspots
     try {
       filteredHotspots.forEach(site => {
+        // Check if site has panoramic tour
+        const hasPanorama = !!site.panoramicImage
+        
+        // Debug: Log panoramic image status
+        if (site.panoramicImage) {
+          console.log(`Site ${site.name} has panoramic image:`, site.panoramicImage)
+        }
+        
         // Custom icons based on site type with pulse animation
         const iconHtml = site.type === 'marine' 
           ? `<div class="marker-pulse" style="
@@ -481,7 +489,11 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
               box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
               cursor: pointer;
               transition: all 0.3s ease;
-            ">🌊</div>`
+              position: relative;
+            ">
+              🌊
+              ${hasPanorama ? '<div style="position: absolute; top: -2px; right: -2px; width: 16px; height: 16px; background: #fbbf24; border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">📷</div>' : ''}
+            </div>`
           : `<div class="marker-pulse" style="
               width: 40px; 
               height: 40px; 
@@ -495,7 +507,11 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
               box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
               cursor: pointer;
               transition: all 0.3s ease;
-            ">🏔️</div>`
+              position: relative;
+            ">
+              🏔️
+              ${hasPanorama ? '<div style="position: absolute; top: -2px; right: -2px; width: 16px; height: 16px; background: #fbbf24; border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">📷</div>' : ''}
+            </div>`
 
         const customIcon = L.divIcon({
           html: iconHtml,
@@ -1515,6 +1531,11 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
               >
                 <PanoramaScene 
                   imageUrl={(currentSite && sitePanoramas[currentSite.id]?.url) || currentSite?.panoramicImage || ''} 
+                  audioUrl={(() => {
+                    console.log('[Audio Debug] Current Site:', currentSite?.name)
+                    console.log('[Audio Debug] Audio URL:', currentSite?.audio_url)
+                    return currentSite?.audio_url
+                  })()}
                   markers={currentPanoramaMarkers}
                   links={currentPanoramaLinks}
                   allPanoramas={allPanoramas}
@@ -1659,15 +1680,7 @@ export default function DetailedGISMap({ className = '' }: DetailedGISMapProps) 
               </div>
             )}
 
-            {/* Quick Loading Indicator for Navigation (no earth effect) */}
-            {isPanoramaLoading && !showInitialEarthLoader && (
-              <div className="absolute inset-0 z-20 bg-black/50 backdrop-blur-sm flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                  <p className="text-white text-sm font-medium">Loading...</p>
-                </div>
-              </div>
-            )}
+
 
             {/* Control Mode Toggle - Lower Left */}
             <div className="absolute bottom-4 left-4 z-10">

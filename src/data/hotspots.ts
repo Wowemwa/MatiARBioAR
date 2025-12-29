@@ -39,6 +39,7 @@ export interface Hotspot {
   stewardship: string
   image?: string
   panoramicImage?: string
+  audio_url?: string
   tags: string[]
   highlightSpeciesIds: string[]
   floraIds: string[]
@@ -65,7 +66,8 @@ export const HOTSPOTS: Hotspot[] = [
     features: [
       'First UNESCO World Heritage Site in Mindanao (2014)',
       'Unique pygmy forest with century-old dwarf trees',
-      'Five endemic Nepenthes species including N. hamiguitanensis',
+      'Five endemic Nepenthes speci
+      es including N. hamiguitanensis',
       'Habitat for 11 IUCN Red List endangered vertebrates',
       'Eastern Mindanao Biodiversity Corridor component',
       '45 orchid species with high endemism'
