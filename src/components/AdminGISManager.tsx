@@ -396,7 +396,10 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
                 <h3 className="font-bold text-lg mb-3 text-gray-900 dark:text-white">Marker Type</h3>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setMarkerType('marine')}
+                    onClick={() => {
+                      setMarkerType('marine')
+                      setNewHotspotData(prev => ({ ...prev, type: 'marine' }))
+                    }}
                     className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-all ${
                       markerType === 'marine'
                         ? 'bg-blue-500 text-white shadow-lg'
@@ -406,7 +409,10 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
                     🌊 Marine
                   </button>
                   <button
-                    onClick={() => setMarkerType('terrestrial')}
+                    onClick={() => {
+                      setMarkerType('terrestrial')
+                      setNewHotspotData(prev => ({ ...prev, type: 'terrestrial' }))
+                    }}
                     className={`flex-1 px-4 py-3 rounded-xl font-semibold transition-all ${
                       markerType === 'terrestrial'
                         ? 'bg-green-500 text-white shadow-lg'
