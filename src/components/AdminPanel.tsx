@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import AdminFeedbacks from './AdminFeedbacks'
 import AdminPanoramaManager from './AdminPanoramaManager'
 import { PlusIcon, EditIcon, DeleteIcon, SaveIcon, CancelIcon, EyeIcon } from './Icons'
@@ -47,6 +47,18 @@ const emptySpecies: SpeciesFormData = {
 export default function AdminPanel({ isVisible, onClose, initialTab = 'species' }: AdminPanelProps) {
   const { species, createSpecies, updateSpecies, deleteSpecies, refresh, clearCache, hotspots } = useData()
   const [activeTab, setActiveTab] = useState<'species' | 'feedbacks' | 'panoramas'>(initialTab)
+
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (isVisible) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isVisible])
 
   // Update active tab when initialTab changes or modal opens
   useMemo(() => {
@@ -717,40 +729,6 @@ export default function AdminPanel({ isVisible, onClose, initialTab = 'species' 
                 <CancelIcon className="w-6 h-6 transition-transform duration-300 group-hover:rotate-90" />
               </button>
             </div>
-          </div>
-
-          {/* Navigation Tabs */}
-          <div className="flex space-x-1 bg-white/10 p-1 rounded-xl backdrop-blur-sm inline-flex">
-            <button
-              onClick={() => setActiveTab('species')}
-              className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                activeTab === 'species' 
-                  ? 'bg-white text-emerald-600 shadow-lg' 
-                  : 'text-white hover:bg-white/10'
-              }`}
-            >
-              Species
-            </button>
-            <button
-              onClick={() => setActiveTab('panoramas')}
-              className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                activeTab === 'panoramas' 
-                  ? 'bg-white text-emerald-600 shadow-lg' 
-                  : 'text-white hover:bg-white/10'
-              }`}
-            >
-              Panoramas
-            </button>
-            <button
-              onClick={() => setActiveTab('feedbacks')}
-              className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                activeTab === 'feedbacks' 
-                  ? 'bg-white text-emerald-600 shadow-lg' 
-                  : 'text-white hover:bg-white/10'
-              }`}
-            >
-              Feedbacks
-            </button>
           </div>
         </div>
 

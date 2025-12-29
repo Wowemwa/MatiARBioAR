@@ -50,6 +50,18 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
     panoramicImageUrl: ''
   })
 
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (isVisible) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isVisible])
+
   // Initialize map
   useEffect(() => {
     if (!isVisible || !mapContainerRef.current || mapRef.current) return
@@ -482,13 +494,13 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
               
               <div className="p-6 space-y-4">
                 <div>
-                  <label className="block font-semibold mb-2">Site Name *</label>
+                  <label className="block font-semibold mb-2 text-gray-900 dark:text-white">Site Name *</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       value={newHotspotData.name}
                       onChange={(e) => setNewHotspotData(prev => ({ ...prev, name: e.target.value }))}
-                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700"
+                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                       placeholder="Enter site name"
                     />
                     <button
@@ -547,17 +559,17 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-2">Description *</label>
+                  <label className="block font-semibold mb-2 text-gray-900 dark:text-white">Description *</label>
                   <textarea
                     value={newHotspotData.description}
                     onChange={(e) => setNewHotspotData(prev => ({ ...prev, description: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 h-24"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white h-24"
                     placeholder="Describe the site"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-2 flex items-center gap-2">
+                  <label className="block font-semibold mb-2 flex items-center gap-2 text-gray-900 dark:text-white">
                     Barangay
                     <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded-full">
                       Auto-filled
@@ -567,23 +579,23 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
                     type="text"
                     value={newHotspotData.barangay}
                     onChange={(e) => setNewHotspotData(prev => ({ ...prev, barangay: e.target.value }))}
-                    className="w-full px-4 py-2 border border-green-300 dark:border-green-600 rounded-lg bg-green-50 dark:bg-green-900/20"
+                    className="w-full px-4 py-2 border border-green-300 dark:border-green-600 rounded-lg bg-green-50 dark:bg-green-900/20 text-gray-900 dark:text-white"
                     placeholder="Auto-detected barangay"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-2">Area (hectares)</label>
+                  <label className="block font-semibold mb-2 text-gray-900 dark:text-white">Area (hectares)</label>
                   <input
                     type="number"
                     value={newHotspotData.areaHectares}
                     onChange={(e) => setNewHotspotData(prev => ({ ...prev, areaHectares: parseFloat(e.target.value) || 0 }))}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-2">Site Image</label>
+                  <label className="block font-semibold mb-2 text-gray-900 dark:text-white">Site Image</label>
                   <div className="space-y-2">
                     {newHotspotData.imageUrl && (
                       <div className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
@@ -611,12 +623,12 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
                     {uploadingImage && (
                       <p className="text-sm text-blue-600">Uploading image...</p>
                     )}
-                    <p className="text-xs text-gray-500">Max 5MB. This image will be displayed when users view this site on the map.</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Max 5MB. This image will be displayed when users view this site on the map.</p>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-2">360° Panoramic Image</label>
+                  <label className="block font-semibold mb-2 text-gray-900 dark:text-white">360° Panoramic Image</label>
                   <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
                     <div className="flex items-start gap-3">
                       <div className="p-2 bg-orange-100 dark:bg-orange-800 rounded-lg">
@@ -636,7 +648,7 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-2">Assign Species (optional)</label>
+                  <label className="block font-semibold mb-2 text-gray-900 dark:text-white">Assign Species (optional)</label>
                   <div className="max-h-40 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 space-y-2">
                     {species.map(sp => (
                       <label key={sp.id} className="flex items-center gap-2 cursor-pointer">
@@ -658,7 +670,7 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
                           }}
                           className="rounded"
                         />
-                        <span className="text-sm">{sp.commonName} ({sp.scientificName})</span>
+                        <span className="text-sm text-gray-900 dark:text-white">{sp.commonName} ({sp.scientificName})</span>
                       </label>
                     ))}
                   </div>
@@ -674,7 +686,7 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
                   </button>
                   <button
                     onClick={cancelMarkerPlacement}
-                    className="px-6 py-3 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 rounded-xl font-semibold"
+                    className="px-6 py-3 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-900 dark:text-white rounded-xl font-semibold"
                   >
                     Cancel
                   </button>

@@ -24,6 +24,18 @@ export default function AdminFeedbacksViewer({ isVisible, onClose }: AdminFeedba
   const [filterRating, setFilterRating] = useState<number | 'all'>('all')
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null)
 
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (isVisible) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isVisible])
+
   useEffect(() => {
     if (isVisible) {
       loadFeedbacks()

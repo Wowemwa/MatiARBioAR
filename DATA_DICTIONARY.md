@@ -282,6 +282,69 @@ Indexes: admin_id, action_type, entity_type, created_at — RLS: admin view; sys
 
 ---
 
+**public.panoramas**
+
+| Column | Type | Constraints | Default | Description |
+|--------|------|-------------|---------|-------------|
+| id | UUID | PK | gen_random_uuid() | Panorama ID |
+| title | TEXT | NOT NULL |  | Panorama title |
+| description | TEXT |  |  | Description |
+| image_url | TEXT | NOT NULL |  | 360° image URL |
+| thumbnail_url | TEXT |  |  | Thumbnail preview URL |
+| is_active | BOOLEAN | NOT NULL | false | Active/published flag |
+| initial_view_h | DECIMAL |  | 0 | Initial horizontal view angle |
+| initial_view_v | DECIMAL |  | 0 | Initial vertical view angle |
+| initial_fov | DECIMAL |  | 75 | Initial field of view |
+| location_lat | DECIMAL |  |  | Geolocation latitude |
+| location_lng | DECIMAL |  |  | Geolocation longitude |
+| floor_plan_x | DECIMAL |  | 0 | Floor plan X coordinate |
+| floor_plan_y | DECIMAL |  | 0 | Floor plan Y coordinate |
+| site_id | TEXT | FK `public.sites(id)`, ON DELETE SET NULL |  | Linked site ID |
+| created_at | TIMESTAMPTZ | NOT NULL | now() | Creation timestamp |
+| updated_at | TIMESTAMPTZ | NOT NULL | now() | Update timestamp |
+
+Indexes: `idx_panoramas_site_id` — RLS: public read; auth insert/update/delete
+
+---
+
+**public.panorama_links**
+
+| Column | Type | Constraints | Default | Description |
+|--------|------|-------------|---------|-------------|
+| id | UUID | PK | gen_random_uuid() | Link ID |
+| from_panorama_id | UUID | NOT NULL, FK `public.panoramas(id)`, ON DELETE CASCADE |  | Source panorama |
+| to_panorama_id | UUID | NOT NULL, FK `public.panoramas(id)`, ON DELETE CASCADE |  | Target panorama |
+| position_x | DECIMAL | NOT NULL |  | 3D position X |
+| position_y | DECIMAL | NOT NULL |  | 3D position Y |
+| position_z | DECIMAL | NOT NULL |  | 3D position Z |
+| rotation_y | DECIMAL |  | 0 | Y-axis rotation |
+| label | TEXT |  |  | Link label |
+| created_at | TIMESTAMPTZ | NOT NULL | now() | Creation timestamp |
+
+RLS: public read; auth insert/update/delete
+
+---
+
+**public.panorama_markers**
+
+| Column | Type | Constraints | Default | Description |
+|--------|------|-------------|---------|-------------|
+| id | UUID | PK | gen_random_uuid() | Marker ID |
+| panorama_id | UUID | NOT NULL, FK `public.panoramas(id)`, ON DELETE CASCADE |  | Parent panorama |
+| type | TEXT | NOT NULL | 'info' | Marker type ('info', 'image', 'video') |
+| position_x | DECIMAL | NOT NULL |  | 3D position X |
+| position_y | DECIMAL | NOT NULL |  | 3D position Y |
+| position_z | DECIMAL | NOT NULL |  | 3D position Z |
+| title | TEXT |  |  | Marker title |
+| content | TEXT |  |  | Marker content/description |
+| icon_url | TEXT |  |  | Marker icon URL |
+| model_url | TEXT |  |  | 3D model URL (GLB/GLTF) |
+| created_at | TIMESTAMPTZ | NOT NULL | now() | Creation timestamp |
+
+RLS: public read; auth insert/update/delete
+
+---
+
 **Relationships**
 - `admins.id` ↔ `auth.users.id` (1:1)
 - `profiles.id` ↔ `auth.users.id` (1:1)
@@ -290,15 +353,19 @@ Indexes: admin_id, action_type, entity_type, created_at — RLS: admin view; sys
 - `media_assets` ↔ `species` (N:1, nullable), ↔ `sites` (N:1, nullable), ↔ `auth.users` (uploader)
 - `feedback.user_id` ↔ `auth.users.id`
 - `activity_log.admin_id` ↔ `admins.id`
+- `panoramas` ↔ `sites` (N:1, nullable)
+- `panorama_links` connects `panoramas` ↔ `panoramas` (M:N self-join for virtual tours)
+- `panorama_markers` ↔ `panoramas` (N:1)
 
 **Triggers**
-- `update_updated_at_column()` BEFORE UPDATE on: `admins`, `profiles`, `sites`, `species`, `distribution_records`, `media_assets`, `team_members`
+- `update_updated_at_column()` BEFORE UPDATE on: `admins`, `profiles`, `sites`, `species`, `distribution_records`, `media_assets`, `team_members`, `panoramas`
 
 **Storage Buckets**
 - `species-models` (public, 50MB) — `model/gltf-binary`, `application/octet-stream`
 - `species-images` (public, 5MB) — `image/jpeg`, `image/png`, `image/webp`
 - `species-audio` (public, 10MB) — `audio/mpeg`, `audio/mp3`, `audio/wav`, `audio/ogg`
 - `site-media` (public, 10MB) — `image/jpeg`, `image/png`, `video/mp4`
+- `panorama-images` (public, 20MB) — `image/jpeg`, `image/png` — 360° panoramic images
 - `ar-patterns` (public, ~1MB) — `text/plain`, `application/octet-stream`
 - `ar-markers` (public, ~2MB) — `image/jpeg`, `image/png`, `image/jpg`
 

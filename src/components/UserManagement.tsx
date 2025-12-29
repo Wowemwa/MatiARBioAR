@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AdminTeam from './AdminTeam'
 import { CancelIcon } from './Icons'
 
@@ -9,6 +9,18 @@ interface UserManagementProps {
 
 export default function UserManagement({ isVisible, onClose }: UserManagementProps) {
   const [activeTab, setActiveTab] = useState<'team'>('team')
+
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (isVisible) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isVisible])
 
   if (!isVisible) return null
 
