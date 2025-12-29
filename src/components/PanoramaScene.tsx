@@ -394,11 +394,27 @@ export default function PanoramaScene({
       audioRef.current.currentTime = 0
     }
 
-    // Cleanup audio only on unmount (not on panorama change)
+    // Cleanup audio on unmount: always pause and release audio
     return () => {
-      if (audioRef.current && !audioUrl) {
-        audioRef.current.pause()
-        audioRef.current.currentTime = 0
+      if (audioRef.current) {
+        try {
+          audioRef.current.pause()
+        } catch (e) {
+          /* ignore */
+        }
+        try {
+          audioRef.current.currentTime = 0
+        } catch (e) {
+          /* ignore */
+        }
+        try {
+          // Clear src to release memory and stop network activity
+          audioRef.current.src = ''
+        } catch (e) {
+          /* ignore */
+        }
+        // Allow GC
+        audioRef.current = null
       }
     }
   }, [audioUrl, texture])
