@@ -303,3 +303,34 @@ export async function deleteSiteWithFiles(siteId: string): Promise<{ success: bo
     return { success: false, error: errorMessage }
   }
 }
+
+/**
+ * Safely deletes a team member and their avatar
+ * @param memberId The team member ID to delete
+ * @returns Promise<{success: boolean, error?: string}> Result of the operation
+ */
+export async function deleteTeamMemberWithFiles(memberId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    // First get the team member data to know what files to delete
+    const { data: member, error: fetchError } = await supabase
+      .from('team_members')
+      .select('avatar_url')
+      .eq('id', memberId)
+      .single()
+
+    if (fetchError) {
+      console.error('[StorageDelete] Error fetching team member data:', fetchError)
+      return { success: false, error: fetchError.message }
+    }
+
+    const fileUrls: string[] = []
+    if (member.avatar_url) fileUrls.push(member.avatar_url)
+
+    return await deleteRecordWithFiles('team_members', memberId, fileUrls)
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error('[StorageDelete] Failed to delete team member with files:', error)
+    return { success: false, error: errorMessage }
+  }
+}
