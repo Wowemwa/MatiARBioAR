@@ -732,13 +732,13 @@ export function DataProvider({ children }: DataProviderProps) {
     try {
       console.log('[DataContext] Deleting species from Supabase:', id)
 
-      // Delete from Supabase (this will cascade to species_sites due to foreign key constraints)
-      const { error } = await supabase
-        .from('species')
-        .delete()
-        .eq('id', id)
+      // Use safe deletion that also removes associated files
+      const { deleteSpeciesWithFiles } = await import('../utils/storageDelete')
+      const result = await deleteSpeciesWithFiles(id)
 
-      if (error) throw error
+      if (!result.success) {
+        throw new Error(result.error)
+      }
 
       // Update local state
       setSpecies(prev => prev.filter(s => s.id !== id))
@@ -826,12 +826,13 @@ export function DataProvider({ children }: DataProviderProps) {
     try {
       console.log('[DataContext] Deleting team member from Supabase:', id)
 
-      const { error } = await supabase
-        .from('team_members')
-        .delete()
-        .eq('id', id)
+      // Use safe deletion that also removes associated avatar file
+      const { deleteTeamMemberWithFiles } = await import('../utils/storageDelete')
+      const result = await deleteTeamMemberWithFiles(id)
 
-      if (error) throw error
+      if (!result.success) {
+        throw new Error(result.error)
+      }
 
       // Update local state
       setTeamMembers(prev => prev.filter(m => m.id !== id))

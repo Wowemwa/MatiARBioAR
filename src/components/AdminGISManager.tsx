@@ -324,22 +324,14 @@ export default function AdminGISManager({ isVisible, onClose }: AdminGISManagerP
     const hotspot = hotspots.find(h => h.id === selectedHotspot)
     if (!hotspot) return
 
-    if (!confirm(`Are you sure you want to delete "${hotspot.name}"?`)) return
+    if (!confirm(`Are you sure you want to delete "${hotspot.name}"? This will also delete the associated image file.`)) return
 
     try {
-      const { data, error, count } = await supabase
-        .from('sites')
-        .delete()
-        .eq('id', selectedHotspot)
-        .select()
+      const { deleteSiteWithFiles } = await import('../utils/storageDelete')
+      const result = await deleteSiteWithFiles(selectedHotspot)
 
-      if (error) {
-        alert(`Error deleting site: ${error.message}`)
-        return
-      }
-
-      if (!data || data.length === 0) {
-        alert('❌ Failed to delete site: No matching site found or insufficient permissions')
+      if (!result.success) {
+        alert(`Error deleting site: ${result.error}`)
         return
       }
 

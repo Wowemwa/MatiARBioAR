@@ -175,15 +175,13 @@ export default function AdminPanoramaManager() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this panorama?')) return
+    if (!confirm('Are you sure you want to delete this panorama? This will also delete the associated image files.')) return
 
-    const { error } = await supabase
-      .from('panoramas')
-      .delete()
-      .eq('id', id)
+    const { deletePanoramaWithFiles } = await import('../utils/storageDelete')
+    const result = await deletePanoramaWithFiles(id)
 
-    if (error) {
-      alert('Error deleting panorama')
+    if (!result.success) {
+      alert(`Error deleting panorama: ${result.error}`)
     } else {
       fetchPanoramas()
       if (editingId === id) {
@@ -417,12 +415,14 @@ export default function AdminPanoramaManager() {
   }
 
   const handleDeleteMarker = async (id: string) => {
-    if (!confirm('Delete this marker?')) return
+    if (!confirm('Delete this marker? This will also delete any associated icon or model files.')) return
     
-    const { error } = await supabase.from('panorama_markers').delete().eq('id', id)
-    
-    if (error) {
-      console.error('Error deleting marker:', error)
+    const { deletePanoramaMarkerWithFiles } = await import('../utils/storageDelete')
+    const result = await deletePanoramaMarkerWithFiles(id)
+
+    if (!result.success) {
+      console.error('Error deleting marker:', result.error)
+      alert(`Error deleting marker: ${result.error}`)
     } else {
       if (editingId) fetchMarkers(editingId)
     }
